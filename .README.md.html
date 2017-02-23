@@ -642,7 +642,7 @@ function setDocumentScrollTop(ypos)
 <h1> <a id="change-detection-with-google-earth-engine-imagery" class="anchor" href="#change-detection-with-google-earth-engine-imagery" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Change Detection with Google Earth Engine Imagery</h1> 
 <p>A simple Flask web application for performing change detection tasks with <a href="https://developers.google.com/earth-engine/">Google Earth Engine</a> imagery *. </p> 
 <p>The AppEngine version (web version) is for demonstration only and has very limited functionality. Exporting results in particular is not possible.</p> 
-<p>The local version runs in a docker container serving the Flask web application on localhost.</p> 
+<p>The local version runs in a Docker container serving the Flask web application on localhost.</p> 
 <p>On the localhost, assuming you have been granted access to the Earth Engine, you can carry out the following tasks:</p> 
 <ol> 
  <li> <p>Run the iMAD (iteratively re-weighted MAD) algorithm on LANDAT-5 TM bitemporal imagery. CCA is done on the client side until Cholesky decomposition becomes available on the GEE API. This means that only small image subsets can be processed and iterations cannot exceed about 10. The code will later be extended to run LANDSAT-7, LANDSAT-8, ASTER and Sentinel-2 optical/infrared imagery.</p> <p><a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=4695"> A. A. Nielsen (2007). The Regularized Iteratively Reweighted MAD Method for Change Detection in Multi- and Hyperspectral Data.</a></p> <p><a href="http://www.amazon.com/Analysis-Classification-Change-Detection-Sensing/dp/1466570377/ref=dp_ob_title_bk"> M. J.Canty (2014). Image Analysis, Classification and Change Detection in Remote Sensing, 3rd Ed., CRC Press 2014</a>; </p> </li> 
@@ -651,16 +651,25 @@ function setDocumentScrollTop(ypos)
  <li><p>Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing.</p></li> 
 </ol> 
 <p>* Special thanks to Charles G. Morton for making available his implementation of the incomplete gamma function on the GEE API.</p> 
-<h3> <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h3> 
+<h3> <a id="installation-and-execution" class="anchor" href="#installation-and-execution" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation and execution</h3> 
 <ol> 
  <li><p>Install <a href="https://docs.docker.com/">Docker</a></p></li> 
  <li> <p>In a command window execute the command</p> <pre><code>docker run -it -p 5000:5000 --name=ee mort/eedocker 
 </code></pre> </li> 
- <li> <p>At the container prompt execute the command</p> <pre><code>earthengine authenticate
-</code></pre> <p>and follow the instructions. You will have to copy the given URL and paste it into your local browser</p> </li> 
- <li> <p>After successful authentification, run the command</p> <pre><code>python app.py
+ <li> <p>If the container is not found it will be automatically downloaded from Dockerhub and started. At the container prompt execute the command</p> <pre><code>  earthengine authenticate
+</code></pre> <p>and follow the instructions. You will have to copy the given URL and paste it into your local browser.</p> </li> 
+ <li> <p>After successful authentification the credetials are saved to the container. Now run the command</p> <pre><code>python app.py
 </code></pre> <p>and point your browser to </p> <pre><code>localhost:5000
 </code></pre> </li> 
+ <li> <p>Hit </p> <pre><code>Ctrl C 
+</code></pre> <p>to stop the Flask application server and </p> <pre><code>exit 
+</code></pre> <p>to leave the container.</p> </li> 
+ <li> <p>Stop the container with</p> <pre><code>docker stop ee
+</code></pre> </li> 
+ <li> <p>Re-start and enter the container with</p> <pre><code>docker start -ai ee
+</code></pre> </li> 
+ <li> <p>Run the command</p> <pre><code>python app.py
+</code></pre> <p>to re-start the server. </p> </li> 
 </ol>
 </body>
 </html>

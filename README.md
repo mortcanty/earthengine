@@ -5,7 +5,7 @@ A simple Flask web application for performing change detection tasks with
 The AppEngine version (web version) is for demonstration only and has very limited functionality.
 Exporting results in particular is not possible.
 
-The local version runs in a docker container serving the Flask web application on localhost.
+The local version runs in a Docker container serving the Flask web application on localhost.
 
 On the localhost, assuming you have been granted access to the Earth Engine, you can carry out the following tasks:
 
@@ -37,7 +37,7 @@ On the localhost, assuming you have been granted access to the Earth Engine, you
  
 \* Special thanks to Charles G. Morton for making available his implementation of the incomplete gamma function on the  GEE API.
 
-### Installation 
+### Installation and execution
 
  1. Install <a href="https://docs.docker.com/">Docker</a>
  
@@ -45,18 +45,44 @@ On the localhost, assuming you have been granted access to the Earth Engine, you
  
  		docker run -it -p 5000:5000 --name=ee mort/eedocker 
  		
- 3. At the container prompt execute the command
+ 3. If the container is not found it will be automatically downloaded from Dockerhub and
+ started. At the container prompt execute the command
  
  		earthengine authenticate
  	
- 	and follow the instructions. You will have to copy the given URL and paste it into your local browser
+ 	and follow the instructions. You will have to copy the given URL and paste it into your local browser.
  	
- 4. After successful authentification, run the command
+ 4. After successful authentification the credetials are saved to the container. Now run the command
  
  		python app.py
  	
  	and point your browser to 
  	
  		localhost:5000
+ 		
+ 5. Hit 
+ 
+ 		Ctrl C 
+ 		
+ 	to stop the Flask application server and 
+ 
+ 		exit 
+ 		
+ 	to leave the container.
+ 
+ 6. Stop the container with
+ 
+ 		docker stop ee
+ 		
+ 7. Re-start and enter the container with
+ 
+ 		docker start -ai ee
+ 		
+ 8. Run the command
+ 
+		python app.py
+		
+	to re-start the server.		
+ 		 		 		   		
  
  
