@@ -52,7 +52,7 @@ On the localhost, assuming you have been granted access to the Earth Engine, you
  	
  	and follow the instructions. You will have to copy the given URL and paste it into your local browser.
  	
- 4. After successful authentification the credetials are saved to the container. Now run the command
+ 4. After successful authentification the credentials are saved to the container. Now run the command
  
  		python app.py
  	

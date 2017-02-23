@@ -14,7 +14,9 @@ A simple Flask web application for performing change detection tasks with
 <a href="https://developers.google.com/earth-engine/">Earth Engine</a> imagery.<br /> <br />
 The AppEngine version (web version) is for demonstration only and has very limited functionality.
 Exporting results in particular is not possible.<br /><br />
-When running on localhost you can carry out the following tasks:<br /><br />
+You can pull and run the Docker container version by following the instructions
+ on the <a href="https://github.com/mortcanty/earthengine">GitHub repository</a>. 
+When running the Docker container on your localhost you can carry out the following tasks:<br /><br />
 
  1. Run the iMAD (iteratively re-weighted MAD) algorithm on LANDAT-5 TM bitemporal imagery. (CCA is done on client side 
  until Cholesky decomposition becomes available on GEE API. Will later be extented to run with LANDSAT-7, LANDSAT-8, ASTER 
@@ -39,9 +41,9 @@ When running on localhost you can carry out the following tasks:<br /><br />
 	K. Conradsen et al. (2016). Determining the points of
 	change in time series of polarimetric SAR data. IEEE TGRS 54 (5) 3007-3024.</a><br /><br />
 
- 4. Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing.
+ 4. Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing, for example with
+ <a href="https://github.com/mortcanty/SARDocker">SARDocker.</a>
 </p>
-
  
  <p><i>Special thanks to Charles G. Morton for making available his implementation of the incomplete gamma function on the  GEE API.</i></p>
  
