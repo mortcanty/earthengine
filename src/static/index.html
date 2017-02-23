@@ -1,0 +1,81 @@
+<html>
+
+<link type="text/css" rel="stylesheet" href="/static/css/mystyle.css" />
+<style> table {background:lightblue}
+        form {background:lightblue; width:170px}   
+</style>
+
+<head>
+        <title>Google Earth Engine</title>
+        <meta name="description" content="Remote sensing digital image processing">
+        <meta name="keywords" content= "Mort Canty, remote sensing, ENVI, IDL, Google Earth Engine, image processing, SAR, classification, change detection">
+      
+<SCRIPT TYPE="text/javascript">
+function dropdown(mySel)
+{
+var myWin, myVal;
+myVal = mySel.options[mySel.selectedIndex].value;
+if(myVal)
+   {
+   if(mySel.form.target) myWin = parent[mySel.form.target];
+   else myWin = window;
+   if (! myWin) return true;
+   myWin.location = myVal;
+   }
+return false; 
+}
+</SCRIPT>
+
+</head>
+
+<body>
+
+
+<h2>Change Detection with Earth Engine Imagery</h2>
+
+<table border="0">
+<tr>
+<th align = "Left"> View/Retrieve </th>
+<th align = "Left"> Algorithm </th>
+<th align = "Left"> Help </th>
+</tr>
+<tr>
+<td>
+<FORM 
+     ACTION="/" 
+     METHOD=POST onsubmit="return dropdown(this.gourl)">
+<SELECT NAME="gourl">
+<OPTION VALUE="/sentinel1.html"            >Sentinel-1
+<OPTION VALUE="/sentinel2.html"            >Sentinel-2
+</SELECT>
+<INPUT TYPE=SUBMIT VALUE="Go">
+</FORM>
+</td>
+<td>
+<FORM 
+     ACTION="/" 
+     METHOD=POST onsubmit="return dropdown(this.gourl)">
+<SELECT NAME="gourl">
+<OPTION VALUE="/omnibus.html"              >Omnibus
+<OPTION VALUE="/wishart.html"              >Wishart
+<OPTION VALUE="/mad.html"                  >iMAD
+</SELECT>
+<INPUT TYPE=SUBMIT VALUE="Go">
+</FORM>
+</td>
+<td>
+<FORM 
+     ACTION="/" 
+     METHOD=POST onsubmit="return dropdown(this.gourl)">
+<SELECT NAME="gourl">
+<OPTION VALUE="/static/overview.html"      >Overview
+<OPTION VALUE="/static/about.html"         >About
+</SELECT>
+<INPUT TYPE=SUBMIT VALUE="Go">
+</FORM>
+</td>
+</tr>
+</table>
+
+</body>
+</html>

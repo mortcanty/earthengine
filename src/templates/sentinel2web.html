@@ -1,0 +1,128 @@
+<html>
+<link type="text/css" rel="stylesheet" href="/static/css/mystyle.css" />
+<script language="JavaScript" src="/static/js/ajax.js"></script>
+<head>
+	<title>Sentinel2</title>
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="stylesheet" href="https://npmcdn.com/leaflet@1.0.0-rc.2/dist/leaflet.css" />
+</head>
+
+<body>
+<h2>View/retrieve Sentinel-2 Imagery</h2>
+{{msg|safe}}
+<p>
+<a href="/" name="return"> Return</a>
+</p>
+
+<div id="mapid" style="width: 640px; height: 480px;"></div>
+
+<form method="post" action = "/sentinel2.html" >
+
+	<p> Start search (yyyy-mm-dd) :
+	<input type="text" value = "2016-04-01" name = "startdate" size = 8><br />
+	End search (yyyy-mm-dd) :
+	<input type="text" value = "2016-09-01" name = "enddate" size = 8></p>	
+	<p> Desired projection:
+	<input type="text" value = "default" name = "projection" size = 10></p>	
+	<table style="width:300px">
+	  <tr>
+	    <td>maxLat: <input type="text" value = "" id = "maxlat" name = "maxLat" size = 8></td>
+	    <td>minLon: <input type="text" value = "" id = "minlon" name = "minLon" size = 8></td> 
+	  </tr>
+	  <tr>
+	    <td>minLat: <input type="text" value = "" id = "minlat" name = "minLat" size = 8></td>
+	    <td>maxLon: <input type="text" value = "" id = "maxlon" name = "maxLon" size = 8></td> 
+	  </tr>
+	 </table>	
+    <input type="checkbox" name="export" value="export" disabled>Export to Google Drive as: 
+                       <input type="text" value = "sentinel2" name = "exportname" size = 10>
+              at scale <input type="text" value = "10" name = "gdexportscale" size = 2> meters<br /> 		 
+	<p><input type="submit" id = "submit" value="Go" disabled></p>
+	
+</form>
+
+<script src="https://npmcdn.com/leaflet@1.0.0-rc.2/dist/leaflet.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+
+<script>
+
+mapboxss = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    maxZoom: 18,
+    id: 'mapbox.streets-satellite',
+    accessToken: 'pk.eyJ1IjoibWNhbnR5IiwiYSI6ImNpcjRsMmJxazAwM3hoeW05aDA1cmNkNzMifQ.d2UbIugbQFk2lnU8uHwCsQ'
+ //   accessToken: '{{accessToken}}'
+});
+
+mapboxs = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    maxZoom: 18,
+    id: 'mapbox.satellite',
+    accessToken: 'pk.eyJ1IjoibWNhbnR5IiwiYSI6ImNpcjRsMmJxazAwM3hoeW05aDA1cmNkNzMifQ.d2UbIugbQFk2lnU8uHwCsQ'
+//    accessToken: '{{accessToken}}'
+});
+
+osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+});
+
+var LAT = {{centerlat}}
+var LON = {{centerlon}}   
+
+var mymap = L.map('mapid', {layers:[mapboxss,mapboxs,osm]}).setView([LAT, LON], 10);
+
+var baseLayers = {
+	    "Mapbox-Streets": mapboxss,
+	    "Mapbox-Satellite": mapboxs,
+	    "OpenStreetMap": osm
+	};
+
+L.control.layers(baseLayers).addTo(mymap);
+
+var drawnItems = new L.FeatureGroup();
+mymap.addLayer(drawnItems);
+var drawControl = new L.Control.Draw({
+     draw: {
+          polygon: false,
+          polyline: false,
+          circle: false,
+          marker: false
+     },        
+     edit: {
+         featureGroup: drawnItems,
+         edit: false
+         }
+     });
+mymap.addControl(drawControl);
+
+mymap.on(L.Draw.Event.CREATED, function(e) {
+   var layer = e.layer;
+   drawnItems.addLayer(layer);
+   var latLngs = (layer.getLatLngs())[0];
+   document.getElementById("minlat").value = (latLngs[0]).lat.toString();
+   document.getElementById("maxlat").value = (latLngs[1]).lat.toString();
+   document.getElementById("minlon").value = (latLngs[0]).lng.toString();
+   document.getElementById("maxlon").value = (latLngs[2]).lng.toString();
+   document.getElementById("submit").disabled = false;   
+});     
+
+var popup = L.popup();
+
+function onMapClick(e) {
+    popup
+        .setLatLng(e.latlng)
+        .setContent('lat:  '+e.latlng.lat.toString()+'<br />lng:  '+e.latlng.lng.toString())
+        .openOn(mymap);
+}
+
+mymap.on('click', onMapClick);
+
+</script>
+
+</body>
+</html>
