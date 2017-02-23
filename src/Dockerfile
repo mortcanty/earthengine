@@ -53,7 +53,6 @@ ADD     httplib2 /home/httplib2
 ADD     oauth2client /home/oauth2client
 ADD     static /home/static
 ADD     templates /home/templates   
-COPY    config.py /home/config.py
 COPY    eeMad.py /home/eeMad.py
 COPY    eeWishart.py /home/eeWishart.py
 COPY    app.py /home/app.py
