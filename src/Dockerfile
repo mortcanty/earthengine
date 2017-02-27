@@ -56,6 +56,7 @@ ADD     templates /home/templates
 COPY    eeMad.py /home/eeMad.py
 COPY    eeWishart.py /home/eeWishart.py
 COPY    app.py /home/app.py
+RUN     chmod +x /home/app.py
 
 WORKDIR /home
 CMD     /bin/bash

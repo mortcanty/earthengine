@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import ee, getpass, time, math, sys
 from flask import Flask, render_template, request 
 from eeMad import imad
@@ -241,7 +242,7 @@ def Sentinel2():
             imageclip = image.clip(rect)              
             timestamp = ee.Date(image.get('system:time_start')).getInfo()
             timestamp = time.gmtime(int(timestamp['value'])/1000)
-            timestamp = time.strftime('%c', timestamp)
+            timestamp = time.strftime('%x', timestamp)
             systemid = image.get('system:id').getInfo()
             cloudcover = image.get('CLOUD_COVERAGE_ASSESSMENT').getInfo()
             projection = image.select('B2').projection().getInfo()['crs']
@@ -324,7 +325,7 @@ def Mad():
             image1 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7')               
             timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
             timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
-            timestamp1 = time.strftime('%c', timestamp1) 
+            timestamp1 = time.strftime('%x', timestamp1) 
             systemid1 = image1.get('system:id').getInfo()
             cloudcover1 = image1.get('CLOUD_COVER').getInfo()
             collection = ee.ImageCollection('LT5_L1T') \
@@ -455,7 +456,7 @@ def Wishart():
             image1 = ee.Image(collection.first()).clip(rect)   
             timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
             timestamp1= time.gmtime(int(timestamp1['value'])/1000)
-            timestamp1 = time.strftime('%c', timestamp1) 
+            timestamp1 = time.strftime('%x', timestamp1) 
             systemid1 = image1.get('system:id').getInfo()   
             relativeOrbitNumber1 = int(image1.get('relativeOrbitNumber_start').getInfo())
 #          get the second time point image           
@@ -476,7 +477,7 @@ def Wishart():
             image2 = ee.Image(collection.first()).clip(rect)                    
             timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
             timestamp2= time.gmtime(int(timestamp2['value'])/1000)
-            timestamp2 = time.strftime('%c', timestamp2) 
+            timestamp2 = time.strftime('%x', timestamp2) 
             systemid2 = image2.get('system:id').getInfo()   
             relativeOrbitNumber2 = int(image2.get('relativeOrbitNumber_start').getInfo())
 #          Wishart change detection    
@@ -596,9 +597,7 @@ def Omnibus():
             timestamplist = []
             for timestamp in acquisition_times.getInfo():
                 tmp = time.gmtime(int(timestamp)/1000)
-                timestamplist.append(time.strftime('%c', tmp))               
-            timestamp = timestamplist[0]    
-            timestamps = str(timestamplist)    
+                timestamplist.append(time.strftime('%x', tmp))                    
             relative_orbit_numbers = ee.List(collection.aggregate_array('relativeOrbitNumber_start'))             
             relativeorbitnumberlist = []
             for ron  in relative_orbit_numbers.getInfo():
@@ -627,8 +626,12 @@ def Omnibus():
             smap = ee.Image(result.get('smap'))
             fmap = ee.Image(result.get('fmap'))  
             bmap = ee.Image(result.get('bmap'))
-            bmapbands = ['b0%i'%i for i in range(1,10)]+['b%i'%i for i in range(10,100)]
-            bands = ['cmap','smap','fmap']+bmapbands[0:count-1]
+#            bmapbands = ['b0%i'%i for i in range(1,10)]+['b%i'%i for i in range(10,100)]
+            timestamplist = [x.replace('/','') for x in timestamplist]  
+            timestamplist = ['b20'+x[4:]+x[0:4] for x in timestamplist]
+            timestamps = str(timestamplist)
+            timestamp = timestamplist[0]   
+            bands = ['cmap','smap','fmap']+timestamplist[1:]
             cmaps = ee.Image.cat(cmap,smap,fmap,bmap).byte().rename(bands)           
             if assexport == 'assexport':
 #              export to Assets 
@@ -651,7 +654,7 @@ def Omnibus():
                 gdexport.start() 
             else:
                 gdexportid = 'none'                                      
-            fmapid = fmap.getMapId({'min': 0, 'max':count/2,'palette':jet, 'opacity': 0.4}) 
+            fmapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
             return render_template('omnibusout.html',
                                           mapid = fmapid['mapid'], 
                                           token = fmapid['token'], 
