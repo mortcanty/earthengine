@@ -32,7 +32,8 @@ Assuming you have been authenticated (see below) to the Earth Engine, you can ca
 	K. Conradsen et al. (2016). Determining the points of
 	change in time series of polarimetric SAR data. IEEE TGRS 54 (5) 3007-3024.</a>
 
- 3. Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing.
+ 3. Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing, 
+ for example with <a href="http://mortcanty.github.io/SARDocker/"> SARDocker</a>.
  
 \* Special thanks to Charles G. Morton for making available his implementation of the incomplete gamma function on the  GEE API.
 
@@ -51,7 +52,7 @@ Assuming you have been authenticated (see below) to the Earth Engine, you can ca
  	
  	and follow the instructions. You will have to copy the given URL and paste it into your local browser.
  	
- 4. After successful authentification the credentials are saved to the container. Now run the command
+ 4. After successful authentication the credentials are saved to the container. Now run the command
  
  		./app.py
  	

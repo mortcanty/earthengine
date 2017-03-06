@@ -87,8 +87,9 @@ osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 
 var LAT = {{centerlat}}
 var LON = {{centerlon}}   
+var ZOOM = {{zoom}}
 
-var mymap = L.map('mapid', {layers:[mapboxss,mapboxs,osm]}).setView([LAT, LON], 10);
+var mymap = L.map('mapid', {layers:[mapboxss,mapboxs,osm]}).setView([LAT, LON], ZOOM);
 
 var baseLayers = {
 	    "Mapbox-Streets": mapboxss,

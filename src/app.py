@@ -12,6 +12,7 @@ local = True
 
 centerlon = 8.5
 centerlat = 50.05
+zoom = 10
 jet = 'black,blue,cyan,yellow,red'
 
 if local:
@@ -62,16 +63,18 @@ def index():
     
 @app.route('/sentinel1.html', methods = ['GET', 'POST'])
 def Sentinel1():    
-    global msg, centerlon, centerlat, local
+    global msg, centerlon, centerlat, local, zoom
     if request.method == 'GET':
         if local:
             return render_template('sentinel1.html', msg = msg,
                                                  centerlon = centerlon,
-                                                 centerlat = centerlat)
+                                                 centerlat = centerlat,
+                                                 zoom = zoom)
         else:
             return render_template('sentinel1web.html', msg = msg,
                                                  centerlon = centerlon,
-                                                 centerlat = centerlat)
+                                                 centerlat = centerlat,
+                                                 zoom = zoom)
     else:
         try: 
             startdate = request.form['startdate']  
@@ -178,6 +181,7 @@ def Sentinel1():
                                           token = mapid['token'], 
                                           centerlon = centerlon,
                                           centerlat = centerlat,
+                                          zoom = zoom,
                                           downloadtext = 'Download image collection intersection',
                                           downloadpath = downloadpath, 
                                           downloadpathclip = downloadpathclip, 
@@ -196,16 +200,17 @@ def Sentinel1():
 
 @app.route('/sentinel2.html', methods = ['GET', 'POST'])
 def Sentinel2():
-    global msg, centerlon, centerlat, local
+    global msg, centerlon, centerlat, local, zoom
     if request.method == 'GET':
         if local:
             return render_template('sentinel2.html', msg = msg,
                                                      centerlon = centerlon,
-                                                     centerlat = centerlat)
+                                                     centerlat = centerlat,
+                                                     zoom = zoom)
         else:
             return render_template('sentinel2web.html', msg = msg,
                                                      centerlon = centerlon,
-                                                     centerlat = centerlat)
+                                                     centerlat = centerlat,zoom = zoom)
     else:
         try:
             startdate = request.form['startdate']  
@@ -273,6 +278,7 @@ def Sentinel2():
                                           token = mapid['token'], 
                                           centerlon = centerlon,
                                           centerlat = centerlat,
+                                          zoom = zoom,
                                           downloadtext = 'Download image intersection',
                                           downloadpath = downloadpath, 
                                           downloadpathclip = downloadpathclip, 
@@ -400,16 +406,18 @@ def Mad():
         
 @app.route('/wishart.html', methods = ['GET', 'POST'])
 def Wishart():
-    global msg, centerlon, centerlat, local
+    global msg, centerlon, centerlat, local, zoom
     if request.method == 'GET':
         if local:
             return render_template('wishart.html', msg = msg,
                                                      centerlon = centerlon,
-                                                     centerlat = centerlat)
+                                                     centerlat = centerlat,
+                                                     zoom = zoom)
         else:
             return render_template('wishartweb.html', msg = msg,
                                                      centerlon = centerlon,
-                                                     centerlat = centerlat)
+                                                     centerlat = centerlat,
+                                                     zoom = zoom)
     else:      
         try:
             start1 = ee.Date(request.form['startdate1'])
@@ -518,6 +526,7 @@ def Wishart():
                                       token = mapid['token'], 
                                       centerlon = centerlon,
                                       centerlat = centerlat,
+                                      zoom = zoom,
                                       downloadpath = downloadpath, 
                                       systemid1 = systemid1,
                                       systemid2 = systemid2,
@@ -534,16 +543,18 @@ def Wishart():
         
 @app.route('/omnibus.html', methods = ['GET', 'POST'])
 def Omnibus():       
-    global msg, centerlon, centerlat, jet, local
+    global msg, centerlon, centerlat, jet, local, zoom
     if request.method == 'GET':
         if local:
             return render_template('omnibus.html', msg = msg,
                                                    centerlon = centerlon,
-                                                   centerlat = centerlat)
+                                                   centerlat = centerlat,
+                                                   zoom = zoom)
         else:
             return render_template('omnibusweb.html', msg = msg,
                                                       centerlon = centerlon,
-                                                      centerlat = centerlat)            
+                                                      centerlat = centerlat,
+                                                      zoom = zoom)            
     else:
         try: 
             startdate = request.form['startdate']  
@@ -665,6 +676,7 @@ def Omnibus():
                                           token = mapid['token'], 
                                           centerlon = centerlon,
                                           centerlat = centerlat,
+                                          zoom = zoom,
                                           projection = projection,
                                           systemid = systemid,
                                           count = count,
