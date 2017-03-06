@@ -1,13 +1,12 @@
 # Change Detection with Google Earth Engine Imagery
 A simple Flask web application for performing change detection tasks with 
-<a href="https://developers.google.com/earth-engine/">Google Earth Engine</a> imagery *. 
+<a href="https://developers.google.com/earth-engine/">Google Earth Engine</a> imagery *.    
 
-The AppEngine version (web version) is for demonstration only and has very limited functionality.
-Exporting results in particular is not possible.
+The <a href="http://ms-image-analysis.appspot.com/static/index.html">AppEngine version</a> (web version) is for demonstration only and has very limited functionality.
+Exporting results to Google Drive or to Earth Engine assets is in particular not possible. 
 
-The local version runs in a Docker container serving the Flask web application on localhost.
-
-On the localhost, assuming you have been granted access to the Earth Engine, you can carry out the following tasks:
+The local version runs in a Docker container serving the Flask web application on __localhost:5000__.
+Assuming you have been authenticated (see below) to the Earth Engine, you can carry out the following tasks:
 
  1. Run the iMAD (iteratively re-weighted MAD) algorithm on LANDAT-5 TM bitemporal imagery. CCA is done on the client side 
  until Cholesky decomposition becomes available on the GEE API. This means that only small image subsets can be processed and iterations
@@ -54,17 +53,19 @@ On the localhost, assuming you have been granted access to the Earth Engine, you
  	
  4. After successful authentification the credentials are saved to the container. Now run the command
  
- 		python app.py
+ 		./app.py
  	
  	and point your browser to 
  	
  		localhost:5000
  		
- 5. Hit 
+ 	to start work.
+ 		
+ 5. When finished, hit 
  
  		Ctrl C 
  		
- 	to stop the Flask application server and 
+ 	in the command window to stop the Flask application server and 
  
  		exit 
  		
@@ -80,7 +81,7 @@ On the localhost, assuming you have been granted access to the Earth Engine, you
  		
  8. Run the command
  
-		python app.py
+	    ./app.py
 		
 	to re-start the server.		
  		 		 		   		

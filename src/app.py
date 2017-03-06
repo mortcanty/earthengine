@@ -1,6 +1,7 @@
 #! /usr/bin/env python
-import ee, time, math, sys
-from flask import Flask, render_template, request, make_response 
+import time, math, sys
+import ee
+from flask import Flask, render_template, request
 from eeMad import imad
 from eeWishart import omnibus
 
@@ -12,7 +13,6 @@ local = True
 centerlon = 8.5
 centerlat = 50.05
 jet = 'black,blue,cyan,yellow,red'
-msg = 'Choose a rectangular region'
 
 if local:
 # for local flask server
@@ -41,9 +41,6 @@ def get_vh(image):
 def get_vvvh(image):   
     ''' get 'VV' and 'VH' bands from sentinel-1 imageCollection and restore linear signal from db-values '''
     return image.select('VV','VH').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
-
-def get_vvvh_raw(image):
-    return image.select('VV','VH')
 
 def get_image(current,image):
         ''' accumulate a single image from a collection of images '''
@@ -148,7 +145,6 @@ def Sentinel1():
                 pcollection = collection.map(get_vh)
             else:
                 pcollection = collection.map(get_vvvh)
-                # pcollection = collection.map(get_vvvh_raw) 
 #          clipped image for display on map                
             image1 = ee.Image(pcollection.first())  
             image1clip = image1.clip(rect)        
