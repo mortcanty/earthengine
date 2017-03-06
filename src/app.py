@@ -6,7 +6,7 @@ from eeWishart import omnibus
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
 #------------
-local = False
+local = True
 #------------
 
 centerlon = 8.5
