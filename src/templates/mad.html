@@ -77,7 +77,10 @@ osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 });
 
-var mymap = L.map('mapid', {layers:[mapboxss,mapboxs,osm]}).setView([37.0868, -116.0444], 10);
+var LAT = {{centerlat}}
+var LON = {{centerlon}}  
+
+var mymap = L.map('mapid', {layers:[mapboxss,mapboxs,osm]}).setView([LAT, LON], 10);
 
 var baseLayers = {
 	    "Mapbox-Streets": mapboxss,

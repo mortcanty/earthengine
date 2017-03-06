@@ -1,15 +1,18 @@
 #! /usr/bin/env python
-import ee, getpass, time, math, sys
-from flask import Flask, render_template, request 
+import ee, time, math, sys
+from flask import Flask, render_template, request, make_response 
 from eeMad import imad
 from eeWishart import omnibus
 
-# Set to True for localhost, False for appengine deploy
-local = True
+# Set to True for localhost, False for appengine dev_appserver or deploy
+#------------
+local = False
+#------------
 
 centerlon = 8.5
 centerlat = 50.05
 jet = 'black,blue,cyan,yellow,red'
+msg = 'Choose a rectangular region'
 
 if local:
 # for local flask server
@@ -18,8 +21,8 @@ if local:
 else:
 # for appengine deployment or development appserver
     import config
+    msg = 'Choose a small rectangular region'
     ee.Initialize(config.EE_CREDENTIALS, 'https://earthengine.googleapis.com')
-    msg = 'Choose a rectangular region.<br />Exporting results is not possible.'
 
 app = Flask(__name__)
 
@@ -90,10 +93,10 @@ def Sentinel1():
             maxLon = float(request.form['maxLon'])
             if request.form.has_key('export'):        
                 export = request.form['export']
+                gdexportname = request.form['exportname']
+                gdexportscale = float(request.form['gdexportscale'])
             else:
-                export = 'none'
-            gdexportname = request.form['exportname']
-            gdexportscale = float(request.form['gdexportscale'])
+                export = 'none'           
             start = ee.Date(startdate)
             finish = ee.Date(enddate)    
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
@@ -218,13 +221,12 @@ def Sentinel2():
             maxLon = float(request.form['maxLon'])
             if request.form.has_key('export'):        
                 export = request.form['export']
+                gdexportname = request.form['exportname'] 
+                gdexportscale = float(request.form['gdexportscale']) 
             else:
-                export = ' '
-            gdexportname = request.form['exportname'] 
-            gdexportscale = float(request.form['gdexportscale'])           
+                export = ' '          
             start = ee.Date(startdate)
-            finish = ee.Date(enddate)    
-            
+            finish = ee.Date(enddate)           
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
             centerlon = (minLon + maxLon)/2.0
             centerlat = (minLat + maxLat)/2.0 
@@ -242,7 +244,7 @@ def Sentinel2():
             imageclip = image.clip(rect)              
             timestamp = ee.Date(image.get('system:time_start')).getInfo()
             timestamp = time.gmtime(int(timestamp['value'])/1000)
-            timestamp = time.strftime('%x', timestamp)
+            timestamp = time.strftime('%c', timestamp)
             systemid = image.get('system:id').getInfo()
             cloudcover = image.get('CLOUD_COVERAGE_ASSESSMENT').getInfo()
             projection = image.select('B2').projection().getInfo()['crs']
@@ -288,9 +290,16 @@ def Sentinel2():
         
 @app.route('/mad.html', methods = ['GET', 'POST'])
 def Mad():
-    global local
+    global msg, local
     if request.method == 'GET':
-        return render_template('mad.html', msg = msg)  
+        if local:
+            return render_template('mad.html', msg = msg,
+                                                     centerlon = -116.0444,
+                                                     centerlat = 37.0868)
+        else:
+            return render_template('madweb.html', msg = msg,
+                                                     centerlon = -116.0444,
+                                                     centerlat = 37.0868)     
     else:
         if not local:
             return 'not yet implemented'
@@ -456,7 +465,7 @@ def Wishart():
             image1 = ee.Image(collection.first()).clip(rect)   
             timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
             timestamp1= time.gmtime(int(timestamp1['value'])/1000)
-            timestamp1 = time.strftime('%x', timestamp1) 
+            timestamp1 = time.strftime('%c', timestamp1) 
             systemid1 = image1.get('system:id').getInfo()   
             relativeOrbitNumber1 = int(image1.get('relativeOrbitNumber_start').getInfo())
 #          get the second time point image           
@@ -477,7 +486,7 @@ def Wishart():
             image2 = ee.Image(collection.first()).clip(rect)                    
             timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
             timestamp2= time.gmtime(int(timestamp2['value'])/1000)
-            timestamp2 = time.strftime('%x', timestamp2) 
+            timestamp2 = time.strftime('%c', timestamp2) 
             systemid2 = image2.get('system:id').getInfo()   
             relativeOrbitNumber2 = int(image2.get('relativeOrbitNumber_start').getInfo())
 #          Wishart change detection    
@@ -533,12 +542,12 @@ def Omnibus():
     if request.method == 'GET':
         if local:
             return render_template('omnibus.html', msg = msg,
-                                                     centerlon = centerlon,
-                                                     centerlat = centerlat)
+                                                   centerlon = centerlon,
+                                                   centerlat = centerlat)
         else:
             return render_template('omnibusweb.html', msg = msg,
-                                                     centerlon = centerlon,
-                                                     centerlat = centerlat)            
+                                                      centerlon = centerlon,
+                                                      centerlat = centerlat)            
     else:
         try: 
             startdate = request.form['startdate']  
@@ -555,23 +564,23 @@ def Omnibus():
             minLat = float(request.form['minLat'])
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
-            maxLon = float(request.form['maxLon'])  
-            assexportscale = float(request.form['assexportscale'])
-            gdexportscale = float(request.form['gdexportscale'])
+            maxLon = float(request.form['maxLon'])        
             if request.form.has_key('assexport'):        
+                assexportscale = float(request.form['assexportscale'])
+                assexportname = request.form['assexportname']
                 assexport = request.form['assexport']
             else:
                 assexport = 'none'
-            if request.form.has_key('gdexport'):        
+            if request.form.has_key('gdexport'):  
+                gdexportscale = float(request.form['gdexportscale'])  
+                gdexportname = request.form['gdexportname']    
                 gdexport = request.form['gdexport']
             else:
-                gdexport = 'none'    
+                gdexport = 'none'   
             if request.form.has_key('median'):        
                 median = True
             else:
                 median = False                
-            assexportname = request.form['assexportname']
-            gdexportname = request.form['gdexportname']
             start = ee.Date(startdate)
             finish = ee.Date(enddate)            
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
@@ -653,25 +662,26 @@ def Omnibus():
                 print '****Exporting to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
             else:
-                gdexportid = 'none'                                      
-            fmapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
+                gdexportid = 'none'                                                                         
+            mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
             return render_template('omnibusout.html',
-                                          mapid = fmapid['mapid'], 
-                                          token = fmapid['token'], 
+                                          mapid = mapid['mapid'], 
+                                          token = mapid['token'], 
                                           centerlon = centerlon,
                                           centerlat = centerlat,
                                           projection = projection,
                                           systemid = systemid,
                                           count = count,
                                           timestamp = timestamp,
-                                          assexportid = 'none',
-                                          gdexportid = 'none',
+                                          assexportid = assexportid,
+                                          gdexportid = gdexportid,
                                           timestamps = timestamps,
                                           polarization = polarization1,
                                           relativeorbitnumbers = relativeorbitnumbers)                  
                             
         except Exception as e:
             return '<br />An error occurred in omnibus: %s'%e    
+        
                                         
 if __name__ == '__main__':
     
