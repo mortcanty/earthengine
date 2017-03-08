@@ -1,0 +1,59 @@
+<html>
+<style type="text/css">
+h2 { color: blue }
+h3 { color: blue }
+p  {width: 600}
+</style>
+
+<body>
+
+<h2>Change Detection with Earth Engine Imagery</h2>
+
+<p>
+A simple Flask web application for performing change detection tasks with 
+<a href="https://developers.google.com/earth-engine/">Earth Engine</a> imagery.<br /> <br />
+The AppEngine version (web version) is for demonstration only and has very limited functionality.
+Exporting results in particular is not possible.<br /><br />
+When running on localhost you can carry out the following tasks:<br /><br />
+
+ 1. Run the iMAD (iteratively re-weighted MAD) algorithm on LANDAT-5 TM bitemporal imagery. (CCA is done on client side 
+ until Cholesky decomposition becomes available on GEE API. Will later be extented to run with LANDSAT-7, LANDSAT-8, ASTER 
+ and Sentinel-2 optical/infrared imagery.)<br />
+ 
+    <a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=4695"> 
+	A. A. Nielsen (2007). The Regularized Iteratively Reweighted MAD Method for Change Detection in Multi- and Hyperspectral Data.</a><br />
+
+	<a href="http://www.amazon.com/Analysis-Classification-Change-Detection-Sensing/dp/1466570377/ref=dp_ob_title_bk"> M. J.Canty (2014). 
+	Image Analysis, Classification and Change Detection in Remote Sensing, 3rd Ed., CRC Press 2014</a> <br /><br />
+	
+ 2. Run the complex Wishart algorithm on polarimetric SAR bitemporal data (presently only Sentinel-1 dual pol, diagonal only, and single pol images).<br />
+ 
+	 <a href = "http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=1219"> 
+	K. Conradsen et al. (2003). A test statistic in the complex Wishart distribution and its 
+	application to change detection in polarimetric SAR data IEEE TGRS 41 (1) 4-19.</a><br /><br />
+	
+	
+ 3. Run the (sequential) omnibus algorithm on polarimetric SAR multitemporal data (presently only Sentinel-1 dual pol, diagonal only, and single pol images). <br />
+ 
+	 <a href = "http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6825"> 
+	K. Conradsen et al. (2016). Determining the points of
+	change in time series of polarimetric SAR data. IEEE TGRS 54 (5) 3007-3024.</a><br /><br />
+
+ 4. Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing.
+</p>
+
+ Installation <br /><br />
+ 1. Clone this repository or download the ZIP and unpack.<br />
+ 2. Install <a href= "https://www.continuum.io/">Anaconda2</a><br />
+ 3. Install the <a href="https://developers.google.com/earth-engine/python_install"> GEE Python API</a><br />
+ 4. cd into ../earthengine/src/ and run <b>python app.py</b>  <br />
+ 5. Point your browser to localhost:5000<br />
+ 
+ <p><i>Special thanks to Charles G. Morton for making available his implementation of the incomplete gamma function on the  GEE API.</i></p>
+ 
+ <a href="/static/index.html" name="return">Return</a>
+ 
+</body>
+ 
+</html>
+
