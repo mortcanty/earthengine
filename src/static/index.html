@@ -35,7 +35,7 @@ return false;
 
 <table border="0">
 <tr>
-<th align = "Left"> View/Retrieve </th>
+<th align = "Left"> Retrieve </th>
 <th align = "Left"> Algorithm </th>
 <th align = "Left"> Help </th>
 </tr>
@@ -68,8 +68,9 @@ return false;
      ACTION="/" 
      METHOD=POST onsubmit="return dropdown(this.gourl)">
 <SELECT NAME="gourl">
+<OPTION VALUE="/static/menu.html">Menu
 <OPTION VALUE="https://github.com/mortcanty/earthengine/blob/master/README.md">ReadMe
-<OPTION VALUE="/static/about.html"         >About
+<OPTION VALUE="/static/about.html">About
 </SELECT>
 <INPUT TYPE=SUBMIT VALUE="Go">
 </FORM>

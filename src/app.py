@@ -7,7 +7,7 @@ from eeWishart import omnibus
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
 #------------
-local = True
+local = False
 #------------
 
 centerlon = 8.5
@@ -22,7 +22,7 @@ if local:
 else:
 # for appengine deployment or development appserver
     import config
-    msg = 'Choose a small rectangular region'
+    msg = 'Choose a SMALL rectangular region'
     ee.Initialize(config.EE_CREDENTIALS, 'https://earthengine.googleapis.com')
 
 app = Flask(__name__)
@@ -43,11 +43,24 @@ def get_vvvh(image):
     ''' get 'VV' and 'VH' bands from sentinel-1 imageCollection and restore linear signal from db-values '''
     return image.select('VV','VH').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
 
+def get_hh(image):   
+    ''' get 'HH' band from sentinel-1 imageCollection and restore linear signal from db-values '''
+    return image.select('HH').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
+
+def get_hv(image):   
+    ''' get 'HV' band from sentinel-1 imageCollection and restore linear signal from db-values '''
+    return image.select('HV').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
+
+def get_hhhv(image):   
+    ''' get 'HH' and 'HV' bands from sentinel-1 imageCollection and restore linear signal from db-values '''
+    return image.select('HH','HV').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
+
 def get_image(current,image):
-        ''' accumulate a single image from a collection of images '''
-        return ee.Image.cat(ee.Image(image),current)    
+    ''' accumulate a single image from a collection of images '''
+    return ee.Image.cat(ee.Image(image),current)    
     
 def clipList(current,prev):
+    ''' clip a list of images '''
     imlist = ee.List(ee.Dictionary(prev).get('imlist'))
     rect = ee.Dictionary(prev).get('rect')    
     imlist = imlist.add(ee.Image(current).clip(rect))
@@ -79,14 +92,15 @@ def Sentinel1():
         try: 
             startdate = request.form['startdate']  
             enddate = request.form['enddate']
-            orbit = request.form['orbit']
+            orbitpass = request.form['pass']
             polarization1 = request.form['polarization']
             relativeorbitnumber = request.form['relativeorbitnumber']
             if polarization1 == 'VV,VH':
                 polarization = ['VV','VH']
+            elif polarization1 == 'HH,HV':
+                polarization = ['HH','HV']
             else:
                 polarization = polarization1
-            mode = request.form['mode']
             minLat = float(request.form['minLat'])
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
@@ -110,8 +124,8 @@ def Sentinel1():
                         .filterDate(start, finish) \
                         .filter(ee.Filter.eq('transmitterReceiverPolarisation', polarization)) \
                         .filter(ee.Filter.eq('resolution_meters', 10)) \
-                        .filter(ee.Filter.eq('instrumentMode', mode)) \
-                        .filter(ee.Filter.eq('orbitProperties_pass', orbit))                        
+                        .filter(ee.Filter.eq('instrumentMode', 'IW')) \
+                        .filter(ee.Filter.eq('orbitProperties_pass', orbitpass))                        
             if relativeorbitnumber != '':
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             collection = collection.sort('system:time_start')                           
@@ -139,19 +153,26 @@ def Sentinel1():
             systemid = image.get('system:id').getInfo()   
             if (polarization1 == 'VV') or (polarization1 == 'VV,VH'): 
                 projection = image.select('VV').projection().getInfo()['crs']
-            else:
-                projection = image.select('VH').projection().getInfo()['crs']    
+            elif polarization1 == 'VH':
+                projection = image.select('VH').projection().getInfo()['crs']  
+            elif (polarization1 == 'HH') or (polarization1 == 'HH,HV'): 
+                projection = image.select('HH').projection().getInfo()['crs']       
 #          make into collection of VV, VH or VVVH images and restore linear scale             
-            if polarization == 'VV':
+            if polarization1 == 'VV':
                 pcollection = collection.map(get_vv)
-            elif polarization == 'VH':
+            elif polarization1 == 'VH':
                 pcollection = collection.map(get_vh)
-            else:
+            elif polarization1 == 'VV,VH':
                 pcollection = collection.map(get_vvvh)
+            elif polarization1 == 'HH':
+                pcollection = collection.map(get_hh)
+            elif polarization1 == 'HV':
+                pcollection = collection.map(get_hv)
+            elif polarization1 == 'HH,HV':
+                pcollection = collection.map(get_hhhv)    
 #          clipped image for display on map                
             image1 = ee.Image(pcollection.first())  
-            image1clip = image1.clip(rect)        
-            downloadpath = image1.getDownloadUrl({'scale':30})                                                             
+            image1clip = image1.clip(rect)                                                                    
 #          clip the image collection and create a single multiband image      
             compositeimage = ee.Image(pcollection.iterate(get_image,image1clip))                            
             if export == 'export':
@@ -168,22 +189,16 @@ def Sentinel1():
                 gdexportid = 'none'
 #              --------------------------------------------------                                        
             downloadpathclip =  compositeimage.getDownloadUrl({'scale':10})                 
-            if (polarization1 == 'VV') or (polarization1 == 'VV,VH'): 
-                mapid = image1.select('VV').getMapId({'min': 0, 'max':1, 'opacity': 0.6}) 
-                mapidclip = image1clip.select('VV').getMapId({'min': 0, 'max':1, 'opacity': 0.7})     
-            else:
-                mapid = image1.select('VH').getMapId({'min': 0, 'max':1, 'opacity': 0.6})                     
-                mapidclip = image1clip.select('VH').getMapId({'min': 0, 'max':1, 'opacity': 0.7})                                            
+            
+            mapidclip = image1clip.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.7})   
+                                                           
             return render_template('sentinel1out.html',
                                           mapidclip = mapidclip['mapid'], 
                                           tokenclip = mapidclip['token'], 
-                                          mapid = mapid['mapid'], 
-                                          token = mapid['token'], 
                                           centerlon = centerlon,
                                           centerlat = centerlat,
                                           zoom = zoom,
                                           downloadtext = 'Download image collection intersection',
-                                          downloadpath = downloadpath, 
                                           downloadpathclip = downloadpathclip, 
                                           projection = projection,
                                           systemid = systemid,
@@ -428,12 +443,14 @@ def Wishart():
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
             maxLon = float(request.form['maxLon'])
-            orbit = request.form['orbit']
+            orbitpass = request.form['pass']
             polarization1 = request.form['polarization']
             relativeorbitnumber = request.form['relativeorbitnumber']
             significance = float(request.form['significance'])
             if polarization1 == 'VV,VH':
                 polarization = ['VV','VH']
+            elif polarization1 == 'HH,HV':
+                polarization = ['HH','HV']
             else:
                 polarization = polarization1
             exportname = request.form['exportname'] 
@@ -459,7 +476,7 @@ def Wishart():
                         .filter(ee.Filter.eq('transmitterReceiverPolarisation', polarization)) \
                         .filter(ee.Filter.eq('resolution_meters', 10)) \
                         .filter(ee.Filter.eq('instrumentMode', 'IW')) \
-                        .filter(ee.Filter.eq('orbitProperties_pass', orbit)) 
+                        .filter(ee.Filter.eq('orbitProperties_pass', orbitpass)) 
             if relativeorbitnumber != '':
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             count = collection.toList(100).length().getInfo()    
@@ -480,7 +497,7 @@ def Wishart():
                         .filter(ee.Filter.eq('transmitterReceiverPolarisation', polarization)) \
                         .filter(ee.Filter.eq('resolution_meters', 10)) \
                         .filter(ee.Filter.eq('instrumentMode', 'IW')) \
-                        .filter(ee.Filter.eq('orbitProperties_pass', orbit)) 
+                        .filter(ee.Filter.eq('orbitProperties_pass', orbitpass)) 
             if relativeorbitnumber != '':
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             count = collection.toList(100).length().getInfo()    
@@ -559,15 +576,14 @@ def Omnibus():
         try: 
             startdate = request.form['startdate']  
             enddate = request.form['enddate']  
-            orbit = request.form['orbit']
+            orbitpass = request.form['pass']
             polarization1 = request.form['polarization']
             relativeorbitnumber = request.form['relativeorbitnumber']
             if polarization1 == 'VV,VH':
                 polarization = ['VV','VH']
             else:
                 polarization = polarization1
-            significance = float(request.form['significance'])                
-            mode = request.form['mode']          
+            significance = float(request.form['significance'])                         
             minLat = float(request.form['minLat'])
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
@@ -601,8 +617,8 @@ def Omnibus():
                         .filterDate(start, finish) \
                         .filter(ee.Filter.eq('transmitterReceiverPolarisation', polarization)) \
                         .filter(ee.Filter.eq('resolution_meters', 10)) \
-                        .filter(ee.Filter.eq('instrumentMode', mode)) \
-                        .filter(ee.Filter.eq('orbitProperties_pass', orbit)) 
+                        .filter(ee.Filter.eq('instrumentMode', 'IW')) \
+                        .filter(ee.Filter.eq('orbitProperties_pass', orbitpass)) 
             if relativeorbitnumber != '':
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             collection = collection.sort('system:time_start')                                     
@@ -623,32 +639,41 @@ def Omnibus():
             systemid = image.get('system:id').getInfo()   
             if (polarization1 == 'VV') or (polarization1 == 'VV,VH'): 
                 projection = image.select('VV').projection().getInfo()['crs']
-            else:
-                projection = image.select('VH').projection().getInfo()['crs'] 
+            elif polarization1 == 'VH':
+                projection = image.select('VH').projection().getInfo()['crs']  
+            elif (polarization1 == 'HH') or (polarization1 == 'HH,HV'): 
+                projection = image.select('HH').projection().getInfo()['crs']            
 #          make into collection of VV, VH or VVVH images and restore linear scale             
-            if polarization == 'VV':
+            if polarization1 == 'VV':
                 pcollection = collection.map(get_vv)
-            elif polarization == 'VH':
+            elif polarization1 == 'VH':
                 pcollection = collection.map(get_vh)
-            else:
-                pcollection = collection.map(get_vvvh) 
+            elif polarization1 == 'VV,VH':
+                pcollection = collection.map(get_vvvh)
+            elif polarization1 == 'HH':
+                pcollection = collection.map(get_hh)
+            elif polarization1 == 'HV':
+                pcollection = collection.map(get_hv)
+            elif polarization1 == 'HH,HV':
+                pcollection = collection.map(get_hhhv)                      
 #          get the list of images and clip to roi
             pList = pcollection.toList(count)   
             first = ee.Dictionary({'imlist':ee.List([]),'rect':rect}) 
             imList = ee.Dictionary(pList.iterate(clipList,first)).get('imlist')  
 #          run the algorithm            
             result = ee.Dictionary(omnibus(imList,significance,median))
-            cmap = ee.Image(result.get('cmap'))   
-            smap = ee.Image(result.get('smap'))
-            fmap = ee.Image(result.get('fmap'))  
-            bmap = ee.Image(result.get('bmap'))
-#            bmapbands = ['b0%i'%i for i in range(1,10)]+['b%i'%i for i in range(10,100)]
+            cmap = ee.Image(result.get('cmap')).byte()   
+            smap = ee.Image(result.get('smap')).byte()
+            fmap = ee.Image(result.get('fmap')).byte()  
+            bmap = ee.Image(result.get('bmap')).byte()
+#          make timestamps in TYYYYMMDD format            
             timestamplist = [x.replace('/','') for x in timestamplist]  
-            timestamplist = ['b20'+x[4:]+x[0:4] for x in timestamplist]
+            timestamplist = ['T20'+x[4:]+x[0:4] for x in timestamplist]
             timestamps = str(timestamplist)
             timestamp = timestamplist[0]   
             bands = ['cmap','smap','fmap']+timestamplist[1:]
-            cmaps = ee.Image.cat(cmap,smap,fmap,bmap).byte().rename(bands)           
+            cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(bands)  
+            downloadpath = cmaps.getDownloadUrl({'scale':10})         
             if assexport == 'assexport':
 #              export to Assets 
                 assexport = ee.batch.Export.image.toAsset(cmaps,
@@ -669,7 +694,8 @@ def Omnibus():
                 print '****Exporting to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
             else:
-                gdexportid = 'none'                                                                         
+                gdexportid = 'none'    
+#          return the fmap for display                                                                                     
             mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
             return render_template('omnibusout.html',
                                           mapid = mapid['mapid'], 
@@ -680,18 +706,16 @@ def Omnibus():
                                           projection = projection,
                                           systemid = systemid,
                                           count = count,
+                                          downloadpath = downloadpath,
                                           timestamp = timestamp,
                                           assexportid = assexportid,
                                           gdexportid = gdexportid,
                                           timestamps = timestamps,
                                           polarization = polarization1,
-                                          relativeorbitnumbers = relativeorbitnumbers)                  
-                            
+                                          relativeorbitnumbers = relativeorbitnumbers)                                            
         except Exception as e:
             return '<br />An error occurred in omnibus: %s'%e    
-        
-                                        
-if __name__ == '__main__':
-    
+                                               
+if __name__ == '__main__':   
     app.run(debug=True, host='0.0.0.0')
   

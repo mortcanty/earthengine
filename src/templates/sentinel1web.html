@@ -10,7 +10,7 @@
 	<link rel="stylesheet" href="https://npmcdn.com/leaflet@1.0.0-rc.2/dist/leaflet.css" />
 </head>
 <body>
-<h2>View/retrieve Sentinel-1 Imagery</h2>
+<h2>Retrieve Sentinel-1 Imagery</h2>
 {{msg|safe}}
 <p>
 <a href="/" name="return"> Return</a>
@@ -25,13 +25,11 @@
 	End search (yyyy-mm-dd) :
 	<input type="text" value = "2016-09-01" name = "enddate" size = 8></p>		
 	<p> orbit :
-	<input type="text" value = "ASCENDING" name = "orbit" size = 10><br />
+	<input type="text" value = "ASCENDING" name = "pass" size = 10><br />
 	polarization :
 	<input type="text" value = "VV,VH" name = "polarization" size = 4><br />
 	relative orbit number :
 	<input type="text" value = "" name = "relativeorbitnumber" size = 4><br />
-	instrument mode :
-	<input type="text" value = "IW" name = "mode" size = 4>
 	</p>	
 	
 	<table style="width:300px">

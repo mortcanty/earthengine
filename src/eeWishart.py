@@ -118,11 +118,9 @@ def filter_ell(current,prev):
                                                                  'bmap':result.get('bmap')})
 
 def omnibus(imList,significance=0.0001,median=False):
-    '''return change maps for sequential omnibus change algorithm'''
-    
+    '''return change maps for sequential omnibus change algorithm'''   
     def gather(current,first):
-        return ee.Image.cat(first,current)
-      
+        return ee.Image.cat(first,current)   
     imList = ee.List(imList).map(multbyenl)    
     p = ee.Image(imList.get(0)).bandNames().length()
     k = imList.length() 

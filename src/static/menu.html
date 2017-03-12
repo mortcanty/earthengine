@@ -1,0 +1,72 @@
+<html>
+
+<link type="text/css" rel="stylesheet" href="/static/css/mystyle.css" />
+<style> table {background:lightblue}
+        form {background:lightblue; width:170px}   
+</style>
+
+<a name="h0"><h2>Change Detection with Earth Engine Imagery</h2>
+
+<a href="/" name="return"><b>Return to the main menu</b></a>
+
+<div style = "width:30%">
+
+<h3><a name="h1">Retrieve/Sentinel1</a></h3>
+<p>
+Retrieve a  time series of Sentinel-1 images:
+Select a start and end date, "ASCENDING" or "DESCENDING" pass, relative orbit number (default any), 
+and polarization ("VV,VH", "VV",  "VH", "HH,HV", "HH" or "HV").  If desired, and if
+you are authenticated, select "Export to Google Drive" with a filename and scale. Use the
+map rectangle tool to set a region of interest. Then click GO to start. When the result page appears
+you can download the time series directly, but this may be unreliable. The Export to Drive is recommended. 
+<br />
+<a href="#h0"> top</a>
+</p>
+
+<h3><a name="h2">Retrieve/Sentinel2</a></h3>
+<p>
+Retrieve a single Sentinel-2 image (the 10m optical/infrared bands only):
+Choose a start and end date for the search. The most cloud-free image in the period will be selected.  
+If desired, and if you are authenticated, select "Export to Google Drive" with a filename and scale. Use the
+map rectangle tool to set a region of interest. Then click GO to start. When the result page appears
+you can download the image directly, but this may be unreliable. The Export to Drive is recommended. 
+<br />
+<a href="#h0"> top</a>
+</p>
+
+<h3><a name="h3">Algorithm/Omnibus</a></h3>
+<p>
+Run the sequential omnibus change detection algorithm on a  time series of Sentinel-1 images:
+Select a start and end date, "ASCENDING" or "DESCENDING" pass, relative orbit number (default any), 
+and polarization ("VV,VH", "VV",  "VH", "HH,HV", "HH" or "HV").  If desired, and if
+you are authenticated, select "Export to Assets" or "Export to Google Drive" (or both) with a filename and scale. Use the
+map rectangle tool to set a region of interest. Then click GO to start. The result page shows the change frequency map
+as an overlay. You can download the change maps directly, but this may be unreliable. The Export to Assets/Drive is recommended.
+<br />
+<a href="#h0"> top</a>
+</p>
+
+<h3><a name="h4">Algorithm/Wishart</a></h3>
+<p>
+Run the bitemporal complex Wishart change detection algorithm on two Sentinel-1 images:
+Select start and end dates to locate the first and second images, "ASCENDING" or "DESCENDING" pass, relative orbit number (default any), 
+and polarization ("VV,VH", "VV",  "VH", "HH,HV", "HH" or "HV").  If desired, and if
+you are authenticated, select "Export to assets" or "Export to Google Drive" (or both) with a filename and scale. Use the
+map rectangle tool to set a region of interest. Then click GO to start. The result page shows the change map
+as an overlay. You can download the change map directly, but this may be unreliable. The Export to Assets/Drive is recommended.
+<br />
+<a href="#h0"> top</a>
+</p>
+
+<h3><a name="h5">Algorithm/iMAD</a></h3>
+<p>
+Not yet implemented
+<br />
+<a href="#h0"> top</a>
+</p>
+
+
+</div>
+
+</html>
+
