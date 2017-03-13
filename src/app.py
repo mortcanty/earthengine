@@ -150,13 +150,8 @@ def Sentinel1():
                 relativeorbitnumberlist.append(ron)
             relativeorbitnumbers = str(relativeorbitnumberlist)                                                 
             image = ee.Image(collection.first())                       
-            systemid = image.get('system:id').getInfo()   
-            if (polarization1 == 'VV') or (polarization1 == 'VV,VH'): 
-                projection = image.select('VV').projection().getInfo()['crs']
-            elif polarization1 == 'VH':
-                projection = image.select('VH').projection().getInfo()['crs']  
-            elif (polarization1 == 'HH') or (polarization1 == 'HH,HV'): 
-                projection = image.select('HH').projection().getInfo()['crs']       
+            systemid = image.get('system:id').getInfo()  
+            projection = image.select(0).projection().getInfo()['crs']      
 #          make into collection of VV, VH or VVVH images and restore linear scale             
             if polarization1 == 'VV':
                 pcollection = collection.map(get_vv)
@@ -637,12 +632,7 @@ def Omnibus():
             relativeorbitnumbers = str(relativeorbitnumberlist)                                        
             image = ee.Image(collection.first())                       
             systemid = image.get('system:id').getInfo()   
-            if (polarization1 == 'VV') or (polarization1 == 'VV,VH'): 
-                projection = image.select('VV').projection().getInfo()['crs']
-            elif polarization1 == 'VH':
-                projection = image.select('VH').projection().getInfo()['crs']  
-            elif (polarization1 == 'HH') or (polarization1 == 'HH,HV'): 
-                projection = image.select('HH').projection().getInfo()['crs']            
+            projection = image.select(0).projection().getInfo()['crs']
 #          make into collection of VV, VH or VVVH images and restore linear scale             
             if polarization1 == 'VV':
                 pcollection = collection.map(get_vv)

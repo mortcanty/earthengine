@@ -11,6 +11,11 @@
 
 <div style = "width:30%">
 
+<p>Note: Because of the deferred execution model used by the GEE, the generated map overlays
+often build up very slowly. This is especially true for the Algorithm/Omnibus
+calculation since with each chosen zoom level results are re-calculated at a
+new scale.</p> 
+
 <h3><a name="h1">Retrieve/Sentinel1</a></h3>
 <p>
 Retrieve a  time series of Sentinel-1 images:
@@ -39,7 +44,8 @@ you can download the image directly, but this may be unreliable. The Export to D
 Run the sequential omnibus change detection algorithm on a  time series of Sentinel-1 images:
 Select a start and end date, "ASCENDING" or "DESCENDING" pass, relative orbit number (default any), 
 and polarization ("VV,VH", "VV",  "VH", "HH,HV", "HH" or "HV").  If desired, and if
-you are authenticated, select "Export to Assets" or "Export to Google Drive" (or both) with a filename and scale. Use the
+you are authenticated, select "Export to Assets" or "Export to Google Drive" (or both) with a filename and scale. 
+To run a 3x3 median filter over the P-values, check the median filter box. Use the
 map rectangle tool to set a region of interest. Then click GO to start. The result page shows the change frequency map
 as an overlay. You can download the change maps directly, but this may be unreliable. The Export to Assets/Drive is recommended.
 <br />
@@ -51,7 +57,8 @@ as an overlay. You can download the change maps directly, but this may be unreli
 Run the bitemporal complex Wishart change detection algorithm on two Sentinel-1 images:
 Select start and end dates to locate the first and second images, "ASCENDING" or "DESCENDING" pass, relative orbit number (default any), 
 and polarization ("VV,VH", "VV",  "VH", "HH,HV", "HH" or "HV").  If desired, and if
-you are authenticated, select "Export to assets" or "Export to Google Drive" (or both) with a filename and scale. Use the
+you are authenticated, select "Export to assets" or "Export to Google Drive" (or both) with a filename and scale. 
+To run a 3x3 median filter over the P-values, check the median filter box. Use the
 map rectangle tool to set a region of interest. Then click GO to start. The result page shows the change map
 as an overlay. You can download the change map directly, but this may be unreliable. The Export to Assets/Drive is recommended.
 <br />
