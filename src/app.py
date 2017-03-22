@@ -128,27 +128,19 @@ def Sentinel1():
                         .filter(ee.Filter.eq('orbitProperties_pass', orbitpass))                        
             if relativeorbitnumber != '':
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
-            collection = collection.sort('system:time_start')                           
-            system_ids = ee.List(collection.aggregate_array('system:id'))                  
-            systemidlist = []
-            for systemid in system_ids.getInfo():
-                systemidlist.append(systemid) 
-            systemids = str(systemidlist)                                        
-            acquisition_times = ee.List(collection.aggregate_array('system:time_start'))                                           
-            count = acquisition_times.length().getInfo() 
+            collection = collection.sort('system:time_start')                             
+            systemids =  str(ee.List(collection.aggregate_array('system:id')).getInfo())                            
+            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                                           
+            count = len(acquisition_times)
             if count==0:
                 raise ValueError('No images found')   
             timestamplist = []
-            for timestamp in acquisition_times.getInfo():
+            for timestamp in acquisition_times:
                 tmp = time.gmtime(int(timestamp)/1000)
                 timestamplist.append(time.strftime('%c', tmp))
             timestamp = timestamplist[0]    
-            timestamps = str(timestamplist)    
-            relative_orbit_numbers = ee.List(collection.aggregate_array('relativeOrbitNumber_start'))             
-            relativeorbitnumberlist = []
-            for ron  in relative_orbit_numbers.getInfo():
-                relativeorbitnumberlist.append(ron)
-            relativeorbitnumbers = str(relativeorbitnumberlist)                                                 
+            timestamps = str(timestamplist)      
+            relativeorbitnumbers = str(ee.List(collection.aggregate_array('relativeOrbitNumber_start')).getInfo())                                                       
             image = ee.Image(collection.first())                       
             systemid = image.get('system:id').getInfo()  
             projection = image.select(0).projection().getInfo()['crs']      
@@ -617,19 +609,15 @@ def Omnibus():
             if relativeorbitnumber != '':
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             collection = collection.sort('system:time_start')                                     
-            acquisition_times = ee.List(collection.aggregate_array('system:time_start'))                                           
-            count = acquisition_times.length().getInfo() 
+            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                                           
+            count = len(acquisition_times) 
             if count==0:
                 raise ValueError('No images found')   
             timestamplist = []
-            for timestamp in acquisition_times.getInfo():
+            for timestamp in acquisition_times:
                 tmp = time.gmtime(int(timestamp)/1000)
-                timestamplist.append(time.strftime('%x', tmp))                    
-            relative_orbit_numbers = ee.List(collection.aggregate_array('relativeOrbitNumber_start'))             
-            relativeorbitnumberlist = []
-            for ron  in relative_orbit_numbers.getInfo():
-                relativeorbitnumberlist.append(ron)
-            relativeorbitnumbers = str(relativeorbitnumberlist)                                        
+                timestamplist.append(time.strftime('%x', tmp))  
+            relativeorbitnumbers = str(ee.List(collection.aggregate_array('relativeOrbitNumber_start')).getInfo())                                                                      
             image = ee.Image(collection.first())                       
             systemid = image.get('system:id').getInfo()   
             projection = image.select(0).projection().getInfo()['crs']
@@ -661,8 +649,7 @@ def Omnibus():
             timestamplist = ['T20'+x[4:]+x[0:4] for x in timestamplist]
             timestamps = str(timestamplist)
             timestamp = timestamplist[0]   
-            bands = ['cmap','smap','fmap']+timestamplist[1:]
-            cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(bands)  
+            cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist[1:])  
             downloadpath = cmaps.getDownloadUrl({'scale':10})         
             if assexport == 'assexport':
 #              export to Assets 
