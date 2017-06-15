@@ -40,6 +40,10 @@ def covw(centeredImage, weights=None, maxPixels=1e9):
     return ee.Array(covW).multiply(nPixels.divide(sumWeights)) 
 
 def chi2cdf(chi2,df):
+    df = ee.Image.constant(ee.Number(df).divide(2))
+    return ee.Image(chi2.divide(2)).gammainc(df)
+
+def chi2cdf_old(chi2,df):
     '''Return the chi-square cdf of chi2 image
        (From Charles Morton's JavaScript code)'''   
     def gser(img,prev):

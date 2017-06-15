@@ -20,6 +20,14 @@
 <div id="mapid" style="width: 640px; height: 480px;"></div>
 
 <form method="post" action = "/omnibus.html" >
+
+	<table><tr><td>
+	<p><input type="radio" name="display"  value="fmap" checked="checked"/> Frequency map<br />
+    <input type="radio" name="display"  value="smap" /> First change map<br />
+    <input type="radio" name="display"  value="cmap" /> Last change map </p>
+    </td>><td>
+	<p><input type="submit" id = "submit" value="Go"></p>
+	</td></tr></table>
 	
 	<p> Start search (yyyy-mm-dd) :
 	<input type="text" value = "2016-04-01" name = "startdate" size = 8><br />
@@ -36,15 +44,14 @@
     <input type="checkbox" name="median" value="median"> Median filter</p>		
 	<table style="width:300px">
 	  <tr>
-	    <td>maxLat: <input type="text" value = "" id = "maxlat" name = "maxLat" size = 8></td>
-	    <td>minLon: <input type="text" value = "" id = "minlon" name = "minLon" size = 8></td> 
+	    <td>maxLat: <input type="text" value = "50.078" id = "maxlat" name = "maxLat" size = 8></td>
+	    <td>minLon: <input type="text" value = "8.444" id = "minlon" name = "minLon" size = 8></td> 
 	  </tr>
 	  <tr>
-	    <td>minLat: <input type="text" value = "" id = "minlat" name = "minLat" size = 8></td>
-	    <td>maxLon: <input type="text" value = "" id = "maxlon" name = "maxLon" size = 8></td> 
+	    <td>minLat: <input type="text" value = "49.985" id = "minlat" name = "minLat" size = 8></td>
+	    <td>maxLon: <input type="text" value = "8.681" id = "maxlon" name = "maxLon" size = 8></td> 
 	  </tr>
-	 </table>	                    	
-	<p><input type="submit" id = "submit" value="Go" disabled></p>
+	 </table>	            	
 	
 </form>
 
@@ -114,7 +121,6 @@ mymap.on(L.Draw.Event.CREATED, function(e) {
    document.getElementById("maxlat").value = (latLngs[1]).lat.toString();
    document.getElementById("minlon").value = (latLngs[0]).lng.toString();
    document.getElementById("maxlon").value = (latLngs[2]).lng.toString();   
-   document.getElementById("submit").disabled = false;
 });     
 
 var popup = L.popup();

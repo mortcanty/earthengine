@@ -19,14 +19,8 @@ Assuming you have been authenticated (see below) to the Earth Engine, you can ca
 	<a href="http://www.amazon.com/Analysis-Classification-Change-Detection-Sensing/dp/1466570377/ref=dp_ob_title_bk"> M. J.Canty (2014). 
 	Image Analysis, Classification and Change Detection in Remote Sensing, 3rd Ed., CRC Press 2014</a>; 
 	
- 2. Run the complex Wishart algorithm on polarimetric SAR bitemporal data (presently only Sentinel-1 dual pol, diagonal only, and single pol images).
- 
-	 <a href = "http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=1219"> 
-	K. Conradsen et al. (2003). A test statistic in the complex Wishart distribution and its 
-	application to change detection in polarimetric SAR data IEEE TGRS 41 (1) 4-19.</a>
 	
-	
- 3. Run the (sequential) omnibus algorithm on polarimetric SAR multitemporal data (presently only Sentinel-1 dual pol, diagonal only, and single pol images).
+ 2. Run the (sequential) omnibus algorithm on polarimetric SAR multitemporal data (presently only Sentinel-1 dual pol, diagonal only, and single pol images).
  
 	 <a href = "http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6825"> 
 	K. Conradsen et al. (2016). Determining the points of
@@ -35,7 +29,6 @@ Assuming you have been authenticated (see below) to the Earth Engine, you can ca
  3. Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing, 
  for example with <a href="http://mortcanty.github.io/SARDocker/"> SARDocker</a>.
  
-\* Special thanks to Charles G. Morton for making available his implementation of the incomplete gamma function on the  GEE API.
 
 ### Installation and execution
 

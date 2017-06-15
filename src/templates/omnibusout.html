@@ -50,7 +50,7 @@ for details.
           maxZoom: 17
         };
 
-        var map = new google.maps.Map(document.getElementById("map"),
+        var map = new google.maps.Map(document.getElementById("fmap"),
                                       mapOptions);
         map.overlayMapTypes.push(mapType);
       }
@@ -60,7 +60,7 @@ for details.
   </head>
   <body>
     <h3>Google Earth Engine</h3>
-    <p><b>Omnibus frequency change map</b><br />
+    <p><b>{{hdr}}</b><br />
     Time series of {{count}} scenes.<br />
     Polarization: {{polarization}}<br />
     Asset ExportID: {{assexportid}}<br />
@@ -70,7 +70,7 @@ for details.
     Projection: {{projection}}<br />
     Timestamp: {{timestamp}}<br /> 
     </p>
-    <div id="map" style="width: 640px; height: 480px;"></div>
+    <div id="fmap" style="width: 640px; height: 480px;"></div>
     <p>Acquisition times:<br />
     {{timestamps}}<br />
     Relative orbit numbers:<br />

@@ -36,7 +36,7 @@ for details.
           return url;
         },
         tileSize: new google.maps.Size(256, 256)
-      };
+      };132
       var eeMapOptions2 = {
         getTileUrl: function(tile, zoom) {
           var url = ['https://earthengine.googleapis.com/map',
@@ -72,8 +72,8 @@ for details.
   </head>
   <body>
     <h3>Google Earth Engine</h3>
-    <p><b>Sentinel-1 Intensity Image.</b><br />
-    First of {{count}} scenes.<br />
+    <p><b>{{titletext}}.</b><br />
+    Data for first of {{count}} scenes:.<br />
     Polarization: {{polarization}}<br />
     System ID: {{systemid}}<br />
     Projection: {{projection}}<br />
@@ -81,7 +81,7 @@ for details.
     GDExportID: {{gdexportid}}<br />
     </p>
     <div id="map" style="width: 640px; height: 480px;"></div>
-    <a href={{downloadpathclip}}>{{downloadtext}}</a>(short series only!)<br />
+    <a href={{downloadpathclip}}>{{downloadtext}}</a><br />
     <p>Acquisition times:<br />
     {{timestamps}}<br />
     Relative orbit numbers:<br />

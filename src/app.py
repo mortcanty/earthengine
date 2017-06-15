@@ -111,6 +111,10 @@ def Sentinel1():
                 gdexportscale = float(request.form['gdexportscale'])
             else:
                 export = 'none'           
+            if request.form.has_key('slanes'):        
+                slanes = True  
+            else:
+                slanes = False  
             start = ee.Date(startdate)
             finish = ee.Date(enddate)    
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
@@ -158,13 +162,24 @@ def Sentinel1():
             elif polarization1 == 'HH,HV':
                 pcollection = collection.map(get_hhhv)    
 #          clipped image for display on map                
-            image1 = ee.Image(pcollection.first())  
-            image1clip = image1.clip(rect)                                                                    
-#          clip the image collection and create a single multiband image      
-            compositeimage = ee.Image(pcollection.iterate(get_image,image1clip))                            
+            if slanes:
+#              just want max for shipping lanes
+                outimage = pcollection.max().clip(rect)
+                mapidclip = outimage.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.7})
+                downloadtext = 'Download maximum intensity image'
+                titletext = 'Sentinel-1 Maximum Intensity Image'
+            else:
+#              want the entire time series 
+                image1clip = ee.Image(pcollection.first()).clip(rect)   
+                mapidclip = image1clip.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.7})    
+                downloadtext = 'Download image collection intersection'      
+                titletext = 'Sentinel-1 Intensity Image'                                                      
+#              clip the image collection and create a single multiband image      
+                outimage = ee.Image(pcollection.iterate(get_image,image1clip))    
+                                               
             if export == 'export':
-#              export to Google Drive --------------------------
-                gdexport = ee.batch.Export.image.toDrive(compositeimage,
+#              export to Google Drive -----------------------132---
+                gdexport = ee.batch.Export.image.toDrive(outimage,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
                                                          fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9)                
@@ -175,9 +190,10 @@ def Sentinel1():
             else:
                 gdexportid = 'none'
 #              --------------------------------------------------                                        
-            downloadpathclip =  compositeimage.getDownloadUrl({'scale':10})                 
+            downloadpathclip =  outimage.getDownloadUrl({'scale':10})                 
             
-            mapidclip = image1clip.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.7})   
+            
+               
                                                            
             return render_template('sentinel1out.html',
                                           mapidclip = mapidclip['mapid'], 
@@ -185,7 +201,8 @@ def Sentinel1():
                                           centerlon = centerlon,
                                           centerlat = centerlat,
                                           zoom = zoom,
-                                          downloadtext = 'Download image collection intersection',
+                                          downloadtext = downloadtext,
+                                          titletext = titletext,
                                           downloadpathclip = downloadpathclip, 
                                           projection = projection,
                                           systemid = systemid,
@@ -406,145 +423,7 @@ def Mad():
         except Exception as e:
             return '<br />An error occurred in MAD: %s'%e        
         
-@app.route('/wishart.html', methods = ['GET', 'POST'])
-def Wishart():
-    global msg, centerlon, centerlat, local, zoom
-    if request.method == 'GET':
-        if local:
-            return render_template('wishart.html', msg = msg,
-                                                     centerlon = centerlon,
-                                                     centerlat = centerlat,
-                                                     zoom = zoom)
-        else:
-            return render_template('wishartweb.html', msg = msg,
-                                                     centerlon = centerlon,
-                                                     centerlat = centerlat,
-                                                     zoom = zoom)
-    else:      
-        try:
-            start1 = ee.Date(request.form['startdate1'])
-            finish1 = ee.Date(request.form['enddate1'])
-            start2 = ee.Date(request.form['startdate2'])
-            finish2 = ee.Date(request.form['enddate2'])   
-            minLat = float(request.form['minLat'])
-            minLon = float(request.form['minLon'])
-            maxLat = float(request.form['maxLat'])
-            maxLon = float(request.form['maxLon'])
-            orbitpass = request.form['pass']
-            polarization1 = request.form['polarization']
-            relativeorbitnumber = request.form['relativeorbitnumber']
-            significance = float(request.form['significance'])
-            if polarization1 == 'VV,VH':
-                polarization = ['VV','VH']
-            elif polarization1 == 'HH,HV':
-                polarization = ['HH','HV']
-            else:
-                polarization = polarization1
-            exportname = request.form['exportname'] 
-            assexportscale = float(request.form['assexportscale'])               
-            if request.form.has_key('export'):        
-                export = request.form['export']
-            else:
-                export = ' ' 
-            if request.form.has_key('median'):        
-                median = True
-            else:
-                median = False
-            rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
-            centerlon = (minLon + maxLon)/2.0
-            centerlat = (minLat + maxLat)/2.0 
-            ulPoint = ee.Geometry.Point([minLon,maxLat])   
-            lrPoint = ee.Geometry.Point([maxLon,minLat])     
-#          get the first time point image           
-            collection = ee.ImageCollection('COPERNICUS/S1_GRD') \
-                        .filterBounds(ulPoint) \
-                        .filterBounds(lrPoint) \
-                        .filterDate(start1, finish1) \
-                        .filter(ee.Filter.eq('transmitterReceiverPolarisation', polarization)) \
-                        .filter(ee.Filter.eq('resolution_meters', 10)) \
-                        .filter(ee.Filter.eq('instrumentMode', 'IW')) \
-                        .filter(ee.Filter.eq('orbitProperties_pass', orbitpass)) 
-            if relativeorbitnumber != '':
-                collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
-            count = collection.toList(100).length().getInfo()    
-            if count==0:
-                raise ValueError('No images found for first time interval')     
-            collection = collection.sort('system:time_start')       
-            image1 = ee.Image(collection.first()).clip(rect)   
-            timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
-            timestamp1= time.gmtime(int(timestamp1['value'])/1000)
-            timestamp1 = time.strftime('%c', timestamp1) 
-            systemid1 = image1.get('system:id').getInfo()   
-            relativeOrbitNumber1 = int(image1.get('relativeOrbitNumber_start').getInfo())
-#          get the second time point image           
-            collection = ee.ImageCollection('COPERNICUS/S1_GRD') \
-                        .filterBounds(ulPoint) \
-                        .filterBounds(lrPoint) \
-                        .filterDate(start2, finish2) \
-                        .filter(ee.Filter.eq('transmitterReceiverPolarisation', polarization)) \
-                        .filter(ee.Filter.eq('resolution_meters', 10)) \
-                        .filter(ee.Filter.eq('instrumentMode', 'IW')) \
-                        .filter(ee.Filter.eq('orbitProperties_pass', orbitpass)) 
-            if relativeorbitnumber != '':
-                collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
-            count = collection.toList(100).length().getInfo()    
-            if count==0:
-                raise ValueError('No images found for second time interval')      
-            collection = collection.sort('system:time_start')       
-            image2 = ee.Image(collection.first()).clip(rect)                    
-            timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
-            timestamp2= time.gmtime(int(timestamp2['value'])/1000)
-            timestamp2 = time.strftime('%c', timestamp2) 
-            systemid2 = image2.get('system:id').getInfo()   
-            relativeOrbitNumber2 = int(image2.get('relativeOrbitNumber_start').getInfo())
-#          Wishart change detection    
-            if polarization1=='VV,VH':
-                image1 = get_vvvh(image1)
-                image2 = get_vvvh(image2) 
-            elif polarization1=='VV':
-                image1 = get_vv(image1)
-                image2 = get_vv(image2)   
-            else:
-                image1 = get_vh(image1)
-                image2 = get_vh(image2) 
-            
-            result = ee.Dictionary(omnibus(ee.List([image1,image2]),significance,median))
-            cmap = ee.Image(result.get('cmap'))   
-            
-            mapid = cmap.getMapId({'min':0, 'max':1 ,'palette':'black,red', 'opacity':0.4})
-            downloadpath = cmap.getDownloadUrl({'scale':10})
-            
-            if export == 'export':
-#              export to Assets ---------------------------------
-                assexport = ee.batch.Export.image.toAsset(cmap,description="wishartTask", 
-                                                          assetId=exportname,scale=assexportscale,maxPixels=1e9)
-                assexportid = str(assexport.id)
-                print '****Exporting to Assets, task id: %s '%assexportid
-                assexport.start() 
-            else:
-                assexportid = 'none'
-#              --------------------------------------------------               
 
-            return render_template('wishartout.html',
-                                      mapid = mapid['mapid'], 
-                                      token = mapid['token'], 
-                                      centerlon = centerlon,
-                                      centerlat = centerlat,
-                                      zoom = zoom,
-                                      downloadpath = downloadpath, 
-                                      systemid1 = systemid1,
-                                      systemid2 = systemid2,
-                                      timestamp1 = timestamp1,
-                                      timestamp2 = timestamp2,
-                                      relativeOrbitNumber1 = relativeOrbitNumber1,
-                                      relativeOrbitNumber2 = relativeOrbitNumber2,
-                                      significance = significance,
-                                      polarization = polarization1,
-                                      assexportid = assexportid)
-                
-        except Exception as e:
-            return '<br />An error occurred in wishart: %s'%e    
-        
 @app.route('/omnibus.html', methods = ['GET', 'POST'])
 def Omnibus():       
     global msg, centerlon, centerlat, jet, local, zoom
@@ -564,6 +443,7 @@ def Omnibus():
             startdate = request.form['startdate']  
             enddate = request.form['enddate']  
             orbitpass = request.form['pass']
+            display = request.form['display']
             polarization1 = request.form['polarization']
             relativeorbitnumber = request.form['relativeorbitnumber']
             if polarization1 == 'VV,VH':
@@ -647,6 +527,9 @@ def Omnibus():
 #          make timestamps in TYYYYMMDD format            
             timestamplist = [x.replace('/','') for x in timestamplist]  
             timestamplist = ['T20'+x[4:]+x[0:4] for x in timestamplist]
+#          in case of duplicates add running integer
+            timestamplist = [timestamplist[i] + '_' + str(i+1) for i in range(len(timestamplist))]
+#          remove duplicates
             timestamps = str(timestamplist)
             timestamp = timestamplist[0]   
             cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist[1:])  
@@ -672,11 +555,20 @@ def Omnibus():
                 gdexport.start() 
             else:
                 gdexportid = 'none'    
-#          return the fmap for display                                                                                     
-            mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
+#          return the fmap for display   
+            if display=='fmap':                                                                                  
+                mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
+                hdr = 'Sequential omnibus frequency map'
+            elif display=='smap':
+                mapid = smap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4}) 
+                hdr = 'Sequential omnibus first change map'
+            else:
+                mapid = cmap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4})   
+                hdr = 'Sequential omnibus last change map'    
             return render_template('omnibusout.html',
                                           mapid = mapid['mapid'], 
                                           token = mapid['token'], 
+                                          hdr = hdr,
                                           centerlon = centerlon,
                                           centerlat = centerlat,
                                           zoom = zoom,
