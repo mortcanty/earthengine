@@ -7,7 +7,7 @@ from eeWishart import omnibus
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
 #------------
-local = True
+local = False
 #------------
 
 centerlon = 8.5
@@ -166,10 +166,12 @@ def Sentinel1():
 #              just want max for shipping lanes
                 outimage = pcollection.max().clip(rect)
                 mapidclip = outimage.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.7})
+                mapid = image.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.5})
                 downloadtext = 'Download maximum intensity image'
                 titletext = 'Sentinel-1 Maximum Intensity Image'
             else:
 #              want the entire time series 
+                mapid = image.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.5})
                 image1clip = ee.Image(pcollection.first()).clip(rect)   
                 mapidclip = image1clip.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.7})    
                 downloadtext = 'Download image collection intersection'      
@@ -196,6 +198,8 @@ def Sentinel1():
                
                                                            
             return render_template('sentinel1out.html',
+                                          mapid = mapid['mapid'],
+                                          token = mapid['token'],
                                           mapidclip = mapidclip['mapid'], 
                                           tokenclip = mapidclip['token'], 
                                           centerlon = centerlon,

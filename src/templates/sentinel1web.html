@@ -34,15 +34,16 @@
 	
 	<table style="width:300px">
 	  <tr>
-	    <td>maxLat: <input type="text" value = "" id = "maxlat" name = "maxLat" size = 8></td>
-	    <td>minLon: <input type="text" value = "" id = "minlon" name = "minLon" size = 8></td> 
+	    <td>maxLat: <input type="text" value = "50.078" id = "maxlat" name = "maxLat" size = 8></td>
+	    <td>minLon: <input type="text" value = "8.444" id = "minlon" name = "minLon" size = 8></td> 
 	  </tr>
 	  <tr>
-	    <td>minLat: <input type="text" value = "" id = "minlat" name = "minLat" size = 8></td>
-	    <td>maxLon: <input type="text" value = "" id = "maxlon" name = "maxLon" size = 8></td> 
+	    <td>minLat: <input type="text" value = "49.985" id = "minlat" name = "minLat" size = 8></td>
+	    <td>maxLon: <input type="text" value = "8.682" id = "maxlon" name = "maxLon" size = 8></td> 
 	  </tr>
 	 </table>
-	<p><input type="submit" id = "submit" value="Go" disabled></p>
+	 <input type="checkbox" name="slanes" value="slanes" >Maximum intensity image only (shipping lanes)<br />
+	<p><input type="submit" id = "submit" value="Go"></p>
 	
 </form>
 
@@ -110,8 +111,7 @@ mymap.on(L.Draw.Event.CREATED, function(e) {
    document.getElementById("minlat").value = (latLngs[0]).lat.toString();
    document.getElementById("maxlat").value = (latLngs[1]).lat.toString();
    document.getElementById("minlon").value = (latLngs[0]).lng.toString();
-   document.getElementById("maxlon").value = (latLngs[2]).lng.toString(); 
-   document.getElementById("submit").disabled = false;  
+   document.getElementById("maxlon").value = (latLngs[2]).lng.toString();   
 });     
 
 var popup = L.popup();
