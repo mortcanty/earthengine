@@ -640,35 +640,33 @@ function setDocumentScrollTop(ypos)
 </head>
 <body class="markdown-body">
 <h1> <a id="change-detection-with-google-earth-engine-imagery" class="anchor" href="#change-detection-with-google-earth-engine-imagery" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Change Detection with Google Earth Engine Imagery</h1> 
-<p>A simple Flask web application for performing change detection tasks with <a href="https://developers.google.com/earth-engine/">Google Earth Engine</a> imagery *. </p> 
-<p>The <a href="http://ms-image-analysis.appspot.com/static/index.html">AppEngine version</a> (web version) is for demonstration only and has very limited functionality. Exporting results to Google Drive or to Earth Engine assets is in particular not possible. </p> 
+<p>A simple Flask web application for performing change detection tasks with <a href="https://developers.google.com/earth-engine/">Google Earth Engine</a> imagery *.</p> 
+<p>The <a href="http://ms-image-analysis.appspot.com/static/index.html">AppEngine version</a> (web version) is for demonstration only and has very limited functionality. Exporting results to Google Drive or to Earth Engine assets is in particular not possible.</p> 
 <p>The local version runs in a Docker container serving the Flask web application on <strong>localhost:5000</strong>. Assuming you have been authenticated (see below) to the Earth Engine, you can carry out the following tasks:</p> 
 <ol> 
- <li> <p>Run the iMAD (iteratively re-weighted MAD) algorithm on LANDAT-5 TM bitemporal imagery. CCA is done on the client side until Cholesky decomposition becomes available on the GEE API. This means that only small image subsets can be processed and iterations cannot exceed about 10. The code will later be extended to run LANDSAT-7, LANDSAT-8, ASTER and Sentinel-2 optical/infrared imagery.</p> <p><a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=4695"> A. A. Nielsen (2007). The Regularized Iteratively Reweighted MAD Method for Change Detection in Multi- and Hyperspectral Data.</a></p> <p><a href="http://www.amazon.com/Analysis-Classification-Change-Detection-Sensing/dp/1466570377/ref=dp_ob_title_bk"> M. J.Canty (2014). Image Analysis, Classification and Change Detection in Remote Sensing, 3rd Ed., CRC Press 2014</a>; </p> </li> 
- <li> <p>Run the complex Wishart algorithm on polarimetric SAR bitemporal data (presently only Sentinel-1 dual pol, diagonal only, and single pol images).</p> <p><a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=1219"> K. Conradsen et al. (2003). A test statistic in the complex Wishart distribution and its application to change detection in polarimetric SAR data IEEE TGRS 41 (1) 4-19.</a></p> </li> 
- <li> <p>Run the (sequential) omnibus algorithm on polarimetric SAR multitemporal data (presently only Sentinel-1 dual pol, diagonal only, and single pol images).</p> <p><a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6825"> K. Conradsen et al. (2016). Determining the points of change in time series of polarimetric SAR data. IEEE TGRS 54 (5) 3007-3024.</a></p> </li> 
- <li><p>Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing, for example with <a href="http://mortcanty.github.io/SARDocker/"> SARDocker</a>.</p></li> 
+ <li> <p>Run the iMAD (iteratively re-weighted MAD) algorithm on LANDAT-5 TM bitemporal imagery. CCA is done on the client side until Cholesky decomposition becomes available on the GEE API. This means that only small image subsets can be processed and iterations cannot exceed about 10. The code will later be extended to run LANDSAT-7, LANDSAT-8, ASTER and Sentinel-2 optical/infrared imagery.</p> <a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=4695"> A. A. Nielsen (2007). The Regularized Iteratively Reweighted MAD Method for Change Detection in Multi- and Hyperspectral Data.</a> <p><a href="http://www.amazon.com/Analysis-Classification-Change-Detection-Sensing/dp/1466570377/ref=dp_ob_title_bk"> M. J.Canty (2014). Image Analysis, Classification and Change Detection in Remote Sensing, 3rd Ed., CRC Press 2014</a>;</p> </li> 
+ <li> <p>Run the (sequential) omnibus algorithm on polarimetric SAR multitemporal data (presently only Sentinel-1 dual pol, diagonal only, and single pol images).</p> <a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6825"> K. Conradsen et al. (2016). Determining the points of change in time series of polarimetric SAR data. IEEE TGRS 54 (5) 3007-3024.</a> </li> 
+ <li> <p>Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing, for example with <a href="http://mortcanty.github.io/SARDocker/"> SARDocker</a>.</p> </li> 
 </ol> 
-<p>* Special thanks to Charles G. Morton for making available his implementation of the incomplete gamma function on the GEE API.</p> 
 <h3> <a id="installation-and-execution" class="anchor" href="#installation-and-execution" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation and execution</h3> 
 <ol> 
- <li><p>Install <a href="https://docs.docker.com/">Docker</a></p></li> 
+ <li> <p>Install <a href="https://docs.docker.com/">Docker</a></p> </li> 
  <li> <p>In a command window execute the command</p> <pre><code>docker run -it -p 5000:5000 --name=ee mort/eedocker 
 </code></pre> </li> 
- <li> <p>If the container is not found it will be automatically downloaded from Dockerhub and started. At the container prompt execute the command</p> <pre><code>  earthengine authenticate
+ <li> <p>If the container is not found it will be automatically downloaded from Dockerhub and started. At the container prompt execute the command</p> <pre><code>earthengine authenticate
 </code></pre> <p>and follow the instructions. You will have to copy the given URL and paste it into your local browser.</p> </li> 
  <li> <p>After successful authentication the credentials are saved to the container. Now run the command</p> <pre><code>./app.py
-</code></pre> <p>and point your browser to </p> <pre><code>localhost:5000
+</code></pre> <p>and point your browser to</p> <pre><code>localhost:5000
 </code></pre> <p>to start work.</p> </li> 
- <li> <p>When finished, hit </p> <pre><code>Ctrl C 
-</code></pre> <p>in the command window to stop the Flask application server and </p> <pre><code>exit 
+ <li> <p>When finished, hit</p> <pre><code>Ctrl C 
+</code></pre> <p>in the command window to stop the Flask application server and</p> <pre><code>exit 
 </code></pre> <p>to leave the container.</p> </li> 
  <li> <p>Stop the container with</p> <pre><code>docker stop ee
 </code></pre> </li> 
  <li> <p>Re-start and enter the container with</p> <pre><code>docker start -ai ee
 </code></pre> </li> 
  <li> <p>Run the command</p> <pre><code>./app.py
-</code></pre> <p>to re-start the server. </p> </li> 
+</code></pre> <p>to re-start the server.</p> </li> 
 </ol>
 </body>
 </html>

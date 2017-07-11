@@ -11,7 +11,7 @@
 </head>
 
 <body>
-<h2>Run the iMAD Algorithm on Landsat-5 Images (Experimental)</h2>
+<h2>Run the iMAD Algorithm on Optical/Infrared Images</h2>
 {{msg|safe}}
 <p><a href="/" name="return"> Return</a></p>
 
@@ -19,30 +19,39 @@
 	<div id="mapid" style="width: 640px; height: 480px;"></div>
 
 <form method="post" action = "/mad.html" >
+
+	<table><tr><td><b>
+	<p><input type="radio" name="platform"  value="sentinel2" checked="checked"/> Sentinel 2<br />
+    <input type="radio" name="platform"  value="landsat8" disabled/> Landsat 8<br />
+    <input type="radio" name="platform"  value="landsat7" disabled /> Landsat 7<br />
+    <input type="radio" name="platform"  value="landsat5"  /> Landsat 5<br /></p>
+    </b></td> <td>
+	<p><input type="submit" id = "submit" value="Go"></p>
+	</td></tr></table>
 	
 	<p><b>Image 1</b><br />
 	Start search (yyyy-mm-dd) :
-	<input type="text" value = "1985-03-01" name = "startdate1" size = 8><br />
+	<input type="text" value = "2016-05-01" name = "startdate1" size = 8><br />
 	End search (yyyy-mm-dd) :
-	<input type="text" value = "1985-06-01" name = "enddate1" size = 8><br />
+	<input type="text" value = "2016-07-01" name = "enddate1" size = 8><br />
 	<b>Image 2</b><br />
 	Start search (yyyy-mm-dd) :
-	<input type="text" value = "1986-03-01" name = "startdate2" size = 8><br />
+	<input type="text" value = "2016-07-01" name = "startdate2" size = 8><br />
 	End search (yyyy-mm-dd) :
-	<input type="text" value = "1986-06-01" name = "enddate2" size = 8></p>	
-	<p>Iterations : <input type="text" value = "5" name = "iterations" size = 2></p>
+	<input type="text" value = "2016-09-01" name = "enddate2" size = 8></p>	
+	<p>Iterations : <input type="text" value = "30" name = "iterations" size = 2></p>
 	
 	<table style="width:300px">
 	  <tr>
-	    <td>maxLat: <input type="text" value = "" id = "maxlat" name = "maxLat" size = 8></td>
-	    <td>minLon: <input type="text" value = "" id = "minlon" name = "minLon" size = 8></td> 
+	    <td>maxLat: <input type="text" value = "50.078" id = "maxlat" name = "maxLat" size = 8></td>
+	    <td>minLon: <input type="text" value = "8.444" id = "minlon" name = "minLon" size = 8></td> 
 	  </tr>
 	  <tr>
-	    <td>minLat: <input type="text" value = "" id = "minlat" name = "minLat" size = 8></td>
-	    <td>maxLon: <input type="text" value = "" id = "maxlon" name = "maxLon" size = 8></td> 
+	    <td>minLat: <input type="text" value = "49.985" id = "minlat" name = "minLat" size = 8></td>
+	    <td>maxLon: <input type="text" value = "8.681" id = "maxlon" name = "maxLon" size = 8></td> 
 	  </tr>
 	 </table>	
-	<p><input type="submit" id = "submit" value="Go" disabled></p>
+	
     	
 </form>
 

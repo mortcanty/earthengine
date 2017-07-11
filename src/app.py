@@ -7,7 +7,7 @@ from eeWishart import omnibus
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
 #------------
-local = True
+local = False
 #------------
 
 centerlon = 8.5
@@ -26,6 +26,19 @@ else:
     ee.Initialize(config.EE_CREDENTIALS, 'https://earthengine.googleapis.com')
 
 app = Flask(__name__)
+
+def iterate(image1,image2,niter,first):
+#   simulated iteration of MAD for debugging
+    for i in range(1,niter+1):
+        result = ee.Dictionary(imad(i,first))
+        allrhos = ee.List(result.get('allrhos'))
+        chi2 = ee.Image(result.get('chi2'))
+        MAD = ee.Image(result.get('MAD'))
+        first = ee.Dictionary({'image':image1.addBands(image2),
+                               'allrhos':allrhos,
+                               'chi2':chi2,
+                               'MAD':MAD})
+    return result
 
 #------------------
 # helper functions
@@ -264,6 +277,7 @@ def Sentinel2():
             count = collection.toList(100).length().getInfo()    
             if count==0:
                 raise ValueError('No images found')        
+            sensingorbitnumbers = str(ee.List(collection.aggregate_array('SENSING_ORBIT_NUMBER')).getInfo())
             image = ee.Image(collection.first())         
             imageclip = image.clip(rect)              
             timestamp = ee.Date(image.get('system:time_start')).getInfo()
@@ -309,25 +323,26 @@ def Sentinel2():
                                           systemid = systemid,
                                           cloudcover = cloudcover,
                                           count = count,
+                                          sensingorbitnumbers = sensingorbitnumbers,
                                           timestamp = timestamp)  
         except Exception as e:
             return '<br />An error occurred in Sentinel2: %s'%e  
         
 @app.route('/mad.html', methods = ['GET', 'POST'])
 def Mad():
-    global msg, local
+    global msg, centerlon, centerlat, local, zoom
     if request.method == 'GET':
         if local:
             return render_template('mad.html', msg = msg,
-                                                     centerlon = -116.0444,
-                                                     centerlat = 37.0868)
+                                                     centerlon = centerlon,
+                                                     centerlat = centerlat,
+                                                     zoom = zoom)
         else:
             return render_template('madweb.html', msg = msg,
-                                                     centerlon = -116.0444,
-                                                     centerlat = 37.0868)     
+                                                     centerlon = centerlon,
+                                                     centerlat = centerlat,
+                                                     zoom = zoom)     
     else:
-        if not local:
-            return 'not yet implemented'
         try:
             niter = int(request.form['iterations'])
             start1 = ee.Date(request.form['startdate1'])
@@ -338,92 +353,159 @@ def Mad():
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
             maxLon = float(request.form['maxLon'])
-            gdexportname = request.form['exportname']               
-            if request.form.has_key('export'):        
-                export = request.form['export']
+            platform = request.form['platform']
+            if request.form.has_key('assexport'):        
+                assexportscale = float(request.form['assexportscale'])
+                assexportname = request.form['assexportname']
+                assexport = request.form['assexport']
             else:
-                export = ' '                            
+                assexport = 'none'
+            if request.form.has_key('gdexport'):  
+                gdexportscale = float(request.form['gdexportscale'])  
+                gdexportname = request.form['gdexportname']    
+                gdexport = request.form['gdexport']
+            else:
+                gdexport = 'none'                 
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
             centerlon = (minLon + maxLon)/2.0
             centerlat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat]) 
-            collection = ee.ImageCollection('LT5_L1T') \
-                        .filterBounds(ulPoint) \
-                        .filterBounds(lrPoint) \
-                        .filterDate(start1, finish1) \
-                        .sort('CLOUD_COVER', True) 
-            count = collection.toList(100).length().getInfo()    
-            if count==0:
-                raise ValueError('No images found for first time interval')        
-            image1 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7')               
-            timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
-            timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
-            timestamp1 = time.strftime('%x', timestamp1) 
-            systemid1 = image1.get('system:id').getInfo()
-            cloudcover1 = image1.get('CLOUD_COVER').getInfo()
-            collection = ee.ImageCollection('LT5_L1T') \
-                        .filterBounds(ulPoint) \
-                        .filterBounds(lrPoint) \
-                        .filterDate(start2, finish2) \
-                        .sort('CLOUD_COVER', True) 
-            count = collection.toList(100).length().getInfo()    
-            if count==0:
-                raise ValueError('No images found for second time interval')        
-            image2 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7') 
-            timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
-            timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
-            timestamp2 = time.strftime('%c', timestamp2) 
-            systemid2 = image2.get('system:id').getInfo()  
-            cloudcover2 = image2.get('CLOUD_COVER').getInfo()                                                  
-#          iMAD:
-            B1 = image1.bandNames().get(0)
-            input_dict = ee.Dictionary({'image1':image1,'image2':image2}) 
-            first = ee.Dictionary({'weights':image1.select(ee.String(B1)).multiply(0).add(ee.Image.constant(1)),
+            if platform=='sentinel2':
+                collection = ee.ImageCollection('COPERNICUS/S2') \
+                            .filterBounds(ulPoint) \
+                            .filterBounds(lrPoint) \
+                            .filterDate(start1, finish1) \
+                            .sort('CLOUDY_PIXEL_PERCENTAGE', True) 
+                count = collection.toList(100).length().getInfo()    
+                if count==0:
+                    raise ValueError('No images found for first time interval')        
+                image1 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B8')               
+                timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
+                timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
+                timestamp1 = time.strftime('%c', timestamp1) 
+                systemid1 = image1.get('system:id').getInfo()
+                cloudcover1 = image1.get('CLOUDY_PIXEL_PERCENTAGE').getInfo()
+                collection = ee.ImageCollection('COPERNICUS/S2') \
+                            .filterBounds(ulPoint) \
+                            .filterBounds(lrPoint) \
+                            .filterDate(start2, finish2) \
+                            .sort('CLOUDY_PIXEL_PERCENTAGE', True) 
+                count = collection.toList(100).length().getInfo()    
+                if count==0:
+                    raise ValueError('No images found for second time interval')        
+                image2 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B8') 
+                timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
+                timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
+                timestamp2 = time.strftime('%c', timestamp2) 
+                systemid2 = image2.get('system:id').getInfo()  
+                cloudcover2 = image2.get('CLOUDY_PIXEL_PERCENTAGE').getInfo()               
+            elif platform=='landsat8':
+                pass
+            elif platform=='landsat7':
+                pass
+            elif platform=='landsat5':
+                collection = ee.ImageCollection('LT5_L1T') \
+                            .filterBounds(ulPoint) \
+                            .filterBounds(lrPoint) \
+                            .filterDate(start1, finish1) \
+                            .sort('CLOUD_COVER', True) 
+                count = collection.toList(100).length().getInfo()    
+                if count==0:
+                    raise ValueError('No images found for first time interval')        
+                image1 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7')               
+                timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
+                timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
+                timestamp1 = time.strftime('%c', timestamp1) 
+                systemid1 = image1.get('system:id').getInfo()
+                cloudcover1 = image1.get('CLOUD_COVER').getInfo()
+                collection = ee.ImageCollection('LT5_L1T') \
+                            .filterBounds(ulPoint) \
+                            .filterBounds(lrPoint) \
+                            .filterDate(start2, finish2) \
+                            .sort('CLOUD_COVER', True) 
+                count = collection.toList(100).length().getInfo()    
+                if count==0:
+                    raise ValueError('No images found for second time interval')        
+                image2 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7') 
+                timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
+                timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
+                timestamp2 = time.strftime('%c', timestamp2) 
+                systemid2 = image2.get('system:id').getInfo()  
+                cloudcover2 = image2.get('CLOUD_COVER').getInfo()                                                  
+#          iMAD
+            chi2 = image1.select(0).multiply(0)
+            allrhos = [ee.List.repeat(0,image1.bandNames().length())]
+            inputlist = ee.List.sequence(1,niter)
+            first = ee.Dictionary({'done':ee.Number(0),
+                                   'image':image1.addBands(image2),
+                                   'allrhos':allrhos,
+                                   'chi2':ee.Image.constant(0),
                                    'MAD':ee.Image.constant(0)})
-#          iteration not yet possible, but this is how it goes:   
-#            result = ee.List.repeat(input_dict, nMax).iterate(imad,first)
-#          fake iteration:                   
-            itr = 0
-            while itr < niter: 
-                result = imad(input_dict,first) 
-                weights = result.get('weights')
-                first = ee.Dictionary({'weights':weights,'MAD':ee.Image.constant(0)}) 
-                itr += 1    
-#          ---------------           
+            
+            print 'Iteration started ...'
+            result = ee.Dictionary(inputlist.iterate(imad,first))
+#            result = iterate(image1,image2,niter,first)
+
+#          output result
             MAD = ee.Image(result.get('MAD'))
-            bNames = MAD.bandNames() 
-            nBands = len(bNames.getInfo())
-            lastMAD = ee.String(MAD.bandNames().get(nBands-1))          
-            scale = image1.select(ee.String(B1)).projection().nominalScale().getInfo() 
-            downloadpath = MAD.getDownloadUrl({'scale':scale, 'crs':'EPSG:4326'})                    
-            mapid = MAD.select(lastMAD).getMapId({'min': -20, 'max': 20, 'opacity': 0.7})      
-            if export == 'export':
-#              export to Google Drive --------------------------
+            chi2 = ee.Image(result.get('chi2')) 
+
+            if assexport == 'assexport':
+#              export to Assets 
+                assexport = ee.batch.Export.image.toAsset(MAD,
+                                                          description='assetExportTask', 
+                                                          assetId=assexportname,scale=assexportscale,maxPixels=1e9)
+                assexportid = str(assexport.id)
+                print '****Exporting to Assets, task id: %s '%assexportid
+                assexport.start() 
+            else:
+                assexportid = 'none'                
+            if gdexport == 'gdexport':
+#              export to Drive 
                 gdexport = ee.batch.Export.image.toDrive(MAD,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
-                                                         fileNamePrefix=gdexportname,scale=scale,maxPixels=1e9)
-                
-                
+                                                         fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9)
                 gdexportid = str(gdexport.id)
                 print '****Exporting to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
             else:
-                gdexportid = 'none'
-#              --------------------------------------------------                                 
-            return render_template('madout.html',
-                                          mapid = mapid['mapid'], 
-                                          token = mapid['token'], 
-                                          centerlon = centerlon,
-                                          centerlat = centerlat,
-                                          downloadpath = downloadpath, 
-                                          systemid1 = systemid1,
-                                          systemid2 = systemid2,
-                                          cloudcover1 = cloudcover1,
-                                          cloudcover2 = cloudcover2,
-                                          timestamp1 = timestamp1,
-                                          timestamp2 = timestamp2)  
+                gdexportid = 'none'    
+                
+            if assexportid=='none' and gdexportid=='none':
+#              output results only if no export
+                allrhos = ee.List(result.get('allrhos')).getInfo()
+                for rhos in allrhos:
+                    print rhos               
+                mapid = chi2.getMapId({'min': 0, 'max':10000, 'opacity': 0.7})                             
+                return render_template('madout.html',
+                                              title = 'Chi Square Image',
+                                              mapid = mapid['mapid'], 
+                                              token = mapid['token'], 
+                                              gdexportid = gdexportid,
+                                              assexportid = assexportid,
+                                              centerlon = centerlon,
+                                              centerlat = centerlat,
+                                              systemid1 = systemid1,
+                                              systemid2 = systemid2,
+                                              cloudcover1 = cloudcover1,
+                                              cloudcover2 = cloudcover2,
+                                              timestamp1 = timestamp1,
+                                              timestamp2 = timestamp2)  
+            else:
+                return render_template('madout.html',
+                                              title = 'Export Task (output image suppressed)',
+                                              gdexportid = gdexportid,
+                                              assexportid = assexportid,
+                                              centerlon = centerlon,
+                                              centerlat = centerlat,
+                                              systemid1 = systemid1,
+                                              systemid2 = systemid2,
+                                              cloudcover1 = cloudcover1,
+                                              cloudcover2 = cloudcover2,
+                                              timestamp1 = timestamp1,
+                                              timestamp2 = timestamp2)      
         except Exception as e:
             return '<br />An error occurred in MAD: %s'%e        
         
@@ -559,33 +641,51 @@ def Omnibus():
                 gdexport.start() 
             else:
                 gdexportid = 'none'    
-#          return the fmap for display   
-            if display=='fmap':                                                                                  
-                mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
-                hdr = 'Sequential omnibus frequency map'
-            elif display=='smap':
-                mapid = smap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4}) 
-                hdr = 'Sequential omnibus first change map'
+            if assexportid=='none' and gdexportid=='none':
+    #          output result only if no export   
+                if display=='fmap':                                                                                  
+                    mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
+                    title = 'Sequential omnibus frequency map'
+                elif display=='smap':
+                    mapid = smap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4}) 
+                    title = 'Sequential omnibus first change map'
+                else:
+                    mapid = cmap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4})   
+                    title = 'Sequential omnibus last change map'    
+                return render_template('omnibusout.html',
+                                              mapid = mapid['mapid'], 
+                                              token = mapid['token'], 
+                                              title = title,
+                                              centerlon = centerlon,
+                                              centerlat = centerlat,
+                                              zoom = zoom,
+                                              projection = projection,
+                                              systemid = systemid,
+                                              count = count,
+                                              downloadpath = downloadpath,
+                                              timestamp = timestamp,
+                                              assexportid = assexportid,
+                                              gdexportid = gdexportid,
+                                              timestamps = timestamps,
+                                              polarization = polarization1,
+                                              relativeorbitnumbers = relativeorbitnumbers)     
             else:
-                mapid = cmap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4})   
-                hdr = 'Sequential omnibus last change map'    
-            return render_template('omnibusout.html',
-                                          mapid = mapid['mapid'], 
-                                          token = mapid['token'], 
-                                          hdr = hdr,
-                                          centerlon = centerlon,
-                                          centerlat = centerlat,
-                                          zoom = zoom,
-                                          projection = projection,
-                                          systemid = systemid,
-                                          count = count,
-                                          downloadpath = downloadpath,
-                                          timestamp = timestamp,
-                                          assexportid = assexportid,
-                                          gdexportid = gdexportid,
-                                          timestamps = timestamps,
-                                          polarization = polarization1,
-                                          relativeorbitnumbers = relativeorbitnumbers)                                            
+                return render_template('omnibusout.html', 
+                                              title = 'Export Task (output image suppressed)',
+                                              centerlon = centerlon,
+                                              centerlat = centerlat,
+                                              zoom = zoom,
+                                              projection = projection,
+                                              systemid = systemid,
+                                              count = count,
+                                              downloadpath = downloadpath,
+                                              timestamp = timestamp,
+                                              assexportid = assexportid,
+                                              gdexportid = gdexportid,
+                                              timestamps = timestamps,
+                                              polarization = polarization1,
+                                              relativeorbitnumbers = relativeorbitnumbers)
+                                                   
         except Exception as e:
             return '<br />An error occurred in omnibus: %s'%e    
                                                

@@ -55,20 +55,22 @@ for details.
       }
 
       window.onload = initialize;
+
     </script>
   </head>
   <body>
     <h3>Google Earth Engine</h3>
-    <p>Last MAD variate<br />
+    <p><b>{{title}}</b><br />
     System ID, Image 1: {{systemid1}}<br />
+    Asset ExportID: {{assexportid}}<br />
+    Google Drive ExportID: {{gdexportid}}<br />
     Timestamp Image 1: {{timestamp1}}<br />
-    Cloudcover Image1 : {{cloudcover1}}<br />
+    Full Scene Cloudcover Image1 : {{cloudcover1}}<br />
     System ID, Image 2: {{systemid2}}<br />
     Timestamp Image 2: {{timestamp2}}<br />
-    Cloudcover Image2 : {{cloudcover2}}	
+    Full Scene Cloudcover Image2 : {{cloudcover2}}	
     </p>
     <div id="map" style="width: 640px; height: 480px;"></div><br />
-    <a href={{downloadpath}}>Download MAD image</a><br />
     <a href="/" name="return"> Return</a>
   </body>
 </html>
