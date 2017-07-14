@@ -251,7 +251,6 @@ def Sentinel2():
         try:
             startdate = request.form['startdate']  
             enddate = request.form['enddate']
-            desired_projection = request.form['projection']
             minLat = float(request.form['minLat'])
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
@@ -274,20 +273,24 @@ def Sentinel2():
                         .filterBounds(lrPoint) \
                         .filterDate(start, finish) \
                         .sort('CLOUD_COVERAGE_ASSESSMENT', True) 
+            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                         
             count = collection.toList(100).length().getInfo()    
             if count==0:
                 raise ValueError('No images found')        
             sensingorbitnumbers = str(ee.List(collection.aggregate_array('SENSING_ORBIT_NUMBER')).getInfo())
+            
+            timestamplist = []
+            for timestamp in acquisition_times:
+                tmp = time.gmtime(int(timestamp)/1000)
+                timestamplist.append(time.strftime('%c', tmp))
+            timestamp = timestamplist[0]    
+            timestamps = str(timestamplist)   
+            
             image = ee.Image(collection.first())         
             imageclip = image.clip(rect)              
-            timestamp = ee.Date(image.get('system:time_start')).getInfo()
-            timestamp = time.gmtime(int(timestamp['value'])/1000)
-            timestamp = time.strftime('%c', timestamp)
             systemid = image.get('system:id').getInfo()
             cloudcover = image.get('CLOUD_COVERAGE_ASSESSMENT').getInfo()
             projection = image.select('B2').projection().getInfo()['crs']
-            if desired_projection != 'default':
-                projection = desired_projection     
             downloadpath = image.getDownloadUrl({'scale':30,'crs':projection})    
             if export == 'export':
 #              export to Google Drive --------------------------
@@ -305,9 +308,9 @@ def Sentinel2():
 #              --------------------------------------------------                    
             downloadpathclip = imageclip.select('B2','B3','B4','B8').getDownloadUrl({'scale':10, 'crs':projection})
             rgb = image.select('B2','B3','B4')            
-            rgbclip = imageclip.select('B2','B3','B5')                 
+            rgbclip = imageclip.select('B2','B3','B4')                 
             mapid = rgb.getMapId({'min':0, 'max':2000, 'opacity': 0.6}) 
-            mapidclip = rgbclip.getMapId({'min':0, 'max':2000, 'opacity': 1.0})          
+            mapidclip = rgbclip.getMapId({'min':0, 'max':3000, 'opacity': 1.0})          
             return render_template('sentinel2out.html',
                                           mapidclip = mapidclip['mapid'], 
                                           tokenclip = mapidclip['token'], 
@@ -319,11 +322,11 @@ def Sentinel2():
                                           downloadtext = 'Download image intersection',
                                           downloadpath = downloadpath, 
                                           downloadpathclip = downloadpathclip, 
-                                          projection = projection,
                                           systemid = systemid,
                                           cloudcover = cloudcover,
                                           count = count,
                                           sensingorbitnumbers = sensingorbitnumbers,
+                                          timestamps = timestamps,
                                           timestamp = timestamp)  
         except Exception as e:
             return '<br />An error occurred in Sentinel2: %s'%e  
@@ -448,8 +451,11 @@ def Mad():
 #            result = iterate(image1,image2,niter,first)
 
 #          output result
-            MAD = ee.Image(result.get('MAD'))
-            chi2 = ee.Image(result.get('chi2')) 
+            nbands = image1.bandNames().length().getInfo()
+            bnames = ['MAD'+str(i+1) for i in range(nbands)]
+            MAD = ee.Image(result.get('MAD')).rename(bnames)
+            chi2 = ee.Image(result.get('chi2')).rename(['chi2'])
+            MAD = ee.Image.cat(MAD,chi2)
 
             if assexport == 'assexport':
 #              export to Assets 
