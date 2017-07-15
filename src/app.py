@@ -435,7 +435,9 @@ def Mad():
                 timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
                 timestamp2 = time.strftime('%c', timestamp2) 
                 systemid2 = image2.get('system:id').getInfo()  
-                cloudcover2 = image2.get('CLOUD_COVER').getInfo()                                                  
+                cloudcover2 = image2.get('CLOUD_COVER').getInfo()   
+#          register
+            image2 = image2.register(image1,60)                                                               
 #          iMAD
             chi2 = image1.select(0).multiply(0)
             allrhos = [ee.List.repeat(0,image1.bandNames().length())]
@@ -498,19 +500,21 @@ def Mad():
                                           timestamp1 = timestamp1,
                                           timestamp2 = timestamp2)  
         except Exception as e:
-            return render_template('madout.html',
-                              title = 'Error in MAD: %s'%e)
-#                               gdexportid = gdexportid,
-#                               assexportid = assexportid,
-#                               centerlon = centerlon,
-#                               centerlat = centerlat,
-#                               systemid1 = systemid1,
-#                               systemid2 = systemid2,
-#                               cloudcover1 = cloudcover1,
-#                               cloudcover2 = cloudcover2,
-#                               timestamp1 = timestamp1,
-#                               timestamp2 = timestamp2)             
-        
+            if isinstance(e,ValueError):
+                return 'Error in MAD. %s'%e
+            else:
+                return render_template('madout.html',
+                                              title = 'Error in MAD: %s'%e,
+                                              gdexportid = gdexportid,
+                                              assexportid = assexportid,
+                                              centerlon = centerlon,
+                                              centerlat = centerlat,
+                                              systemid1 = systemid1,
+                                              systemid2 = systemid2,
+                                              cloudcover1 = cloudcover1,
+                                              cloudcover2 = cloudcover2,
+                                              timestamp1 = timestamp1,
+                                              timestamp2 = timestamp2)                 
 
 @app.route('/omnibus.html', methods = ['GET', 'POST'])
 def Omnibus():       
@@ -671,8 +675,24 @@ def Omnibus():
                                           polarization = polarization1,
                                           relativeorbitnumbers = relativeorbitnumbers)                                          
         except Exception as e:
-            return render_template('omnibusout.html', 
-                                          title = 'Error in omnibus: %s'%e)
+            if isinstance(e,ValueError):
+                return 'Error in omnibus. %s'%e
+            else:
+                return render_template('omnibusout.html', 
+                                              title = 'Error in omnibus: %s'%e,
+                                              centerlon = centerlon,
+                                              centerlat = centerlat,
+                                              zoom = zoom,
+                                              projection = projection,
+                                              systemid = systemid,
+                                              count = count,
+                                              downloadpath = downloadpath,
+                                              timestamp = timestamp,
+                                              assexportid = assexportid,
+                                              gdexportid = gdexportid,
+                                              timestamps = timestamps,
+                                              polarization = polarization1,
+                                              relativeorbitnumbers = relativeorbitnumbers)  
                                                
 if __name__ == '__main__':   
     app.run(debug=True, host='0.0.0.0')

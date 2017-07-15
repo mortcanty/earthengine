@@ -92,28 +92,15 @@ def imad1(current,prev):
     sigma2s = rhos.subtract(1).multiply(-2).toList() 
     sigma2s = ee.Image.constant(sigma2s)
 #  ensure sum of positive correlations between X and U is positive
-    pass
+    tmp = s11.matrixDiagonal().sqrt()
+    ones = tmp.multiply(0).add(1)
+    tmp = ones.divide(tmp).matrixToDiag()
+    s = tmp.matrixMultiply(s11).matrixMultiply(A).reduce(ee.Reducer.sum(),[0]).transpose()
+    A = A.matrixMultiply(s.divide(s.abs()).matrixToDiag())
 #  ensure positive correlation
     tmp = A.transpose().matrixMultiply(s12).matrixMultiply(B).matrixDiagonal()
     tmp = tmp.divide(tmp.abs()).matrixToDiag()
-    B = B.matrixMultiply(tmp)  
-          
-# # -------------------------------------------------------------------
-#     s11 = np.mat(s11.getInfo())    
-#     s12 = np.mat(s12.getInfo())          
-#     A = np.mat(A.getInfo())
-#     B = np.mat(B.getInfo())    
-# #  ensure sum of positive correlations between X and U is positive
-#     tmp = np.diag(1/np.sqrt(np.diag(s11)))  
-#     s = np.ravel(np.sum(tmp*s11*A,axis=0)) 
-#     A = A*np.diag(s/np.abs(s))                                    
-# #  ensure positive correlation
-#     tmp = np.diag(A.T*s12*B)
-#     B = B*np.diag(tmp/abs(tmp))   
-#     A = ee.Array(A.tolist())
-#     B = ee.Array(B.tolist())  
-# # -------------------------------------------------------------------    
-                   
+    B = B.matrixMultiply(tmp)           
 #  canonical and MAD variates 
     centeredImage1Array = centeredImage1.toArray().toArray(1)
     centeredImage2Array = centeredImage2.toArray().toArray(1)
