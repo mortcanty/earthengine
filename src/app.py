@@ -479,41 +479,37 @@ def Mad():
             else:
                 gdexportid = 'none'    
                 
-            if assexportid=='none' and gdexportid=='none':
-#              output results only if no export
-                allrhos = ee.List(result.get('allrhos')).getInfo()
-                for rhos in allrhos:
-                    print rhos               
-                mapid = chi2.getMapId({'min': 0, 'max':10000, 'opacity': 0.7})                             
-                return render_template('madout.html',
-                                              title = 'Chi Square Image',
-                                              mapid = mapid['mapid'], 
-                                              token = mapid['token'], 
-                                              gdexportid = gdexportid,
-                                              assexportid = assexportid,
-                                              centerlon = centerlon,
-                                              centerlat = centerlat,
-                                              systemid1 = systemid1,
-                                              systemid2 = systemid2,
-                                              cloudcover1 = cloudcover1,
-                                              cloudcover2 = cloudcover2,
-                                              timestamp1 = timestamp1,
-                                              timestamp2 = timestamp2)  
-            else:
-                return render_template('madout.html',
-                                              title = 'Export Task (output image suppressed)',
-                                              gdexportid = gdexportid,
-                                              assexportid = assexportid,
-                                              centerlon = centerlon,
-                                              centerlat = centerlat,
-                                              systemid1 = systemid1,
-                                              systemid2 = systemid2,
-                                              cloudcover1 = cloudcover1,
-                                              cloudcover2 = cloudcover2,
-                                              timestamp1 = timestamp1,
-                                              timestamp2 = timestamp2)      
+            allrhos = ee.List(result.get('allrhos')).getInfo()
+            for rhos in allrhos:
+                print rhos               
+            mapid = chi2.getMapId({'min': 0, 'max':10000, 'opacity': 0.7})                             
+            return render_template('madout.html',
+                                          title = 'Chi Square Image',
+                                          mapid = mapid['mapid'], 
+                                          token = mapid['token'], 
+                                          gdexportid = gdexportid,
+                                          assexportid = assexportid,
+                                          centerlon = centerlon,
+                                          centerlat = centerlat,
+                                          systemid1 = systemid1,
+                                          systemid2 = systemid2,
+                                          cloudcover1 = cloudcover1,
+                                          cloudcover2 = cloudcover2,
+                                          timestamp1 = timestamp1,
+                                          timestamp2 = timestamp2)  
         except Exception as e:
-            return '<br />An error occurred in MAD: %s'%e        
+            return render_template('madout.html',
+                              title = 'Error in MAD: %s'%e)
+#                               gdexportid = gdexportid,
+#                               assexportid = assexportid,
+#                               centerlon = centerlon,
+#                               centerlat = centerlat,
+#                               systemid1 = systemid1,
+#                               systemid2 = systemid2,
+#                               cloudcover1 = cloudcover1,
+#                               cloudcover2 = cloudcover2,
+#                               timestamp1 = timestamp1,
+#                               timestamp2 = timestamp2)             
         
 
 @app.route('/omnibus.html', methods = ['GET', 'POST'])
@@ -647,53 +643,36 @@ def Omnibus():
                 gdexport.start() 
             else:
                 gdexportid = 'none'    
-            if assexportid=='none' and gdexportid=='none':
-    #          output result only if no export   
-                if display=='fmap':                                                                                  
-                    mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
-                    title = 'Sequential omnibus frequency map'
-                elif display=='smap':
-                    mapid = smap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4}) 
-                    title = 'Sequential omnibus first change map'
-                else:
-                    mapid = cmap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4})   
-                    title = 'Sequential omnibus last change map'    
-                return render_template('omnibusout.html',
-                                              mapid = mapid['mapid'], 
-                                              token = mapid['token'], 
-                                              title = title,
-                                              centerlon = centerlon,
-                                              centerlat = centerlat,
-                                              zoom = zoom,
-                                              projection = projection,
-                                              systemid = systemid,
-                                              count = count,
-                                              downloadpath = downloadpath,
-                                              timestamp = timestamp,
-                                              assexportid = assexportid,
-                                              gdexportid = gdexportid,
-                                              timestamps = timestamps,
-                                              polarization = polarization1,
-                                              relativeorbitnumbers = relativeorbitnumbers)     
+ 
+            if display=='fmap':                                                                                  
+                mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
+                title = 'Sequential omnibus frequency map'
+            elif display=='smap':
+                mapid = smap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4}) 
+                title = 'Sequential omnibus first change map'
             else:
-                return render_template('omnibusout.html', 
-                                              title = 'Export Task (output image suppressed)',
-                                              centerlon = centerlon,
-                                              centerlat = centerlat,
-                                              zoom = zoom,
-                                              projection = projection,
-                                              systemid = systemid,
-                                              count = count,
-                                              downloadpath = downloadpath,
-                                              timestamp = timestamp,
-                                              assexportid = assexportid,
-                                              gdexportid = gdexportid,
-                                              timestamps = timestamps,
-                                              polarization = polarization1,
-                                              relativeorbitnumbers = relativeorbitnumbers)
-                                                   
+                mapid = cmap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4})   
+                title = 'Sequential omnibus last change map'    
+            return render_template('omnibusout.html',
+                                          mapid = mapid['mapid'], 
+                                          token = mapid['token'], 
+                                          title = title,
+                                          centerlon = centerlon,
+                                          centerlat = centerlat,
+                                          zoom = zoom,
+                                          projection = projection,
+                                          systemid = systemid,
+                                          count = count,
+                                          downloadpath = downloadpath,
+                                          timestamp = timestamp,
+                                          assexportid = assexportid,
+                                          gdexportid = gdexportid,
+                                          timestamps = timestamps,
+                                          polarization = polarization1,
+                                          relativeorbitnumbers = relativeorbitnumbers)                                          
         except Exception as e:
-            return '<br />An error occurred in omnibus: %s'%e    
+            return render_template('omnibusout.html', 
+                                          title = 'Error in omnibus: %s'%e)
                                                
 if __name__ == '__main__':   
     app.run(debug=True, host='0.0.0.0')

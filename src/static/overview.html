@@ -16,9 +16,7 @@ The AppEngine version (web version) is for demonstration only and has very limit
 Exporting results in particular is not possible.<br /><br />
 When running on localhost you can carry out the following tasks:<br /><br />
 
- 1. Run the iMAD (iteratively re-weighted MAD) algorithm on LANDAT-5 TM bitemporal imagery. (CCA is done on client side 
- until Cholesky decomposition becomes available on GEE API. Will later be extented to run with LANDSAT-7, LANDSAT-8, ASTER 
- and Sentinel-2 optical/infrared imagery.)<br />
+ 1. Run the iMAD (iteratively re-weighted MAD) algorithm on optical/infrared bitemporal imagery (Landsat 5, 7, 8 and Sentinel-2.)<br />
  
     <a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=4695"> 
 	A. A. Nielsen (2007). The Regularized Iteratively Reweighted MAD Method for Change Detection in Multi- and Hyperspectral Data.</a><br />
@@ -26,14 +24,7 @@ When running on localhost you can carry out the following tasks:<br /><br />
 	<a href="http://www.amazon.com/Analysis-Classification-Change-Detection-Sensing/dp/1466570377/ref=dp_ob_title_bk"> M. J.Canty (2014). 
 	Image Analysis, Classification and Change Detection in Remote Sensing, 3rd Ed., CRC Press 2014</a> <br /><br />
 	
- 2. Run the complex Wishart algorithm on polarimetric SAR bitemporal data (presently only Sentinel-1 dual pol, diagonal only, and single pol images).<br />
- 
-	 <a href = "http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=1219"> 
-	K. Conradsen et al. (2003). A test statistic in the complex Wishart distribution and its 
-	application to change detection in polarimetric SAR data IEEE TGRS 41 (1) 4-19.</a><br /><br />
-	
-	
- 3. Run the (sequential) omnibus algorithm on polarimetric SAR multitemporal data (presently only Sentinel-1 dual pol, diagonal only, and single pol images). <br />
+ 2. Run the (sequential) omnibus algorithm on Sentinel-1 polarimetric SAR multitemporal data. <br />
  
 	 <a href = "http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6825"> 
 	K. Conradsen et al. (2016). Determining the points of
