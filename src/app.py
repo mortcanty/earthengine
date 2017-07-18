@@ -404,9 +404,63 @@ def Mad():
                 systemid2 = image2.get('system:id').getInfo()  
                 cloudcover2 = image2.get('CLOUDY_PIXEL_PERCENTAGE').getInfo()               
             elif platform=='landsat8':
-                pass
+                collection = ee.ImageCollection('LANDSAT/LC08/C01/T1') \
+                            .filterBounds(ulPoint) \
+                            .filterBounds(lrPoint) \
+                            .filterDate(start1, finish1) \
+                            .sort('CLOUD_COVER', True) 
+                count = collection.toList(100).length().getInfo()    
+                if count==0:
+                    raise ValueError('No images found for first time interval')
+                image1 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B5','B6','B7')               
+                timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
+                timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
+                timestamp1 = time.strftime('%c', timestamp1) 
+                systemid1 = image1.get('system:id').getInfo()
+                cloudcover1 = image1.get('CLOUD_COVER').getInfo()
+                collection = ee.ImageCollection('LANDSAT/LC08/C01/T1') \
+                            .filterBounds(ulPoint) \
+                            .filterBounds(lrPoint) \
+                            .filterDate(start2, finish2) \
+                            .sort('CLOUD_COVER', True) 
+                count = collection.toList(100).length().getInfo()    
+                if count==0:
+                    raise ValueError('No images found for second time interval')        
+                image2 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B5','B6','B7') 
+                timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
+                timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
+                timestamp2 = time.strftime('%c', timestamp2) 
+                systemid2 = image2.get('system:id').getInfo()  
+                cloudcover2 = image2.get('CLOUD_COVER').getInfo()                       
             elif platform=='landsat7':
-                pass
+                collection = ee.ImageCollection('LANDSAT/LE7') \
+                            .filterBounds(ulPoint) \
+                            .filterBounds(lrPoint) \
+                            .filterDate(start1, finish1) \
+                            .sort('CLOUD_COVER', True) 
+                count = collection.toList(100).length().getInfo()    
+                if count==0:
+                    raise ValueError('No images found for first time interval')        
+                image1 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7')               
+                timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
+                timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
+                timestamp1 = time.strftime('%c', timestamp1) 
+                systemid1 = image1.get('system:id').getInfo()
+                cloudcover1 = image1.get('CLOUD_COVER').getInfo()
+                collection = ee.ImageCollection('LANDSAT/LE7') \
+                            .filterBounds(ulPoint) \
+                            .filterBounds(lrPoint) \
+                            .filterDate(start2, finish2) \
+                            .sort('CLOUD_COVER', True) 
+                count = collection.toList(100).length().getInfo()    
+                if count==0:
+                    raise ValueError('No images found for second time interval')        
+                image2 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7') 
+                timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
+                timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
+                timestamp2 = time.strftime('%c', timestamp2) 
+                systemid2 = image2.get('system:id').getInfo()  
+                cloudcover2 = image2.get('CLOUD_COVER').getInfo()   
             elif platform=='landsat5':
                 collection = ee.ImageCollection('LT5_L1T') \
                             .filterBounds(ulPoint) \
@@ -457,6 +511,9 @@ def Mad():
             bnames = ['MAD'+str(i+1) for i in range(nbands)]
             MAD = ee.Image(result.get('MAD')).rename(bnames)
             chi2 = ee.Image(result.get('chi2')).rename(['chi2'])
+#            allrhos = ee.Array(result.get('allrhos'))
+#            rhoslow = allrhos.slice(1,0,1).project([0])
+#            rhoshigh = allrhos.slice(1,-1).project([0])
             MAD = ee.Image.cat(MAD,chi2)
 
             if assexport == 'assexport':
