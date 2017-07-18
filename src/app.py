@@ -79,6 +79,10 @@ def clipList(current,prev):
     imlist = imlist.add(ee.Image(current).clip(rect))
     return ee.Dictionary({'imlist':imlist,'rect':rect})
 
+def makefeature(data):
+    ''' for exporting as CSV to Drive '''
+    return ee.Feature(None, {'data': data})
+
 #--------------------
 # request handlers
 #--------------------
@@ -504,6 +508,7 @@ def Mad():
             
             print 'Iteration started ...'
             result = ee.Dictionary(inputlist.iterate(imad,first))
+#          iteration emulation for debugging             
 #            result = iterate(image1,image2,niter,first)
 
 #          output result
@@ -511,35 +516,40 @@ def Mad():
             bnames = ['MAD'+str(i+1) for i in range(nbands)]
             MAD = ee.Image(result.get('MAD')).rename(bnames)
             chi2 = ee.Image(result.get('chi2')).rename(['chi2'])
-#            allrhos = ee.Array(result.get('allrhos'))
-#            rhoslow = allrhos.slice(1,0,1).project([0])
-#            rhoshigh = allrhos.slice(1,-1).project([0])
+            allrhos = ee.Array(result.get('allrhos')).toList()              
             MAD = ee.Image.cat(MAD,chi2)
-
             if assexport == 'assexport':
+#              export allrhos as CSV to Drive               
+                gdrhosexport = ee.batch.Export.table. \
+                     toDrive(ee.FeatureCollection(allrhos.map(makefeature)),
+                             description='driveExportTask', 
+                             folder = 'EarthEngineImages',
+                             fileNamePrefix=assexportname.replace('/','-') )
+                gdrhosexportid = str(gdrhosexport.id)
+                print '****Exporting correlations as CSV to Drive, task id: %s '%gdrhosexportid            
+                gdrhosexport.start()                  
 #              export to Assets 
                 assexport = ee.batch.Export.image.toAsset(MAD,
                                                           description='assetExportTask', 
                                                           assetId=assexportname,scale=assexportscale,maxPixels=1e9)
                 assexportid = str(assexport.id)
-                print '****Exporting to Assets, task id: %s '%assexportid
+                print '****Exporting MAD image to Assets, task id: %s '%assexportid
                 assexport.start() 
             else:
                 assexportid = 'none'                
-            if gdexport == 'gdexport':
+            if gdexport == 'gdexport':              
 #              export to Drive 
                 gdexport = ee.batch.Export.image.toDrive(MAD,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
                                                          fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9)
                 gdexportid = str(gdexport.id)
-                print '****Exporting to Google Drive, task id: %s '%gdexportid
+                print '****Exporting MAD image to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
             else:
                 gdexportid = 'none'    
                 
-            allrhos = ee.List(result.get('allrhos')).getInfo()
-            for rhos in allrhos:
+            for rhos in allrhos.getInfo():
                 print rhos               
             mapid = chi2.getMapId({'min': 0, 'max':10000, 'opacity': 0.7})                             
             return render_template('madout.html',
@@ -562,8 +572,8 @@ def Mad():
             else:
                 return render_template('madout.html',
                                               title = 'Error in MAD: %s'%e,
-                                              gdexportid = gdexportid,
-                                              assexportid = assexportid,
+                                              gdexportid = 'none',
+                                              assexportid = 'none',
                                               centerlon = centerlon,
                                               centerlat = centerlat,
                                               systemid1 = systemid1,
