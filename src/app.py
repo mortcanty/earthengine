@@ -518,8 +518,10 @@ def Mad():
             chi2 = ee.Image(result.get('chi2')).rename(['chi2'])
             allrhos = ee.Array(result.get('allrhos')).toList()              
             MAD = ee.Image.cat(MAD,chi2)
+            hint = '(enable export to bypass)'
             if assexport == 'assexport':
-#              export allrhos as CSV to Drive               
+#              export allrhos as CSV to Drive  
+                hint = '(batch export to should complete)'             
                 gdrhosexport = ee.batch.Export.table. \
                      toDrive(ee.FeatureCollection(allrhos.map(makefeature)),
                              description='driveExportTask', 
@@ -539,6 +541,7 @@ def Mad():
                 assexportid = 'none'                
             if gdexport == 'gdexport':              
 #              export to Drive 
+                hint = '(batch export to should complete)'
                 gdexport = ee.batch.Export.image.toDrive(MAD,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
@@ -568,10 +571,10 @@ def Mad():
                                           timestamp2 = timestamp2)  
         except Exception as e:
             if isinstance(e,ValueError):
-                return 'Error in MAD. %s'%e
+                return 'Error in MAD: %s'%e
             else:
                 return render_template('madout.html',
-                                              title = 'Error in MAD: %s'%e,
+                                              title = 'Error in MAD: %s '%e + hint,
                                               gdexportid = 'none',
                                               assexportid = 'none',
                                               centerlon = centerlon,
@@ -692,9 +695,11 @@ def Omnibus():
             timestamps = str(timestamplist)
             timestamp = timestamplist[0]   
             cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist[1:])  
-            downloadpath = cmaps.getDownloadUrl({'scale':10})         
+            downloadpath = cmaps.getDownloadUrl({'scale':10})    
+            hint = '(enable export to bypass)'     
             if assexport == 'assexport':
 #              export to Assets 
+                hint = '(batch export to should complete)'
                 assexport = ee.batch.Export.image.toAsset(cmaps,
                                                           description='assetExportTask', 
                                                           assetId=assexportname,scale=assexportscale,maxPixels=1e9)
@@ -705,6 +710,7 @@ def Omnibus():
                 assexportid = 'none'                
             if gdexport == 'gdexport':
 #              export to Drive 
+                hint = '(batch export to should complete)'
                 gdexport = ee.batch.Export.image.toDrive(cmaps,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
@@ -743,10 +749,10 @@ def Omnibus():
                                           relativeorbitnumbers = relativeorbitnumbers)                                          
         except Exception as e:
             if isinstance(e,ValueError):
-                return 'Error in omnibus. %s'%e
+                return 'Error in MAD: %s'%e
             else:
                 return render_template('omnibusout.html', 
-                                              title = 'Error in omnibus: %s'%e,
+                                              title = 'Error in omnibus: %s '%e + hint,
                                               centerlon = centerlon,
                                               centerlat = centerlat,
                                               zoom = zoom,

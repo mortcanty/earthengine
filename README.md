@@ -35,6 +35,10 @@ Assuming you have been authenticated (see below) to the Earth Engine, you can ca
  
  		docker run -it -p 5000:5000 --name=ee mort/eedocker 
  		
+ 	or, if you are on a Raspberry Pi
+ 	
+ 		docker run -it -p 5000:5000 --name=ee mort/rpi-eedocker		
+ 		
  3. If the container is not found it will be automatically downloaded from Dockerhub and
  started. At the container prompt execute the command
  

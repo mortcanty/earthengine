@@ -652,6 +652,7 @@ function setDocumentScrollTop(ypos)
 <ol> 
  <li> <p>Install <a href="https://docs.docker.com/">Docker</a></p> </li> 
  <li> <p>In a command window execute the command</p> <pre><code>docker run -it -p 5000:5000 --name=ee mort/eedocker 
+</code></pre> <p>or, if you are on a Raspberry Pi</p> <pre><code>docker run -it -p 5000:5000 --name=ee mort/rpi-eedocker		
 </code></pre> </li> 
  <li> <p>If the container is not found it will be automatically downloaded from Dockerhub and started. At the container prompt execute the command</p> <pre><code>earthengine authenticate
 </code></pre> <p>and follow the instructions. You will have to copy the given URL and paste it into your local browser.</p> </li> 
