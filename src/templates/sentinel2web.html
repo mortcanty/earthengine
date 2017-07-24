@@ -27,16 +27,16 @@
 	<input type="text" value = "2016-09-01" name = "enddate" size = 8></p>	
 	<p> Desired projection:
 	<input type="text" value = "default" name = "projection" size = 10></p>	
-		<table style="width:300px">
+	<table style="width:300px">
 	  <tr>
-	    <td>maxLat: <input type="text" value = "50.078" id = "maxlat" name = "maxLat" size = 8></td>
-	    <td>minLon: <input type="text" value = "8.444" id = "minlon" name = "minLon" size = 8></td> 
+	    <td>maxLat: <input type="text" value = {{maxLat}} id = "maxlat" name = "maxLat" size = 8></td>
+	    <td>minLon: <input type="text" value = {{minLon}} id = "minlon" name = "minLon" size = 8></td> 
 	  </tr>
 	  <tr>
-	    <td>minLat: <input type="text" value = "49.985" id = "minlat" name = "minLat" size = 8></td>
-	    <td>maxLon: <input type="text" value = "8.682" id = "maxlon" name = "maxLon" size = 8></td> 
+	    <td>minLat: <input type="text" value = {{minLat}} id = "minlat" name = "minLat" size = 8></td>
+	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxlon" name = "maxLon" size = 8></td> 
 	  </tr>
-	 </table> 
+	 </table>
 	<p><input type="submit" id = "submit" value="Go"></p>
 	
 </form>
@@ -68,8 +68,8 @@ osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 });
 
-var LAT = {{centerlat}}
-var LON = {{centerlon}}  
+var LAT = {{centerLat}}
+var LON = {{centerLon}}  
 var ZOOM = {{zoom}} 
 
 var mymap = L.map('mapid', {layers:[mapboxss,mapboxs,osm]}).setView([LAT, LON], ZOOM);

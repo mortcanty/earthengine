@@ -105,6 +105,10 @@ def Sentinel1():
                                                  zoom = zoom)
         else:
             return render_template('sentinel1web.html', msg = msg,
+                                                 minLat = glbls['minLat'],
+                                                 minLon = glbls['minLon'],
+                                                 maxLat = glbls['maxLat'],
+                                                 maxLon = glbls['maxLon'],
                                                  centerLon = glbls['centerLon'],
                                                  centerLat = glbls['centerLat'],
                                                  zoom = zoom)
@@ -260,6 +264,10 @@ def Sentinel2():
                                                  zoom = zoom)
         else:
             return render_template('sentinel2web.html', msg = msg,
+                                                 minLat = glbls['minLat'],
+                                                 minLon = glbls['minLon'],
+                                                 maxLat = glbls['maxLat'],
+                                                 maxLon = glbls['maxLon'],
                                                  centerLon = glbls['centerLon'],
                                                  centerLat = glbls['centerLat'],
                                                  zoom = zoom)
@@ -370,6 +378,10 @@ def Mad():
                                                  zoom = zoom)
         else:
             return render_template('madweb.html', msg = msg,
+                                                 minLat = glbls['minLat'],
+                                                 minLon = glbls['minLon'],
+                                                 maxLat = glbls['maxLat'],
+                                                 maxLon = glbls['maxLon'],
                                                  centerLon = glbls['centerLon'],
                                                  centerLat = glbls['centerLat'],
                                                  zoom = zoom)
@@ -632,6 +644,10 @@ def Omnibus():
                                                  zoom = zoom)
         else:
             return render_template('omnibusweb.html', msg = msg,
+                                                 minLat = glbls['minLat'],
+                                                 minLon = glbls['minLon'],
+                                                 maxLat = glbls['maxLat'],
+                                                 maxLon = glbls['maxLon'],
                                                  centerLon = glbls['centerLon'],
                                                  centerLat = glbls['centerLat'],
                                                  zoom = zoom)        
