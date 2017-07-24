@@ -115,9 +115,7 @@ def imad1(current,prev):
     chi2 = MAD.pow(2) \
               .divide(sigma2s) \
               .reduce(ee.Reducer.sum()) \
-              .clip(region)  
-#  no-change probability                
-              
+              .clip(region)                
     return ee.Dictionary({'done':done,'image':image,'allrhos':allrhos,'chi2':chi2,'MAD':MAD})     
     
 if __name__ == '__main__': 

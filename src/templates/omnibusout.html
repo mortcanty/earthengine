@@ -43,7 +43,7 @@ for details.
 
       // Initialize the Google Map and add our custom layer overlay.
       function initialize() {
-        var myLatLng = new google.maps.LatLng({{centerlat}}, {{centerlon}});
+        var myLatLng = new google.maps.LatLng({{centerLat}}, {{centerLon}});
         var mapOptions = {
           center: myLatLng,
           zoom: {{zoom}},
@@ -70,7 +70,7 @@ for details.
     Projection: {{projection}}<br />
     Timestamp: {{timestamp}}<br /> 
     </p>
-    <a href="/" name="return"> Return</a><br />
+    <p><a href="/" name="return"> Return</a></p>
     <div id="fmap" style="width: 640px; height: 480px;"></div>
     <p>Acquisition times:<br />
     {{timestamps}}<br />

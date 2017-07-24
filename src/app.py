@@ -10,8 +10,7 @@ from eeWishart import omnibus
 local = True
 #------------
 
-centerlon = 8.5
-centerlat = 50.05
+glbls = {'centerLon':8.5,'centerLat':50.05,'minLat':49.985,'maxLat':50.078,'minLon':8.444,'maxLon':8.682}
 zoom = 10
 jet = 'black,blue,cyan,yellow,red'
 
@@ -93,17 +92,21 @@ def index():
     
 @app.route('/sentinel1.html', methods = ['GET', 'POST'])
 def Sentinel1():    
-    global msg, centerlon, centerlat, local, zoom
+    global glbls, msg, local, zoom
     if request.method == 'GET':
         if local:
             return render_template('sentinel1.html', msg = msg,
-                                                 centerlon = centerlon,
-                                                 centerlat = centerlat,
+                                                 minLat = glbls['minLat'],
+                                                 minLon = glbls['minLon'],
+                                                 maxLat = glbls['maxLat'],
+                                                 maxLon = glbls['maxLon'],
+                                                 centerLon = glbls['centerLon'],
+                                                 centerLat = glbls['centerLat'],
                                                  zoom = zoom)
         else:
             return render_template('sentinel1web.html', msg = msg,
-                                                 centerlon = centerlon,
-                                                 centerlat = centerlat,
+                                                 centerLon = glbls['centerLon'],
+                                                 centerLat = glbls['centerLat'],
                                                  zoom = zoom)
     else:
         try: 
@@ -135,8 +138,8 @@ def Sentinel1():
             start = ee.Date(startdate)
             finish = ee.Date(enddate)    
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
-            centerlon = (minLon + maxLon)/2.0
-            centerlat = (minLat + maxLat)/2.0 
+            centerLon = (minLon + maxLon)/2.0
+            centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat])
             collection = ee.ImageCollection('COPERNICUS/S1_GRD') \
@@ -197,7 +200,7 @@ def Sentinel1():
                 outimage = ee.Image(pcollection.iterate(get_image,image1clip))    
                                                
             if export == 'export':
-#              export to Google Drive -----------------------132---
+#              export to Google Drive -------------------------
                 gdexport = ee.batch.Export.image.toDrive(outimage,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
@@ -209,18 +212,22 @@ def Sentinel1():
             else:
                 gdexportid = 'none'
 #              --------------------------------------------------                                        
-            downloadpathclip =  outimage.getDownloadUrl({'scale':10})                 
+            downloadpathclip =  outimage.getDownloadUrl({'scale':10})       
             
-            
-               
-                                                           
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat        
+                                                                    
             return render_template('sentinel1out.html',
                                           mapid = mapid['mapid'],
                                           token = mapid['token'],
                                           mapidclip = mapidclip['mapid'], 
                                           tokenclip = mapidclip['token'], 
-                                          centerlon = centerlon,
-                                          centerlat = centerlat,
+                                          centerLon = centerLon,
+                                          centerLat = centerLat,
                                           zoom = zoom,
                                           downloadtext = downloadtext,
                                           titletext = titletext,
@@ -240,17 +247,22 @@ def Sentinel1():
 
 @app.route('/sentinel2.html', methods = ['GET', 'POST'])
 def Sentinel2():
-    global msg, centerlon, centerlat, local, zoom
+    global glbls, msg, local, zoom
     if request.method == 'GET':
         if local:
             return render_template('sentinel2.html', msg = msg,
-                                                     centerlon = centerlon,
-                                                     centerlat = centerlat,
-                                                     zoom = zoom)
+                                                 minLat = glbls['minLat'],
+                                                 minLon = glbls['minLon'],
+                                                 maxLat = glbls['maxLat'],
+                                                 maxLon = glbls['maxLon'],
+                                                 centerLon = glbls['centerLon'],
+                                                 centerLat = glbls['centerLat'],
+                                                 zoom = zoom)
         else:
             return render_template('sentinel2web.html', msg = msg,
-                                                     centerlon = centerlon,
-                                                     centerlat = centerlat,zoom = zoom)
+                                                 centerLon = glbls['centerLon'],
+                                                 centerLat = glbls['centerLat'],
+                                                 zoom = zoom)
     else:
         try:
             startdate = request.form['startdate']  
@@ -268,8 +280,8 @@ def Sentinel2():
             start = ee.Date(startdate)
             finish = ee.Date(enddate)           
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
-            centerlon = (minLon + maxLon)/2.0
-            centerlat = (minLat + maxLat)/2.0 
+            centerLon = (minLon + maxLon)/2.0
+            centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat]) 
             collection = ee.ImageCollection('COPERNICUS/S2') \
@@ -314,14 +326,22 @@ def Sentinel2():
             rgb = image.select('B2','B3','B4')            
             rgbclip = imageclip.select('B2','B3','B4')                 
             mapid = rgb.getMapId({'min':0, 'max':2000, 'opacity': 0.6}) 
-            mapidclip = rgbclip.getMapId({'min':0, 'max':3000, 'opacity': 1.0})          
+            mapidclip = rgbclip.getMapId({'min':0, 'max':3000, 'opacity': 1.0}) 
+            
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat  
+                                 
             return render_template('sentinel2out.html',
                                           mapidclip = mapidclip['mapid'], 
                                           tokenclip = mapidclip['token'], 
                                           mapid = mapid['mapid'], 
                                           token = mapid['token'], 
-                                          centerlon = centerlon,
-                                          centerlat = centerlat,
+                                          centerLon = centerLon,
+                                          centerLat = centerLat,
                                           zoom = zoom,
                                           downloadtext = 'Download image intersection',
                                           downloadpath = downloadpath, 
@@ -337,18 +357,22 @@ def Sentinel2():
         
 @app.route('/mad.html', methods = ['GET', 'POST'])
 def Mad():
-    global msg, centerlon, centerlat, local, zoom
+    global glbls, msg, local, zoom
     if request.method == 'GET':
         if local:
             return render_template('mad.html', msg = msg,
-                                                     centerlon = centerlon,
-                                                     centerlat = centerlat,
-                                                     zoom = zoom)
+                                                 minLat = glbls['minLat'],
+                                                 minLon = glbls['minLon'],
+                                                 maxLat = glbls['maxLat'],
+                                                 maxLon = glbls['maxLon'],
+                                                 centerLon = glbls['centerLon'],
+                                                 centerLat = glbls['centerLat'],
+                                                 zoom = zoom)
         else:
             return render_template('madweb.html', msg = msg,
-                                                     centerlon = centerlon,
-                                                     centerlat = centerlat,
-                                                     zoom = zoom)     
+                                                 centerLon = glbls['centerLon'],
+                                                 centerLat = glbls['centerLat'],
+                                                 zoom = zoom)
     else:
         try:
             niter = int(request.form['iterations'])
@@ -374,8 +398,8 @@ def Mad():
             else:
                 gdexport = 'none'                 
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
-            centerlon = (minLon + maxLon)/2.0
-            centerlat = (minLat + maxLat)/2.0 
+            centerLon = (minLon + maxLon)/2.0
+            centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat]) 
             if platform=='sentinel2':
@@ -517,7 +541,7 @@ def Mad():
             MAD = ee.Image(result.get('MAD')).rename(bnames)
             chi2 = ee.Image(result.get('chi2')).rename(['chi2'])
             allrhos = ee.Array(result.get('allrhos')).toList()              
-            MAD = ee.Image.cat(MAD,chi2)
+            MAD = ee.Image.cat(MAD,chi2,image1,image2)
             hint = '(enable export to bypass)'
             if assexport == 'assexport':
 #              export allrhos as CSV to Drive  
@@ -552,6 +576,13 @@ def Mad():
             else:
                 gdexportid = 'none'    
                 
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat                  
+                
             for rhos in allrhos.getInfo():
                 print rhos               
             mapid = chi2.getMapId({'min': 0, 'max':10000, 'opacity': 0.7})                             
@@ -561,8 +592,8 @@ def Mad():
                                           token = mapid['token'], 
                                           gdexportid = gdexportid,
                                           assexportid = assexportid,
-                                          centerlon = centerlon,
-                                          centerlat = centerlat,
+                                          centerLon = centerLon,
+                                          centerLat = centerLat,
                                           systemid1 = systemid1,
                                           systemid2 = systemid2,
                                           cloudcover1 = cloudcover1,
@@ -577,8 +608,8 @@ def Mad():
                                               title = 'Error in MAD: %s '%e + hint,
                                               gdexportid = 'none',
                                               assexportid = 'none',
-                                              centerlon = centerlon,
-                                              centerlat = centerlat,
+                                              centerLon = centerLon,
+                                              centerLat = centerLat,
                                               systemid1 = systemid1,
                                               systemid2 = systemid2,
                                               cloudcover1 = cloudcover1,
@@ -588,18 +619,22 @@ def Mad():
 
 @app.route('/omnibus.html', methods = ['GET', 'POST'])
 def Omnibus():       
-    global msg, centerlon, centerlat, jet, local, zoom
+    global glbls, msg, local, zoom
     if request.method == 'GET':
         if local:
             return render_template('omnibus.html', msg = msg,
-                                                   centerlon = centerlon,
-                                                   centerlat = centerlat,
-                                                   zoom = zoom)
+                                                 minLat = glbls['minLat'],
+                                                 minLon = glbls['minLon'],
+                                                 maxLat = glbls['maxLat'],
+                                                 maxLon = glbls['maxLon'],
+                                                 centerLon = glbls['centerLon'],
+                                                 centerLat = glbls['centerLat'],
+                                                 zoom = zoom)
         else:
             return render_template('omnibusweb.html', msg = msg,
-                                                      centerlon = centerlon,
-                                                      centerlat = centerlat,
-                                                      zoom = zoom)            
+                                                 centerLon = glbls['centerLon'],
+                                                 centerLat = glbls['centerLat'],
+                                                 zoom = zoom)        
     else:
         try: 
             startdate = request.form['startdate']  
@@ -636,8 +671,8 @@ def Omnibus():
             start = ee.Date(startdate)
             finish = ee.Date(enddate)            
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
-            centerlon = (minLon + maxLon)/2.0
-            centerlat = (minLat + maxLat)/2.0 
+            centerLon = (minLon + maxLon)/2.0
+            centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat])                
             collection = ee.ImageCollection('COPERNICUS/S1_GRD') \
@@ -730,12 +765,20 @@ def Omnibus():
             else:
                 mapid = cmap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4})   
                 title = 'Sequential omnibus last change map'    
+                
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat                                                 
+                
             return render_template('omnibusout.html',
                                           mapid = mapid['mapid'], 
                                           token = mapid['token'], 
                                           title = title,
-                                          centerlon = centerlon,
-                                          centerlat = centerlat,
+                                          centerLon = centerLon,
+                                          centerLat = centerLat,
                                           zoom = zoom,
                                           projection = projection,
                                           systemid = systemid,

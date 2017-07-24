@@ -21,6 +21,8 @@ for details.
       var TOKEN = "{{ token }}";
       var MAPIDCLIP = "{{ mapidclip }}";
       var TOKENCLIP = "{{ tokenclip }}";
+      var CENTERLAT = "{{ centerLat }}";
+      var CENTERLON = "{{ centerLon }}";
       
       /**
       * The Google Maps API calls getTileUrl when it tries to display a maps
@@ -54,7 +56,7 @@ for details.
 
       // Initialize the Google Map and add our custom layer overlay.
       function initialize() {
-        var myLatLng = new google.maps.LatLng({{centerlat}}, {{centerlon}});
+        var myLatLng = new google.maps.LatLng(CENTERLAT, CENTERLON);
         var mapOptions = {
           center: myLatLng,
           zoom: {{zoom}},
@@ -80,6 +82,7 @@ for details.
     Timestamp: {{timestamp}}<br />
     GDExportID: {{gdexportid}}<br />
     </p>
+    <p><a href="/" name="return"> Return</a></p>
     <div id="map" style="width: 640px; height: 480px;"></div>
     <a href={{downloadpathclip}}>{{downloadtext}}</a><br />
     <p>Acquisition times:<br />
@@ -88,6 +91,5 @@ for details.
     {{relativeorbitnumbers}}<br />
     System IDs:<br />
     {{systemids}} </p>
-    <a href="/" name="return"> Return</a>
   </body>
 </html>
