@@ -20,8 +20,8 @@ if local:
     msg = 'Choose a rectangular region'
     sentinel1 = 'sentinel1.html'
     sentinel2 = 'sentinel2.html'
-    mad = 'mad.html'
-    omnibus = 'omnibus.html'
+    mad1 = 'mad.html'
+    omnibus1 = 'omnibus.html'
 else:
 # for appengine deployment or development appserver
     import config
@@ -356,7 +356,7 @@ def Sentinel2():
 def Mad():
     global glbls, msg, local, zoom
     if request.method == 'GET':
-        return render_template(mad, msg = msg,
+        return render_template(mad1, msg = msg,
                                     minLat = glbls['minLat'],
                                     minLon = glbls['minLon'],
                                     maxLat = glbls['maxLat'],
@@ -366,6 +366,7 @@ def Mad():
                                     zoom = zoom)
     else:
         try:
+            hint = '(enable export to bypass)' 
             niter = int(request.form['iterations'])
             start1 = ee.Date(request.form['startdate1'])
             finish1 = ee.Date(request.form['enddate1'])
@@ -533,7 +534,6 @@ def Mad():
             chi2 = ee.Image(result.get('chi2')).rename(['chi2'])
             allrhos = ee.Array(result.get('allrhos')).toList()              
             MAD = ee.Image.cat(MAD,chi2,image1,image2)
-            hint = '(enable export to bypass)'
             if assexport == 'assexport':
 #              export allrhos as CSV to Drive  
                 hint = '(batch export to should complete)'             
@@ -612,7 +612,7 @@ def Mad():
 def Omnibus():       
     global glbls, msg, local, zoom
     if request.method == 'GET':
-        return render_template(omnibus, msg = msg,
+        return render_template(omnibus1, msg = msg,
                                         minLat = glbls['minLat'],
                                         minLon = glbls['minLon'],
                                         maxLat = glbls['maxLat'],
@@ -622,6 +622,7 @@ def Omnibus():
                                         zoom = zoom)
     else:
         try: 
+            hint = '(enable export to bypass)' 
             startdate = request.form['startdate']  
             enddate = request.form['enddate']  
             orbitpass = request.form['pass']
@@ -673,12 +674,20 @@ def Omnibus():
             collection = collection.sort('system:time_start')                                     
             acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                                           
             count = len(acquisition_times) 
-            if count==0:
-                raise ValueError('No images found')   
+            if count<2:
+                raise ValueError('Less than 2 images found')   
             timestamplist = []
             for timestamp in acquisition_times:
                 tmp = time.gmtime(int(timestamp)/1000)
                 timestamplist.append(time.strftime('%x', tmp))  
+#          make timestamps in TYYYYMMDD format            
+            timestamplist = [x.replace('/','') for x in timestamplist]  
+            timestamplist = ['T20'+x[4:]+x[0:4] for x in timestamplist]
+#          in case of duplicates add running integer
+            timestamplist = [timestamplist[i] + '_' + str(i+1) for i in range(len(timestamplist))]
+#          remove duplicates
+            timestamps = str(timestamplist)
+            timestamp = timestamplist[0]                   
             relativeorbitnumbers = str(ee.List(collection.aggregate_array('relativeOrbitNumber_start')).getInfo())                                                                      
             image = ee.Image(collection.first())                       
             systemid = image.get('system:id').getInfo()   
@@ -706,17 +715,8 @@ def Omnibus():
             smap = ee.Image(result.get('smap')).byte()
             fmap = ee.Image(result.get('fmap')).byte()  
             bmap = ee.Image(result.get('bmap')).byte()
-#          make timestamps in TYYYYMMDD format            
-            timestamplist = [x.replace('/','') for x in timestamplist]  
-            timestamplist = ['T20'+x[4:]+x[0:4] for x in timestamplist]
-#          in case of duplicates add running integer
-            timestamplist = [timestamplist[i] + '_' + str(i+1) for i in range(len(timestamplist))]
-#          remove duplicates
-            timestamps = str(timestamplist)
-            timestamp = timestamplist[0]   
             cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist[1:])  
-            downloadpath = cmaps.getDownloadUrl({'scale':10})    
-            hint = '(enable export to bypass)'     
+            downloadpath = cmaps.getDownloadUrl({'scale':10})                  
             if assexport == 'assexport':
 #              export to Assets 
                 hint = '(batch export to should complete)'
@@ -781,16 +781,13 @@ def Omnibus():
             else:
                 return render_template('omnibusout.html', 
                                         title = 'Error in omnibus: %s '%e + hint,
-                                        centerlon = centerlon,
-                                        centerlat = centerlat,
+                                        centerLon = centerLon,
+                                        centerLat = centerLat,
                                         zoom = zoom,
                                         projection = projection,
                                         systemid = systemid,
                                         count = count,
-                                        downloadpath = downloadpath,
                                         timestamp = timestamp,
-                                        assexportid = assexportid,
-                                        gdexportid = gdexportid,
                                         timestamps = timestamps,
                                         polarization = polarization1,
                                         relativeorbitnumbers = relativeorbitnumbers)  
