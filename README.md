@@ -64,17 +64,13 @@ Assuming you have been authenticated (see below) to the Earth Engine, you can ca
  
  		exit 
  		
- 	to leave the container.
- 
- 6. Stop the container with
- 
- 		docker stop ee
+ 	to leave the container. The container will then stop.
  		
- 7. Re-start and enter the container with
+ 6. Re-start and enter the container with
  
  		docker start -ai ee
  		
- 8. Run the command
+ 7. Run the command
  
 	    ./app.py
 		

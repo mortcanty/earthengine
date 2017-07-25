@@ -18,11 +18,19 @@ if local:
 # for local flask server
     ee.Initialize()
     msg = 'Choose a rectangular region'
+    sentinel1 = 'sentinel1.html'
+    sentinel2 = 'sentinel2.html'
+    mad = 'mad.html'
+    omnibus = 'omnibus.html'
 else:
 # for appengine deployment or development appserver
     import config
     msg = 'Choose a SMALL rectangular region'
     ee.Initialize(config.EE_CREDENTIALS, 'https://earthengine.googleapis.com')
+    sentinel1 = 'sentinel1web.html'
+    sentinel2 = 'sentinel2web.html'
+    mad = 'madweb.html'
+    omnibus = 'omnibusweb.html'    
 
 app = Flask(__name__)
 
@@ -94,24 +102,14 @@ def index():
 def Sentinel1():    
     global glbls, msg, local, zoom
     if request.method == 'GET':
-        if local:
-            return render_template('sentinel1.html', msg = msg,
-                                                 minLat = glbls['minLat'],
-                                                 minLon = glbls['minLon'],
-                                                 maxLat = glbls['maxLat'],
-                                                 maxLon = glbls['maxLon'],
-                                                 centerLon = glbls['centerLon'],
-                                                 centerLat = glbls['centerLat'],
-                                                 zoom = zoom)
-        else:
-            return render_template('sentinel1web.html', msg = msg,
-                                                 minLat = glbls['minLat'],
-                                                 minLon = glbls['minLon'],
-                                                 maxLat = glbls['maxLat'],
-                                                 maxLon = glbls['maxLon'],
-                                                 centerLon = glbls['centerLon'],
-                                                 centerLat = glbls['centerLat'],
-                                                 zoom = zoom)
+        return render_template(sentinel1, msg = msg,
+                                          minLat = glbls['minLat'],
+                                          minLon = glbls['minLon'],
+                                          maxLat = glbls['maxLat'],
+                                          maxLon = glbls['maxLon'],
+                                          centerLon = glbls['centerLon'],
+                                          centerLat = glbls['centerLat'],
+                                          zoom = zoom)
     else:
         try: 
             startdate = request.form['startdate']  
@@ -226,25 +224,25 @@ def Sentinel1():
             glbls['centerLat'] = centerLat        
                                                                     
             return render_template('sentinel1out.html',
-                                          mapid = mapid['mapid'],
-                                          token = mapid['token'],
-                                          mapidclip = mapidclip['mapid'], 
-                                          tokenclip = mapidclip['token'], 
-                                          centerLon = centerLon,
-                                          centerLat = centerLat,
-                                          zoom = zoom,
-                                          downloadtext = downloadtext,
-                                          titletext = titletext,
-                                          downloadpathclip = downloadpathclip, 
-                                          projection = projection,
-                                          systemid = systemid,
-                                          count = count,
-                                          timestamp = timestamp,
-                                          gdexportid = gdexportid,
-                                          timestamps = timestamps,
-                                          systemids = systemids,
-                                          polarization = polarization1,
-                                          relativeorbitnumbers = relativeorbitnumbers)  
+                                    mapid = mapid['mapid'],
+                                    token = mapid['token'],
+                                    mapidclip = mapidclip['mapid'], 
+                                    tokenclip = mapidclip['token'], 
+                                    centerLon = centerLon,
+                                    centerLat = centerLat,
+                                    zoom = zoom,
+                                    downloadtext = downloadtext,
+                                    titletext = titletext,
+                                    downloadpathclip = downloadpathclip, 
+                                    projection = projection,
+                                    systemid = systemid,
+                                    count = count,
+                                    timestamp = timestamp,
+                                    gdexportid = gdexportid,
+                                    timestamps = timestamps,
+                                    systemids = systemids,
+                                    polarization = polarization1,
+                                    relativeorbitnumbers = relativeorbitnumbers)  
         except Exception as e:
             return '<br />An error occurred in Sentinel1: %s'%e
                   
@@ -253,24 +251,14 @@ def Sentinel1():
 def Sentinel2():
     global glbls, msg, local, zoom
     if request.method == 'GET':
-        if local:
-            return render_template('sentinel2.html', msg = msg,
-                                                 minLat = glbls['minLat'],
-                                                 minLon = glbls['minLon'],
-                                                 maxLat = glbls['maxLat'],
-                                                 maxLon = glbls['maxLon'],
-                                                 centerLon = glbls['centerLon'],
-                                                 centerLat = glbls['centerLat'],
-                                                 zoom = zoom)
-        else:
-            return render_template('sentinel2web.html', msg = msg,
-                                                 minLat = glbls['minLat'],
-                                                 minLon = glbls['minLon'],
-                                                 maxLat = glbls['maxLat'],
-                                                 maxLon = glbls['maxLon'],
-                                                 centerLon = glbls['centerLon'],
-                                                 centerLat = glbls['centerLat'],
-                                                 zoom = zoom)
+        return render_template(sentinel2, msg = msg,
+                                          minLat = glbls['minLat'],
+                                          minLon = glbls['minLon'],
+                                          maxLat = glbls['maxLat'],
+                                          maxLon = glbls['maxLon'],
+                                          centerLon = glbls['centerLon'],
+                                          centerLat = glbls['centerLat'],
+                                          zoom = zoom)
     else:
         try:
             startdate = request.form['startdate']  
@@ -344,22 +332,23 @@ def Sentinel2():
             glbls['centerLat'] = centerLat  
                                  
             return render_template('sentinel2out.html',
-                                          mapidclip = mapidclip['mapid'], 
-                                          tokenclip = mapidclip['token'], 
-                                          mapid = mapid['mapid'], 
-                                          token = mapid['token'], 
-                                          centerLon = centerLon,
-                                          centerLat = centerLat,
-                                          zoom = zoom,
-                                          downloadtext = 'Download image intersection',
-                                          downloadpath = downloadpath, 
-                                          downloadpathclip = downloadpathclip, 
-                                          systemid = systemid,
-                                          cloudcover = cloudcover,
-                                          count = count,
-                                          sensingorbitnumbers = sensingorbitnumbers,
-                                          timestamps = timestamps,
-                                          timestamp = timestamp)  
+                                    mapidclip = mapidclip['mapid'], 
+                                    tokenclip = mapidclip['token'], 
+                                    mapid = mapid['mapid'], 
+                                    token = mapid['token'], 
+                                    centerLon = centerLon,
+                                    centerLat = centerLat,
+                                    zoom = zoom,
+                                    downloadtext = 'Download image intersection',
+                                    downloadpath = downloadpath, 
+                                    downloadpathclip = downloadpathclip, 
+                                    systemid = systemid,
+                                    cloudcover = cloudcover,
+                                    projection = projection,
+                                    count = count,
+                                    sensingorbitnumbers = sensingorbitnumbers,
+                                    timestamps = timestamps,
+                                    timestamp = timestamp)  
         except Exception as e:
             return '<br />An error occurred in Sentinel2: %s'%e  
         
@@ -367,24 +356,14 @@ def Sentinel2():
 def Mad():
     global glbls, msg, local, zoom
     if request.method == 'GET':
-        if local:
-            return render_template('mad.html', msg = msg,
-                                                 minLat = glbls['minLat'],
-                                                 minLon = glbls['minLon'],
-                                                 maxLat = glbls['maxLat'],
-                                                 maxLon = glbls['maxLon'],
-                                                 centerLon = glbls['centerLon'],
-                                                 centerLat = glbls['centerLat'],
-                                                 zoom = zoom)
-        else:
-            return render_template('madweb.html', msg = msg,
-                                                 minLat = glbls['minLat'],
-                                                 minLon = glbls['minLon'],
-                                                 maxLat = glbls['maxLat'],
-                                                 maxLon = glbls['maxLon'],
-                                                 centerLon = glbls['centerLon'],
-                                                 centerLat = glbls['centerLat'],
-                                                 zoom = zoom)
+        return render_template(mad, msg = msg,
+                                    minLat = glbls['minLat'],
+                                    minLon = glbls['minLon'],
+                                    maxLat = glbls['maxLat'],
+                                    maxLon = glbls['maxLon'],
+                                    centerLon = glbls['centerLon'],
+                                    centerLat = glbls['centerLat'],
+                                    zoom = zoom)
     else:
         try:
             niter = int(request.form['iterations'])
@@ -599,58 +578,48 @@ def Mad():
                 print rhos               
             mapid = chi2.getMapId({'min': 0, 'max':10000, 'opacity': 0.7})                             
             return render_template('madout.html',
-                                          title = 'Chi Square Image',
-                                          mapid = mapid['mapid'], 
-                                          token = mapid['token'], 
-                                          gdexportid = gdexportid,
-                                          assexportid = assexportid,
-                                          centerLon = centerLon,
-                                          centerLat = centerLat,
-                                          systemid1 = systemid1,
-                                          systemid2 = systemid2,
-                                          cloudcover1 = cloudcover1,
-                                          cloudcover2 = cloudcover2,
-                                          timestamp1 = timestamp1,
-                                          timestamp2 = timestamp2)  
+                                    title = 'Chi Square Image',
+                                    mapid = mapid['mapid'], 
+                                    token = mapid['token'], 
+                                    gdexportid = gdexportid,
+                                    assexportid = assexportid,
+                                    centerLon = centerLon,
+                                    centerLat = centerLat,
+                                    systemid1 = systemid1,
+                                    systemid2 = systemid2,
+                                    cloudcover1 = cloudcover1,
+                                    cloudcover2 = cloudcover2,
+                                    timestamp1 = timestamp1,
+                                    timestamp2 = timestamp2)  
         except Exception as e:
             if isinstance(e,ValueError):
                 return 'Error in MAD: %s'%e
             else:
                 return render_template('madout.html',
-                                              title = 'Error in MAD: %s '%e + hint,
-                                              gdexportid = 'none',
-                                              assexportid = 'none',
-                                              centerLon = centerLon,
-                                              centerLat = centerLat,
-                                              systemid1 = systemid1,
-                                              systemid2 = systemid2,
-                                              cloudcover1 = cloudcover1,
-                                              cloudcover2 = cloudcover2,
-                                              timestamp1 = timestamp1,
-                                              timestamp2 = timestamp2)                 
+                                        title = 'Error in MAD: %s '%e + hint,
+                                        gdexportid = 'none',
+                                        assexportid = 'none',
+                                        centerLon = centerLon,
+                                        centerLat = centerLat,
+                                        systemid1 = systemid1,
+                                        systemid2 = systemid2,
+                                        cloudcover1 = cloudcover1,
+                                        cloudcover2 = cloudcover2,
+                                        timestamp1 = timestamp1,
+                                        timestamp2 = timestamp2)                 
 
 @app.route('/omnibus.html', methods = ['GET', 'POST'])
 def Omnibus():       
     global glbls, msg, local, zoom
     if request.method == 'GET':
-        if local:
-            return render_template('omnibus.html', msg = msg,
-                                                 minLat = glbls['minLat'],
-                                                 minLon = glbls['minLon'],
-                                                 maxLat = glbls['maxLat'],
-                                                 maxLon = glbls['maxLon'],
-                                                 centerLon = glbls['centerLon'],
-                                                 centerLat = glbls['centerLat'],
-                                                 zoom = zoom)
-        else:
-            return render_template('omnibusweb.html', msg = msg,
-                                                 minLat = glbls['minLat'],
-                                                 minLon = glbls['minLon'],
-                                                 maxLat = glbls['maxLat'],
-                                                 maxLon = glbls['maxLon'],
-                                                 centerLon = glbls['centerLon'],
-                                                 centerLat = glbls['centerLat'],
-                                                 zoom = zoom)        
+        return render_template(omnibus, msg = msg,
+                                        minLat = glbls['minLat'],
+                                        minLon = glbls['minLon'],
+                                        maxLat = glbls['maxLat'],
+                                        maxLon = glbls['maxLon'],
+                                        centerLon = glbls['centerLon'],
+                                        centerLat = glbls['centerLat'],
+                                        zoom = zoom)
     else:
         try: 
             startdate = request.form['startdate']  
@@ -790,41 +759,41 @@ def Omnibus():
             glbls['centerLat'] = centerLat                                                 
                 
             return render_template('omnibusout.html',
-                                          mapid = mapid['mapid'], 
-                                          token = mapid['token'], 
-                                          title = title,
-                                          centerLon = centerLon,
-                                          centerLat = centerLat,
-                                          zoom = zoom,
-                                          projection = projection,
-                                          systemid = systemid,
-                                          count = count,
-                                          downloadpath = downloadpath,
-                                          timestamp = timestamp,
-                                          assexportid = assexportid,
-                                          gdexportid = gdexportid,
-                                          timestamps = timestamps,
-                                          polarization = polarization1,
-                                          relativeorbitnumbers = relativeorbitnumbers)                                          
+                                    mapid = mapid['mapid'], 
+                                    token = mapid['token'], 
+                                    title = title,
+                                    centerLon = centerLon,
+                                    centerLat = centerLat,
+                                    zoom = zoom,
+                                    projection = projection,
+                                    systemid = systemid,
+                                    count = count,
+                                    downloadpath = downloadpath,
+                                    timestamp = timestamp,
+                                    assexportid = assexportid,
+                                    gdexportid = gdexportid,
+                                    timestamps = timestamps,
+                                    polarization = polarization1,
+                                    relativeorbitnumbers = relativeorbitnumbers)                                          
         except Exception as e:
             if isinstance(e,ValueError):
                 return 'Error in MAD: %s'%e
             else:
                 return render_template('omnibusout.html', 
-                                              title = 'Error in omnibus: %s '%e + hint,
-                                              centerlon = centerlon,
-                                              centerlat = centerlat,
-                                              zoom = zoom,
-                                              projection = projection,
-                                              systemid = systemid,
-                                              count = count,
-                                              downloadpath = downloadpath,
-                                              timestamp = timestamp,
-                                              assexportid = assexportid,
-                                              gdexportid = gdexportid,
-                                              timestamps = timestamps,
-                                              polarization = polarization1,
-                                              relativeorbitnumbers = relativeorbitnumbers)  
+                                        title = 'Error in omnibus: %s '%e + hint,
+                                        centerlon = centerlon,
+                                        centerlat = centerlat,
+                                        zoom = zoom,
+                                        projection = projection,
+                                        systemid = systemid,
+                                        count = count,
+                                        downloadpath = downloadpath,
+                                        timestamp = timestamp,
+                                        assexportid = assexportid,
+                                        gdexportid = gdexportid,
+                                        timestamps = timestamps,
+                                        polarization = polarization1,
+                                        relativeorbitnumbers = relativeorbitnumbers)  
                                                
 if __name__ == '__main__':   
     app.run(debug=True, host='0.0.0.0')
