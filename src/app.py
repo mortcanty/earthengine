@@ -2,7 +2,7 @@
 import time, math, sys
 import ee
 from flask import Flask, render_template, request
-from eeMad import imad
+from eeMad import imad, chi2cdf, orthoregress
 from eeWishart import omnibus
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
@@ -170,7 +170,7 @@ def Sentinel1():
             image = ee.Image(collection.first())                       
             systemid = image.get('system:id').getInfo()  
             projection = image.select(0).projection().getInfo()['crs']      
-#          make into collection of VV, VH or VVVH images and restore linear scale             
+#          make into collection of VV, VH, HH, HV, HHHV or VVVH images and restore linear scale             
             if polarization1 == 'VV':
                 pcollection = collection.map(get_vv)
             elif polarization1 == 'VH':
@@ -366,7 +366,7 @@ def Mad():
                                     zoom = zoom)
     else:
         try:
-            hint = '(enable export to bypass)' 
+            hint = '(enable export to bypass this error)' 
             niter = int(request.form['iterations'])
             start1 = ee.Date(request.form['startdate1'])
             finish1 = ee.Date(request.form['enddate1'])
@@ -509,42 +509,64 @@ def Mad():
                 timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
                 timestamp2 = time.strftime('%c', timestamp2) 
                 systemid2 = image2.get('system:id').getInfo()  
-                cloudcover2 = image2.get('CLOUD_COVER').getInfo()   
+                cloudcover2 = image2.get('CLOUD_COVER').getInfo()  
+            nbands = image1.bandNames().length().getInfo() 
+            madnames = ['MAD'+str(i+1) for i in range(nbands)]
 #          register
             image2 = image2.register(image1,60)                                                               
 #          iMAD
             chi2 = image1.select(0).multiply(0)
-            allrhos = [ee.List.repeat(0,image1.bandNames().length())]
+            allrhos = [ee.List.sequence(1,image1.bandNames().length())]
+            image = image1.addBands(image2)
             inputlist = ee.List.sequence(1,niter)
             first = ee.Dictionary({'done':ee.Number(0),
-                                   'image':image1.addBands(image2),
+                                   'image':image,
                                    'allrhos':allrhos,
                                    'chi2':ee.Image.constant(0),
-                                   'MAD':ee.Image.constant(0)})
-            
+                                   'MAD':ee.Image.constant(0)})         
             print 'Iteration started ...'
             result = ee.Dictionary(inputlist.iterate(imad,first))
-#          iteration emulation for debugging             
+#          ------iteration emulation for debugging -----             
 #            result = iterate(image1,image2,niter,first)
-
-#          output result
-            nbands = image1.bandNames().length().getInfo()
-            bnames = ['MAD'+str(i+1) for i in range(nbands)]
-            MAD = ee.Image(result.get('MAD')).rename(bnames)
+#          ---------------------------------------------                     
+            MAD = ee.Image(result.get('MAD')).rename(madnames)
             chi2 = ee.Image(result.get('chi2')).rename(['chi2'])
-            allrhos = ee.Array(result.get('allrhos')).toList()              
-            MAD = ee.Image.cat(MAD,chi2,image1,image2)
+            allrhos = ee.Array(result.get('allrhos')).toList()                                   
+#          radcal           
+            ncmask = chi2cdf(chi2,nbands).lt(ee.Image.constant(0.05)).rename(['invarpix'])                     
+            inputlist1 = ee.List.sequence(0,nbands-1)
+            first = ee.Dictionary({'image':image,
+                                   'ncmask':ncmask,
+                                   'nbands':nbands,
+                                   'coeffs': ee.List([]),
+                                   'normalized':ee.Image()})
+            result = ee.Dictionary(inputlist1.iterate(orthoregress,first))          
+            coeffs = ee.List(result.get('coeffs'))                    
+            sel = ee.List.sequence(1,nbands)
+            normalized = ee.Image(result.get ('normalized')).select(sel)                                             
+            MAD = ee.Image.cat(MAD,chi2,ncmask,image1,image2,normalized)
             if assexport == 'assexport':
-#              export allrhos as CSV to Drive  
-                hint = '(batch export to should complete)'             
-                gdrhosexport = ee.batch.Export.table. \
-                     toDrive(ee.FeatureCollection(allrhos.map(makefeature)),
+#              export metadata as CSV to Drive  
+                ninvar = ee.String(ncmask.reduceRegion(ee.Reducer.sum().unweighted(),
+                                                       scale=assexportscale,maxPixels= 1e9).toArray().project([0]))  
+                metadata = ee.List(['IR-MAD: '+time.asctime(),
+                                    timestamp1+': '+systemid1+' %CC: '+str(cloudcover1),
+                                    timestamp2+': '+systemid2+' %CC: '+str(cloudcover2),
+                                    'Asset Export Name: '+assexportname]) \
+                                    .cat(['Canonical Correlations']) \
+                                    .cat(allrhos) \
+                                    .cat(['Radiometric Normalization, Invariant Pixels:']) \
+                                    .cat([ninvar]) \
+                                    .cat(['Slope, Intercept, R:']) \
+                                    .cat(coeffs)      
+                hint = '(batch export should complete)'             
+                gdmetaexport = ee.batch.Export.table.toDrive(ee.FeatureCollection(metadata.map(makefeature)),
                              description='driveExportTask', 
                              folder = 'EarthEngineImages',
                              fileNamePrefix=assexportname.replace('/','-') )
-                gdrhosexportid = str(gdrhosexport.id)
+                gdrhosexportid = str(gdmetaexport.id)
                 print '****Exporting correlations as CSV to Drive, task id: %s '%gdrhosexportid            
-                gdrhosexport.start()                  
+                gdmetaexport.start()                  
 #              export to Assets 
                 assexport = ee.batch.Export.image.toAsset(MAD,
                                                           description='assetExportTask', 
@@ -556,7 +578,7 @@ def Mad():
                 assexportid = 'none'                
             if gdexport == 'gdexport':              
 #              export to Drive 
-                hint = '(batch export to should complete)'
+                hint = '(batch export should complete)'
                 gdexport = ee.batch.Export.image.toDrive(MAD,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
@@ -622,7 +644,7 @@ def Omnibus():
                                         zoom = zoom)
     else:
         try: 
-            hint = '(enable export to bypass)' 
+            hint = '(enable export to bypass this error)' 
             startdate = request.form['startdate']  
             enddate = request.form['enddate']  
             orbitpass = request.form['pass']
@@ -684,15 +706,15 @@ def Omnibus():
             timestamplist = [x.replace('/','') for x in timestamplist]  
             timestamplist = ['T20'+x[4:]+x[0:4] for x in timestamplist]
 #          in case of duplicates add running integer
-            timestamplist = [timestamplist[i] + '_' + str(i+1) for i in range(len(timestamplist))]
+            timestamplist1 = [timestamplist[i] + '_' + str(i+1) for i in range(len(timestamplist))]
 #          remove duplicates
-            timestamps = str(timestamplist)
-            timestamp = timestamplist[0]                   
+            timestamps = str(timestamplist1)
+            timestamp = timestamplist1[0]                   
             relativeorbitnumbers = str(ee.List(collection.aggregate_array('relativeOrbitNumber_start')).getInfo())                                                                      
             image = ee.Image(collection.first())                       
             systemid = image.get('system:id').getInfo()   
             projection = image.select(0).projection().getInfo()['crs']
-#          make into collection of VV, VH or VVVH images and restore linear scale             
+#          make into collection of VV, VH, HH, HV, HHHV or VVVH images and restore linear scale             
             if polarization1 == 'VV':
                 pcollection = collection.map(get_vv)
             elif polarization1 == 'VH':
@@ -709,28 +731,46 @@ def Omnibus():
             pList = pcollection.toList(count)   
             first = ee.Dictionary({'imlist':ee.List([]),'rect':rect}) 
             imList = ee.Dictionary(pList.iterate(clipList,first)).get('imlist')  
-#          run the algorithm            
+#          run the algorithm ------------------------------------------    
             result = ee.Dictionary(omnibus(imList,significance,median))
+#          ------------------------------------------------------------            
             cmap = ee.Image(result.get('cmap')).byte()   
             smap = ee.Image(result.get('smap')).byte()
             fmap = ee.Image(result.get('fmap')).byte()  
             bmap = ee.Image(result.get('bmap')).byte()
-            cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist[1:])  
-            downloadpath = cmaps.getDownloadUrl({'scale':10})                  
+            cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist1[1:])  
+            downloadpath = cmaps.getDownloadUrl({'scale':10})  
+            
+            metadata = ee.List(['SEQUENTIAL OMNIBUS: '+time.asctime(),
+                    'Polarzation: '+polarization1,            
+                    'Timestamps: '+timestamps,
+                    'Rel orbit numbers: '+relativeorbitnumbers,
+                    'Asset export name: '+assexportname])     
+            
+            assexportid = 'none'     
+            gdexportid = 'none'        
             if assexport == 'assexport':
+#              export metadata as CSV to Drive  
+                hint = '(batch export should complete)'             
+                gdrhosexport = ee.batch.Export.table.toDrive(ee.FeatureCollection(metadata.map(makefeature)),
+                             description='driveExportTask', 
+                             folder = 'EarthEngineImages',
+                             fileNamePrefix=assexportname.replace('/','-') )
+                gdrhosexportid = str(gdrhosexport.id)
+                print '****Exporting correlations as CSV to Drive, task id: %s '%gdrhosexportid            
+                gdrhosexport.start()                
 #              export to Assets 
-                hint = '(batch export to should complete)'
+                hint = '(batch export should complete)'
                 assexport = ee.batch.Export.image.toAsset(cmaps,
                                                           description='assetExportTask', 
                                                           assetId=assexportname,scale=assexportscale,maxPixels=1e9)
                 assexportid = str(assexport.id)
                 print '****Exporting to Assets, task id: %s '%assexportid
                 assexport.start() 
-            else:
-                assexportid = 'none'                
+            
             if gdexport == 'gdexport':
 #              export to Drive 
-                hint = '(batch export to should complete)'
+                hint = '(batch export should complete)'
                 gdexport = ee.batch.Export.image.toDrive(cmaps,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
@@ -738,8 +778,6 @@ def Omnibus():
                 gdexportid = str(gdexport.id)
                 print '****Exporting to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
-            else:
-                gdexportid = 'none'    
  
             if display=='fmap':                                                                                  
                 mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
@@ -777,7 +815,7 @@ def Omnibus():
                                     relativeorbitnumbers = relativeorbitnumbers)                                          
         except Exception as e:
             if isinstance(e,ValueError):
-                return 'Error in MAD: %s'%e
+                return 'Error in omnibus: %s'%e
             else:
                 return render_template('omnibusout.html', 
                                         title = 'Error in omnibus: %s '%e + hint,
@@ -787,6 +825,8 @@ def Omnibus():
                                         projection = projection,
                                         systemid = systemid,
                                         count = count,
+                                        assexportid = assexportid,
+                                        gdexportid = gdexportid,
                                         timestamp = timestamp,
                                         timestamps = timestamps,
                                         polarization = polarization1,

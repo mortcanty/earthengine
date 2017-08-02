@@ -13,27 +13,25 @@
 <h2>Run Sequential Omnibus Algorithm on Sentinel-1 Images</h2>
 {{msg|safe}}
 
-<p>
-<a href="/" name="return"> Return</a>
-</p>
+<p><a href="/" name="return"> Return</a></p>
 
-<div id="mapid" style="width: 640px; height: 480px;"></div>
-
+	<div id="mapid" style="width: 640px; height: 480px;"></div>
+	
 <form method="post" action = "/omnibus.html" >
 	
 	<table><tr><td>
 	<p><input type="radio" name="display"  value="fmap" checked="checked"/> Frequency map<br />
     <input type="radio" name="display"  value="smap" /> First change map<br />
     <input type="radio" name="display"  value="cmap" /> Last change map </p>
-    </td>><td>
+    </td><td>
 	<p><input type="submit" id = "submit" value="Go"></p>
 	</td></tr></table>
 	
-	<p> Start search (yyyy-mm-dd) :
+	Start search (yyyy-mm-dd) :
 	<input type="text" value = "2016-04-01" name = "startdate" size = 8><br />
 	End search (yyyy-mm-dd) :
-	<input type="text" value = "2016-09-01" name = "enddate" size = 8></p>		
-	<p> Pass :
+	<input type="text" value = "2016-09-01" name = "enddate" size = 8><br />		
+    Pass :
 	<input type="text" value = "ASCENDING" name = "pass" size = 10><br />
 	Polarization :
 	<input type="text" value = "VV,VH" name = "polarization" size = 4><br />
@@ -41,7 +39,7 @@
 	<input type="text" value = "" name = "relativeorbitnumber" size = 4><br />
 	 Significance :
 	<input type="text" value = "0.01" name = "significance" size = 6><br />
-    <input type="checkbox" name="median" value="median" checked> Median filter</p>		
+    <input type="checkbox" name="median" value="median" checked> Median filter<br />		
     <table style="width:300px">
 	  <tr>
 	    <td>maxLat: <input type="text" value = {{maxLat}} id = "maxlat" name = "maxLat" size = 8></td>

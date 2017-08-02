@@ -8,7 +8,10 @@ Exporting results to Google Drive or to Earth Engine assets is in particular not
 The local version runs in a Docker container serving the Flask web application on __localhost:5000__.
 Assuming you have been authenticated (see below) to the Earth Engine, you can carry out the following tasks:
 
- 1. Run the iMAD (iteratively re-weighted MAD) algorithm on Landsat 5, 7, 8 and Sentinel-2 optical/infrared bitemporal imagery. 
+ 1. Run the iMAD (iteratively re-weighted MAD) algorithm on Landsat 5, 7, 8 and Sentinel-2 optical/infrared bitemporal imagery. Automatic radiometric normaloization is carried out as a side effect.
+
+    <a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=5362">
+       M. J. Canty and A. A. Nielsen (2008). Automatic Radiometric Normalization of Multitemporal Satellite Imagery with the Iteratively Re-weighted MAD Transformation.</a>
  
     <a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=4695"> 
 	A. A. Nielsen (2007). The Regularized Iteratively Reweighted MAD Method for Change Detection in Multi- and Hyperspectral Data.</a>

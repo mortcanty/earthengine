@@ -44,6 +44,41 @@ def geneiv(C,B):
     eigenvecs = Li.matrixTranspose().matrixMultiply(X)
     return (lambdas,eigenvecs) 
 
+def orthoregress(current,prev):
+    ''' iterator function for orthogonal regression'''
+    k = ee.Number(current)
+    prev = ee.Dictionary(prev)    
+#  image is concatenation of reference and target    
+    image = ee.Image(prev.get('image'))
+    ncmask = ee.Image(prev.get('ncmask'))
+    nbands = ee.Number(prev.get('nbands'))
+    coeffs = ee.List(prev.get('coeffs'))
+    normalized = ee.Image(prev.get('normalized'))
+    scale = image.select(0).projection().nominalScale()
+    geometry = image.geometry()
+#  orthoregress reference onto target  
+    image1 = image.select(k.add(nbands),k).updateMask(ncmask).rename(['x','y'])
+    means = image1.reduceRegion(ee.Reducer.mean(), scale=scale, maxPixels=1e9) \
+                  .toArray()\
+                  .project([0])              
+    Xm = means.get([0])    
+    Ym = means.get([1])    
+    S = ee.Array(image1.toArray() \
+                       .reduceRegion(ee.Reducer.covariance(), geometry=geometry, scale=scale, maxPixels=1e9) \
+                       .get('array'))     
+#  Pearson correlation     
+    R = S.get([0,1]).divide(S.get([0,0]).multiply(S.get([1,1])).sqrt())
+    eivs = S.eigen()
+    e1 = eivs.get([0,1])
+    e2 = eivs.get([0,2])
+#  slope and intercept    
+    b = e2.divide(e1)
+    a = Ym.subtract(b.multiply(Xm))
+    coeffs = coeffs.add(ee.List([b,a,R]))
+#  normalize kth band in target    
+    normalized = normalized.addBands(image.select(k.add(nbands)).multiply(b).add(a))
+    return ee.Dictionary({'image':image,'ncmask':ncmask,'nbands':nbands,'coeffs':coeffs,'normalized':normalized})    
+
 def imad(current,prev):
     done =  ee.Number(ee.Dictionary(prev).get('done'))
     return ee.Algorithms.If(done,prev,imad1(current,prev))
