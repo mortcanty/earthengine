@@ -47,9 +47,9 @@ polarization ("VV,VH", "VV",  "VH", "HH,HV", "HH" or "HV") and significance leve
 you are authenticated, select "Export to Assets" or "Export to Google Drive" (or both) with a filename and scale. 
 To run a 3x3 median filter over the P-values, check the median filter box. Choosing "Export to Assets" will also
 trigger an export of metadata for the calculation to Google Drive. Use the
-map rectangle tool to set a region of interest. Click GO to start. If the calculation ends with an error
+map rectangle tool to set a region of interest. Click GO to start. If the foreground calculation ends with an error
 indicating ressources were exceeded, it will usually run to completion in the batch export.
-The result page shows the change frequency map, a time of first change map or a time of last last change map, depending on selection,
+If there is no error, the result page shows the change frequency map, a time of first change map or a time of last last change map, depending on selection,
 as an overlay. You can download the change maps directly, but this may be unreliable. The Export to Assets/Drive is recommended.
 <br />
 <a href="#h0"> top</a>
@@ -64,8 +64,9 @@ you are authenticated, select "Export to Assets" or "Export to Google Drive" (or
 Choosing "Export to Assets" will also
 trigger an export of metadata for the calculation to Google Drive and an automatic radiometric normalization of the second
 image to the first will be attampted as a side effect. 
-Click GO to start. If the calculation ends with an error
-indicating ressources were exceeded, it will usually run to completion in the batch export. The result page shows the resulting chi-square
+Click GO to start. If the foreground calculation ends with an error
+indicating ressources were exceeded, it will usually run to completion in the batch export. If there is no error, 
+the result page shows the resulting chi-square
 image as an overlay. You can download the MAD change image directly, but this may be unreliable. The Export to Assets/Drive is recommended.
 <br />
 <a href="#h0"> top</a>

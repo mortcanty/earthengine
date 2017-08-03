@@ -7,7 +7,7 @@ from eeWishart import omnibus
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
 #------------
-local = True
+local = False
 #------------
 
 glbls = {'centerLon':8.5,'centerLat':50.05,'minLat':49.985,'maxLat':50.078,'minLon':8.444,'maxLon':8.682}
@@ -29,8 +29,8 @@ else:
     ee.Initialize(config.EE_CREDENTIALS, 'https://earthengine.googleapis.com')
     sentinel1 = 'sentinel1web.html'
     sentinel2 = 'sentinel2web.html'
-    mad = 'madweb.html'
-    omnibus = 'omnibusweb.html'    
+    mad1 = 'madweb.html'
+    omnibus1 = 'omnibusweb.html'    
 
 app = Flask(__name__)
 
@@ -739,18 +739,17 @@ def Omnibus():
             fmap = ee.Image(result.get('fmap')).byte()  
             bmap = ee.Image(result.get('bmap')).byte()
             cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist1[1:])  
-            downloadpath = cmaps.getDownloadUrl({'scale':10})  
-            
-            metadata = ee.List(['SEQUENTIAL OMNIBUS: '+time.asctime(),
-                    'Polarzation: '+polarization1,            
-                    'Timestamps: '+timestamps,
-                    'Rel orbit numbers: '+relativeorbitnumbers,
-                    'Asset export name: '+assexportname])     
+            downloadpath = cmaps.getDownloadUrl({'scale':10})    
             
             assexportid = 'none'     
             gdexportid = 'none'        
             if assexport == 'assexport':
 #              export metadata as CSV to Drive  
+                metadata = ee.List(['SEQUENTIAL OMNIBUS: '+time.asctime(),
+                        'Polarization: '+polarization1,            
+                        'Timestamps: '+timestamps,
+                        'Rel orbit numbers: '+relativeorbitnumbers,
+                        'Asset export name: '+assexportname])   
                 hint = '(batch export should complete)'             
                 gdrhosexport = ee.batch.Export.table.toDrive(ee.FeatureCollection(metadata.map(makefeature)),
                              description='driveExportTask', 
