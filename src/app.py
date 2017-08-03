@@ -7,7 +7,7 @@ from eeWishart import omnibus
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
 #------------
-local = False
+local = True
 #------------
 
 glbls = {'centerLon':8.5,'centerLat':50.05,'minLat':49.985,'maxLat':50.078,'minLon':8.444,'maxLon':8.682}
