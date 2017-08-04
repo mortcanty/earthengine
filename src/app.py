@@ -35,7 +35,8 @@ else:
 app = Flask(__name__)
 
 def iterate(image1,image2,niter,first):
-#   simulated iteration of MAD for debugging
+#   simulated iteration of MAD for debugging          
+#   result = iterate(image1,image2,niter,first)   
     for i in range(1,niter+1):
         result = ee.Dictionary(imad(i,first))
         allrhos = ee.List(result.get('allrhos'))
@@ -356,7 +357,7 @@ def Sentinel2():
 def Mad():
     global glbls, msg, local, zoom
     if request.method == 'GET':
-        return render_template(mad1, msg = msg,
+        return render_template(mad1,msg = msg,
                                     minLat = glbls['minLat'],
                                     minLon = glbls['minLon'],
                                     maxLat = glbls['maxLat'],
@@ -394,7 +395,7 @@ def Mad():
             centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat]) 
-            if platform=='sentinel2':
+            if (platform=='sentinel2_10') or (platform=='sentinel2_20'):
                 collection = ee.ImageCollection('COPERNICUS/S2') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
@@ -402,11 +403,14 @@ def Mad():
                             .sort('CLOUDY_PIXEL_PERCENTAGE', True) 
                 count = collection.toList(100).length().getInfo()    
                 if count==0:
-                    raise ValueError('No images found for first time interval')        
-                image1 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B8')               
+                    raise ValueError('No images found for first time interval')    
+                if platform=='sentinel2_10':   
+                    image1 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B8')    
+                else:
+                    image1 = ee.Image(collection.first()).clip(rect).select('B5','B6','B7','B8A','B11','B12')               
                 timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
                 timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
-                timestamp1 = time.strftime('%c', timestamp1) 
+                timestamp1 = time.strftime('%c', timestamp1)               
                 systemid1 = image1.get('system:id').getInfo()
                 cloudcover1 = image1.get('CLOUDY_PIXEL_PERCENTAGE').getInfo()
                 collection = ee.ImageCollection('COPERNICUS/S2') \
@@ -417,14 +421,17 @@ def Mad():
                 count = collection.toList(100).length().getInfo()    
                 if count==0:
                     raise ValueError('No images found for second time interval')        
-                image2 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B8') 
+                if platform=='sentinel2_10':   
+                    image2 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B8')    
+                else:
+                    image2 = ee.Image(collection.first()).clip(rect).select('B5','B6','B7','B8A','B11','B12')  
                 timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
                 timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
                 timestamp2 = time.strftime('%c', timestamp2) 
                 systemid2 = image2.get('system:id').getInfo()  
                 cloudcover2 = image2.get('CLOUDY_PIXEL_PERCENTAGE').getInfo()               
             elif platform=='landsat8':
-                collection = ee.ImageCollection('LANDSAT/LC08/C01/T1') \
+                collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_RT') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
                             .filterDate(start1, finish1) \
@@ -453,7 +460,7 @@ def Mad():
                 systemid2 = image2.get('system:id').getInfo()  
                 cloudcover2 = image2.get('CLOUD_COVER').getInfo()                       
             elif platform=='landsat7':
-                collection = ee.ImageCollection('LANDSAT/LE7') \
+                collection = ee.ImageCollection('LANDSAT/LE07/C01/T1_RT') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
                             .filterDate(start1, finish1) \
@@ -482,7 +489,7 @@ def Mad():
                 systemid2 = image2.get('system:id').getInfo()  
                 cloudcover2 = image2.get('CLOUD_COVER').getInfo()   
             elif platform=='landsat5':
-                collection = ee.ImageCollection('LT5_L1T') \
+                collection = ee.ImageCollection('LANDSAT/LT5_L1T') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
                             .filterDate(start1, finish1) \
@@ -515,27 +522,21 @@ def Mad():
 #          register
             image2 = image2.register(image1,60)                                                               
 #          iMAD
-            chi2 = image1.select(0).multiply(0)
-            allrhos = [ee.List.sequence(1,image1.bandNames().length())]
-            image = image1.addBands(image2)
             inputlist = ee.List.sequence(1,niter)
             first = ee.Dictionary({'done':ee.Number(0),
-                                   'image':image,
-                                   'allrhos':allrhos,
+                                   'image':image1.addBands(image2),
+                                   'allrhos': [ee.List.sequence(1,image1.bandNames().length())],
                                    'chi2':ee.Image.constant(0),
                                    'MAD':ee.Image.constant(0)})         
-            print 'Iteration started ...'
-            result = ee.Dictionary(inputlist.iterate(imad,first))
-#          ------iteration emulation for debugging -----             
-#            result = iterate(image1,image2,niter,first)
-#          ---------------------------------------------                     
+            print >> sys.stderr, '**** Iteration started ...'
+            result = ee.Dictionary(inputlist.iterate(imad,first))                
             MAD = ee.Image(result.get('MAD')).rename(madnames)
             chi2 = ee.Image(result.get('chi2')).rename(['chi2'])
             allrhos = ee.Array(result.get('allrhos')).toList()                                   
 #          radcal           
             ncmask = chi2cdf(chi2,nbands).lt(ee.Image.constant(0.05)).rename(['invarpix'])                     
             inputlist1 = ee.List.sequence(0,nbands-1)
-            first = ee.Dictionary({'image':image,
+            first = ee.Dictionary({'image':image1.addBands(image2),
                                    'ncmask':ncmask,
                                    'nbands':nbands,
                                    'coeffs': ee.List([]),
@@ -597,7 +598,7 @@ def Mad():
             glbls['centerLat'] = centerLat                  
                 
             for rhos in allrhos.getInfo():
-                print rhos               
+                print >> sys.stderr, rhos               
             mapid = chi2.getMapId({'min': 0, 'max':10000, 'opacity': 0.7})                             
             return render_template('madout.html',
                                     title = 'Chi Square Image',
