@@ -22,18 +22,18 @@
 <form method="post" action = "/sentinel2.html" >
 
 	<p> Start search (yyyy-mm-dd) :
-	<input type="text" value = "2016-04-01" name = "startdate" size = 8><br />
+	<input type="text" value = {{startDate}} name = "startDate" size = 8><br />
 	End search (yyyy-mm-dd) :
-	<input type="text" value = "2016-09-01" name = "enddate" size = 8></p>	
+	<input type="text" value = {{endDate}} name = "endDate" size = 8></p>	
 	
     <table style="width:300px">
 	  <tr>
-	    <td>maxLat: <input type="text" value = {{maxLat}} id = "maxlat" name = "maxLat" size = 8></td>
-	    <td>minLon: <input type="text" value = {{minLon}} id = "minlon" name = "minLon" size = 8></td> 
+	    <td>maxLat: <input type="text" value = {{maxLat}} id = "maxLat" name = "maxLat" size = 8></td>
+	    <td>minLon: <input type="text" value = {{minLon}} id = "minLon" name = "minLon" size = 8></td> 
 	  </tr>
 	  <tr>
-	    <td>minLat: <input type="text" value = {{minLat}} id = "minlat" name = "minLat" size = 8></td>
-	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxlon" name = "maxLon" size = 8></td> 
+	    <td>minLat: <input type="text" value = {{minLat}} id = "minLat" name = "minLat" size = 8></td>
+	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxLon" name = "maxLon" size = 8></td> 
 	  </tr>
 	 </table>
 
@@ -105,10 +105,10 @@ mymap.on(L.Draw.Event.CREATED, function(e) {
    var layer = e.layer;
    drawnItems.addLayer(layer);
    var latLngs = (layer.getLatLngs())[0];
-   document.getElementById("minlat").value = (latLngs[0]).lat.toString();
-   document.getElementById("maxlat").value = (latLngs[1]).lat.toString();
-   document.getElementById("minlon").value = (latLngs[0]).lng.toString();
-   document.getElementById("maxlon").value = (latLngs[2]).lng.toString();  
+   document.getElementById("minLat").value = (latLngs[0]).lat.toString();
+   document.getElementById("maxLat").value = (latLngs[1]).lat.toString();
+   document.getElementById("minLon").value = (latLngs[0]).lng.toString();
+   document.getElementById("maxLon").value = (latLngs[2]).lng.toString();  
 });     
 
 var popup = L.popup();

@@ -11,58 +11,63 @@
 </head>
 
 <body>
-<h2>IR-MAD Change Detection</h2>
+<h2>Run Automatic Radiometric Normalization in Batch Mode</h2>
 {{msg|safe}}
 <p><a href="/" name="return"> Return</a></p>
-
 	
 	<div id="mapid" style="width: 640px; height: 480px;"></div>
 
-<form method="post" action = "/mad.html" >
-
-	<table><tr><td><b>
-	<p><input type="radio" name="platform"  value="sentinel2_10" checked="checked" /> Sentinel 2 10m<br />
-	<input type="radio" name="platform"  value="sentinel2_20" /> Sentinel 2 20m<br />
-    <input type="radio" name="platform"  value="landsat8" /> Landsat 8 T1<br />
-    <input type="radio" name="platform"  value="landsat7" /> Landsat 7 ETM<br />
-    <input type="radio" name="platform"  value="landsat5"  /> Landsat 5 TM<br /></p>
-    </b></td> <td>
-	<p><input type="submit" id = "submit" value="Go"></p>
-	</td></tr></table>
-	
-	<b>Image 1</b><br />
+<form name="form" >
+<p>
+	Platform  <input id="pf" type="text" name="platform"  value="S2/10" size=4 /> (S2/10, S2/20, L8, L7 or L5)<br />
 	Start search (yyyy-mm-dd) :
-	<input type="text" value = {{startDate1}} name = "startDate1" size = 8><br />
+	<input id="sd" type="text" value = "2015-01-01" name = "startdate" size = 8><br />
 	End search (yyyy-mm-dd) :
-	<input type="text" value = {{endDate1}} name = "endDate1" size = 8><br />
-	<b>Image 2</b><br />
-	Start search (yyyy-mm-dd) :
-	<input type="text" value = {{startDate2}} name = "startDate2" size = 8><br />
-	End search (yyyy-mm-dd) :
-	<input type="text" value = {{endDate2}} name = "endDate2" size = 8><br />
-	Iterations : <input type="text" value = "50" name = "iterations" size = 2><br />	
-		
-	
+	<input id="ed" type="text" value = "2018-01-01" name = "enddate" size = 8><br />
+	Season from month
+	<input id="m1" type="text" value = "6" name = "month1" size = 2>
+	to month
+   <input id="m2" type="text" value = "8" name = "month2" size = 2><br />
+	Maximum cloud cover (%)
+	<input id="ccm" type="text" value = "5" name = "maxcloudcover" size = 2><br />
+	Iterations : 
+	<input id="it" type="text" value = "50" name = "niter" size = 2><br />	
 	
     <table style="width:300px">
 	  <tr>
-	    <td>maxLat: <input type="text" value = {{maxLat}} id = "maxLat" name = "maxLat" size = 8></td>
-	    <td>minLon: <input type="text" value = {{minLon}} id = "minLon" name = "minLon" size = 8></td> 
+	    <td>maxLat: <input id="maxlat" type="text" value = {{maxLat}}  name = "maxLat" size = 6></td>
+	    <td>minLon: <input id="minlon" type="text" value = {{minLon}}  name = "minLon" size = 6></td> 
 	  </tr>
 	  <tr>
-	    <td>minLat: <input type="text" value = {{minLat}} id = "minLat" name = "minLat" size = 8></td>
-	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxLon" name = "maxLon" size = 8></td> 
+	    <td>minLat: <input id="minlat" type="text" value = {{minLat}}  name = "minLat" size = 6></td>
+	    <td>maxLon: <input id="maxlon" type="text" value = {{maxLon}}  name = "maxLon" size = 6></td> 
 	  </tr>
-	 </table>
-   <input type="checkbox" name="assexport" value="assexport" >Export to Assets as: 
-                       <input type="text" value = "users/mortcanty/imad" name = "assexportname" size = 20>
-               at scale <input type="text" value = "10" name = "assexportscale" size = 4> meters<br />
-    <input type="checkbox" name="gdexport" value="gdexport" >Export to Google Drive as: 
-                       <input type="text" value = "imad" name = "gdexportname" size = 12>
-               at scale <input type="text" value = "10" name = "gdexportscale" size = 2> meters<br />
-   	
+	 </table>	 
+   Export to assets in directory: 
+     <input id="assn" type="text" value = "users/mortcanty/radcal" name = "assexportname" size = 20>
+   at scale:
+     <input id="asssc" type="text" value = "10" name = "assexportscale" size = 2> meters<br />
+   <p><input type="button" value="Go"
+   onClick=" var pf = document.getElementById('pf').value;
+             var sd = document.getElementById('sd').value;
+             var ed = document.getElementById('ed').value;
+             var m1 = document.getElementById('m1').value;
+             var m2 = document.getElementById('m2').value;
+             var ccm = document.getElementById('ccm').value;
+             var it = document.getElementById('it').value;
+             var maxlat = document.getElementById('maxlat').value;
+             var minlon = document.getElementById('minlon').value;
+             var minlat = document.getElementById('minlat').value;
+             var maxlon = document.getElementById('maxlon').value;
+             var assn = document.getElementById('assn').value;
+             var asssc = document.getElementById('asssc').value;
+             document.getElementById('answer').innerHTML = 'Submitting, please wait ...';
+             document.body.style.cursor='wait';          
+  sndReq('/radcal.html','pf='+pf+'&sd='+sd+'&ed='+ed+'&m1='+m1+'&m2='+m2+'&ccm='+ccm+'&it='+it+'&maxlat='+maxlat+'&minlon='+minlon+'&minlat='+minlat+'&maxlon='+maxlon+'&assn='+assn+'&asssc='+asssc);"></p>      	
+      </p>
 </form>
 
+<div id="answer"></div>
 
 <script src="https://npmcdn.com/leaflet@1.0.0-rc.2/dist/leaflet.js"></script>
 
@@ -125,10 +130,10 @@ mymap.on(L.Draw.Event.CREATED, function(e) {
    var layer = e.layer;
    drawnItems.addLayer(layer);
    var latLngs = (layer.getLatLngs())[0];
-   document.getElementById("minLat").value = (latLngs[0]).lat.toString();
-   document.getElementById("maxLat").value = (latLngs[1]).lat.toString();
-   document.getElementById("minLon").value = (latLngs[0]).lng.toString();
-   document.getElementById("maxLon").value = (latLngs[2]).lng.toString();  
+   document.getElementById("minlat").value = (latLngs[0]).lat.toString();
+   document.getElementById("maxlat").value = (latLngs[1]).lat.toString();
+   document.getElementById("minlon").value = (latLngs[0]).lng.toString();
+   document.getElementById("maxlon").value = (latLngs[2]).lng.toString();  
 });     
 var popup = L.popup();
 

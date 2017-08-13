@@ -2,7 +2,7 @@
 import time, math, sys
 import ee
 from flask import Flask, render_template, request
-from eeMad import imad, chi2cdf, orthoregress
+from eeMad import imad, chi2cdf, radcal, radcalbatch
 from eeWishart import omnibus
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
@@ -10,7 +10,12 @@ from eeWishart import omnibus
 local = True
 #------------
 
-glbls = {'centerLon':8.5,'centerLat':50.05,'minLat':49.985,'maxLat':50.078,'minLon':8.444,'maxLon':8.682}
+glbls = {'centerLon':8.5,'centerLat':50.05,
+         'minLat':49.985,'maxLat':50.078,'minLon':8.444,'maxLon':8.682,
+         'startDate':'2016-04-01','endDate':'2016-09-01',
+         'startDate1':'2016-03-07','endDate1':'2016-07-01',
+         'startDate2':'2016-07-01','endDate2':'2016-11-01',
+         'month1':6,'month2':8}
 zoom = 10
 jet = 'black,blue,cyan,yellow,red'
 
@@ -21,6 +26,7 @@ if local:
     sentinel1 = 'sentinel1.html'
     sentinel2 = 'sentinel2.html'
     mad1 = 'mad.html'
+    radcal1 = 'radcal.html'
     omnibus1 = 'omnibus.html'
 else:
 # for appengine deployment or development appserver
@@ -30,6 +36,7 @@ else:
     sentinel1 = 'sentinel1web.html'
     sentinel2 = 'sentinel2web.html'
     mad1 = 'madweb.html'
+    radcal1 = 'radcalweb.html'
     omnibus1 = 'omnibusweb.html'    
 
 app = Flask(__name__)
@@ -47,6 +54,7 @@ def iterate(image1,image2,niter,first):
                                'chi2':chi2,
                                'MAD':MAD})
     return result
+
 
 #------------------
 # helper functions
@@ -110,11 +118,13 @@ def Sentinel1():
                                           maxLon = glbls['maxLon'],
                                           centerLon = glbls['centerLon'],
                                           centerLat = glbls['centerLat'],
+                                          startDate = glbls['startDate'],
+                                          endDate = glbls['endDate'],
                                           zoom = zoom)
     else:
         try: 
-            startdate = request.form['startdate']  
-            enddate = request.form['enddate']
+            startDate = request.form['startDate']  
+            endDate = request.form['endDate']
             orbitpass = request.form['pass']
             polarization1 = request.form['polarization']
             relativeorbitnumber = request.form['relativeorbitnumber']
@@ -138,8 +148,8 @@ def Sentinel1():
                 slanes = True  
             else:
                 slanes = False  
-            start = ee.Date(startdate)
-            finish = ee.Date(enddate)    
+            start = ee.Date(startDate)
+            finish = ee.Date(endDate)    
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
             centerLon = (minLon + maxLon)/2.0
             centerLat = (minLat + maxLat)/2.0 
@@ -222,7 +232,9 @@ def Sentinel1():
             glbls['maxLat'] = maxLat
             glbls['maxLon'] = maxLon  
             glbls['centerLon'] = centerLon
-            glbls['centerLat'] = centerLat        
+            glbls['centerLat'] = centerLat  
+            glbls['startDate'] = startDate
+            glbls['endDate'] = endDate
                                                                     
             return render_template('sentinel1out.html',
                                     mapid = mapid['mapid'],
@@ -245,7 +257,7 @@ def Sentinel1():
                                     polarization = polarization1,
                                     relativeorbitnumbers = relativeorbitnumbers)  
         except Exception as e:
-            return '<br />An error occurred in Sentinel1: %s'%e
+            return '<br />An error occurred in Sentinel1: %s<br /><a href="%s" name="return"> Return</a>'%(e,sentinel1) 
                   
 
 @app.route('/sentinel2.html', methods = ['GET', 'POST'])
@@ -259,11 +271,13 @@ def Sentinel2():
                                           maxLon = glbls['maxLon'],
                                           centerLon = glbls['centerLon'],
                                           centerLat = glbls['centerLat'],
+                                          startDate = glbls['startDate'],
+                                          endDate = glbls['endDate'],
                                           zoom = zoom)
     else:
         try:
-            startdate = request.form['startdate']  
-            enddate = request.form['enddate']
+            startDate = request.form['startDate']  
+            endDate = request.form['endDate']
             minLat = float(request.form['minLat'])
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
@@ -274,8 +288,8 @@ def Sentinel2():
                 gdexportscale = float(request.form['gdexportscale']) 
             else:
                 export = ' '          
-            start = ee.Date(startdate)
-            finish = ee.Date(enddate)           
+            start = ee.Date(startDate)
+            finish = ee.Date(endDate)           
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
             centerLon = (minLon + maxLon)/2.0
             centerLat = (minLat + maxLat)/2.0 
@@ -331,6 +345,8 @@ def Sentinel2():
             glbls['maxLon'] = maxLon  
             glbls['centerLon'] = centerLon
             glbls['centerLat'] = centerLat  
+            glbls['startDate'] = startDate
+            glbls['endDate'] = endDate 
                                  
             return render_template('sentinel2out.html',
                                     mapidclip = mapidclip['mapid'], 
@@ -351,7 +367,7 @@ def Sentinel2():
                                     timestamps = timestamps,
                                     timestamp = timestamp)  
         except Exception as e:
-            return '<br />An error occurred in Sentinel2: %s'%e  
+            return '<br />An error occurred in Sentinel2: %s<br /><a href="%s" name="return"> Return</a>'%(e,sentinel2)   
         
 @app.route('/mad.html', methods = ['GET', 'POST'])
 def Mad():
@@ -364,15 +380,19 @@ def Mad():
                                     maxLon = glbls['maxLon'],
                                     centerLon = glbls['centerLon'],
                                     centerLat = glbls['centerLat'],
+                                    startDate1 = glbls['startDate1'],
+                                    endDate1 = glbls['endDate1'],
+                                    startDate2 = glbls['startDate2'],
+                                    endDate2 = glbls['endDate2'],
                                     zoom = zoom)
     else:
         try:
             hint = '(enable export to bypass this error)' 
             niter = int(request.form['iterations'])
-            start1 = ee.Date(request.form['startdate1'])
-            finish1 = ee.Date(request.form['enddate1'])
-            start2 = ee.Date(request.form['startdate2'])
-            finish2 = ee.Date(request.form['enddate2'])   
+            startDate1 = request.form['startDate1']
+            endDate1 = request.form['endDate1']
+            startDate2 = request.form['startDate2']
+            endDate2 = request.form['endDate2']   
             minLat = float(request.form['minLat'])
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
@@ -399,15 +419,15 @@ def Mad():
                 collection = ee.ImageCollection('COPERNICUS/S2') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
-                            .filterDate(start1, finish1) \
+                            .filterDate(ee.Date(startDate1), ee.Date(endDate1)) \
                             .sort('CLOUDY_PIXEL_PERCENTAGE', True) 
                 count = collection.toList(100).length().getInfo()    
                 if count==0:
                     raise ValueError('No images found for first time interval')    
                 if platform=='sentinel2_10':   
-                    image1 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B8')    
+                    image1 = ee.Image(collection.first()).select('B2','B3','B4','B8')    
                 else:
-                    image1 = ee.Image(collection.first()).clip(rect).select('B5','B6','B7','B8A','B11','B12')               
+                    image1 = ee.Image(collection.first()).select('B5','B6','B7','B8A','B11','B12')               
                 timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
                 timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
                 timestamp1 = time.strftime('%c', timestamp1)               
@@ -416,7 +436,7 @@ def Mad():
                 collection = ee.ImageCollection('COPERNICUS/S2') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
-                            .filterDate(start2, finish2) \
+                            .filterDate(ee.Date(startDate2), ee.Date(endDate2)) \
                             .sort('CLOUDY_PIXEL_PERCENTAGE', True) 
                 count = collection.toList(100).length().getInfo()    
                 if count==0:
@@ -424,7 +444,7 @@ def Mad():
                 if platform=='sentinel2_10':   
                     image2 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B8')    
                 else:
-                    image2 = ee.Image(collection.first()).clip(rect).select('B5','B6','B7','B8A','B11','B12')  
+                    image2 = ee.Image(collection.first()).select('B5','B6','B7','B8A','B11','B12')  
                 timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
                 timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
                 timestamp2 = time.strftime('%c', timestamp2) 
@@ -434,12 +454,12 @@ def Mad():
                 collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_RT') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
-                            .filterDate(start1, finish1) \
+                            .filterDate(ee.Date(startDate1), ee.Date(endDate1)) \
                             .sort('CLOUD_COVER', True) 
                 count = collection.toList(100).length().getInfo()    
                 if count==0:
                     raise ValueError('No images found for first time interval')
-                image1 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B5','B6','B7')               
+                image1 = ee.Image(collection.first()).select('B2','B3','B4','B5','B6','B7')               
                 timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
                 timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
                 timestamp1 = time.strftime('%c', timestamp1) 
@@ -448,12 +468,12 @@ def Mad():
                 collection = ee.ImageCollection('LANDSAT/LC08/C01/T1') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
-                            .filterDate(start2, finish2) \
+                            .filterDate(ee.Date(startDate2), ee.Date(endDate2)) \
                             .sort('CLOUD_COVER', True) 
                 count = collection.toList(100).length().getInfo()    
                 if count==0:
                     raise ValueError('No images found for second time interval')        
-                image2 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B5','B6','B7') 
+                image2 = ee.Image(collection.first()).select('B2','B3','B4','B5','B6','B7') 
                 timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
                 timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
                 timestamp2 = time.strftime('%c', timestamp2) 
@@ -463,12 +483,12 @@ def Mad():
                 collection = ee.ImageCollection('LANDSAT/LE07/C01/T1_RT') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
-                            .filterDate(start1, finish1) \
+                            .filterDate(ee.Date(startDate1), ee.Date(endDate1)) \
                             .sort('CLOUD_COVER', True) 
                 count = collection.toList(100).length().getInfo()    
                 if count==0:
                     raise ValueError('No images found for first time interval')        
-                image1 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7')               
+                image1 = ee.Image(collection.first()).select('B1','B2','B3','B4','B5','B7')               
                 timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
                 timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
                 timestamp1 = time.strftime('%c', timestamp1) 
@@ -477,12 +497,12 @@ def Mad():
                 collection = ee.ImageCollection('LANDSAT/LE7') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
-                            .filterDate(start2, finish2) \
+                            .filterDate(ee.Date(startDate2), ee.Date(endDate2)) \
                             .sort('CLOUD_COVER', True) 
                 count = collection.toList(100).length().getInfo()    
                 if count==0:
                     raise ValueError('No images found for second time interval')        
-                image2 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7') 
+                image2 = ee.Image(collection.first()).select('B1','B2','B3','B4','B5','B7') 
                 timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
                 timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
                 timestamp2 = time.strftime('%c', timestamp2) 
@@ -492,12 +512,12 @@ def Mad():
                 collection = ee.ImageCollection('LANDSAT/LT5_L1T') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
-                            .filterDate(start1, finish1) \
+                            .filterDate(ee.Date(startDate1), ee.Date(endDate1)) \
                             .sort('CLOUD_COVER', True) 
                 count = collection.toList(100).length().getInfo()    
                 if count==0:
                     raise ValueError('No images found for first time interval')        
-                image1 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7')               
+                image1 = ee.Image(collection.first()).select('B1','B2','B3','B4','B5','B7')               
                 timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
                 timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
                 timestamp1 = time.strftime('%c', timestamp1) 
@@ -506,12 +526,12 @@ def Mad():
                 collection = ee.ImageCollection('LT5_L1T') \
                             .filterBounds(ulPoint) \
                             .filterBounds(lrPoint) \
-                            .filterDate(start2, finish2) \
+                            .filterDate(ee.Date(startDate2), ee.Date(endDate2)) \
                             .sort('CLOUD_COVER', True) 
                 count = collection.toList(100).length().getInfo()    
                 if count==0:
                     raise ValueError('No images found for second time interval')        
-                image2 = ee.Image(collection.first()).clip(rect).select('B1','B2','B3','B4','B5','B7') 
+                image2 = ee.Image(collection.first()).select('B1','B2','B3','B4','B5','B7') 
                 timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
                 timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
                 timestamp2 = time.strftime('%c', timestamp2) 
@@ -524,7 +544,7 @@ def Mad():
 #          iMAD
             inputlist = ee.List.sequence(1,niter)
             first = ee.Dictionary({'done':ee.Number(0),
-                                   'image':image1.addBands(image2),
+                                   'image':image1.addBands(image2).clip(rect),
                                    'allrhos': [ee.List.sequence(1,image1.bandNames().length())],
                                    'chi2':ee.Image.constant(0),
                                    'MAD':ee.Image.constant(0)})         
@@ -539,13 +559,14 @@ def Mad():
             first = ee.Dictionary({'image':image1.addBands(image2),
                                    'ncmask':ncmask,
                                    'nbands':nbands,
+                                   'rect':rect,
                                    'coeffs': ee.List([]),
                                    'normalized':ee.Image()})
-            result = ee.Dictionary(inputlist1.iterate(orthoregress,first))          
+            result = ee.Dictionary(inputlist1.iterate(radcal,first))          
             coeffs = ee.List(result.get('coeffs'))                    
             sel = ee.List.sequence(1,nbands)
             normalized = ee.Image(result.get ('normalized')).select(sel)                                             
-            MAD = ee.Image.cat(MAD,chi2,ncmask,image1,image2,normalized)
+            MAD = ee.Image.cat(MAD,chi2,ncmask,image1.clip(rect),image2.clip(rect),normalized.clip(rect))
             if assexport == 'assexport':
 #              export metadata as CSV to Drive  
                 ninvar = ee.String(ncmask.reduceRegion(ee.Reducer.sum().unweighted(),
@@ -580,8 +601,7 @@ def Mad():
             if gdexport == 'gdexport':              
 #              export to Drive 
                 hint = '(batch export should complete)'
-                gdexport = ee.batch.Export.image.toDrive(MAD,
-                                                         description='driveExportTask', 
+                gdexport = ee.batch.Export.image.toDrive(MAD,description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
                                                          fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9)
                 gdexportid = str(gdexport.id)
@@ -595,7 +615,11 @@ def Mad():
             glbls['maxLat'] = maxLat
             glbls['maxLon'] = maxLon  
             glbls['centerLon'] = centerLon
-            glbls['centerLat'] = centerLat                  
+            glbls['centerLat'] = centerLat   
+            glbls['startDate1'] = startDate1
+            glbls['endDate1'] = endDate1   
+            glbls['startDate2'] = startDate2
+            glbls['endDate2'] = endDate2     
                 
             for rhos in allrhos.getInfo():
                 print >> sys.stderr, rhos               
@@ -616,7 +640,7 @@ def Mad():
                                     timestamp2 = timestamp2)  
         except Exception as e:
             if isinstance(e,ValueError):
-                return 'Error in MAD: %s'%e
+                return '<br />An error occurred in MAD: %s<br /><a href="%s" name="return"> Return</a>'%(e,mad1) 
             else:
                 return render_template('madout.html',
                                         title = 'Error in MAD: %s '%e + hint,
@@ -631,6 +655,164 @@ def Mad():
                                         timestamp1 = timestamp1,
                                         timestamp2 = timestamp2)                 
 
+@app.route('/radcal.html', methods = ['GET', 'POST'])
+def Radcal():       
+    global glbls, msg, local, zoom
+    if request.method == 'GET':
+        return render_template(radcal1, msg = msg,
+                                        minLat = glbls['minLat'],
+                                        minLon = glbls['minLon'],
+                                        maxLat = glbls['maxLat'],
+                                        maxLon = glbls['maxLon'],
+                                        centerLon = glbls['centerLon'],
+                                        centerLat = glbls['centerLat'],
+                                        startDate = glbls['startDate'],
+                                        endDate = glbls['endDate'],
+                                        month1 = glbls['month1'],
+                                        month2 = glbls['month2'],
+                                        zoom = zoom)
+    else:
+        try: 
+            niter = int(request.form['niter'])
+            startDate = request.form['startDate']
+            endDate = request.form['endDate']
+            month1 = int(request.form['month1'])
+            month2 = int(request.form['month2'])
+            maxcloudcover = float(request.form['maxcloudcover'])
+            minLat = float(request.form['minLat'])
+            minLon = float(request.form['minLon'])
+            maxLat = float(request.form['maxLat'])
+            maxLon = float(request.form['maxLon'])
+            platform = request.form['platform']  
+            refnumber = int(request.form['refnumber'])
+            rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
+            centerLon = (minLon + maxLon)/2.0
+            centerLat = (minLat + maxLat)/2.0 
+            ulPoint = ee.Geometry.Point([minLon,maxLat])   
+            lrPoint = ee.Geometry.Point([maxLon,minLat]) 
+            if platform=='sentinel2_10':
+                bandNames = ['B2','B3','B4','B8']
+                collectionid = 'COPERNICUS/S2'
+                cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
+                displaymax = 2000
+            elif platform =='sentinel2_20':
+                bandNames = ['B5','B6','B7','B8A','B11','B12']
+                collectionid = 'COPERNICUS/S2'
+                cloudcover = 'CLOUDY_PIXEL_PERCENTAGE' 
+                displaymax = 5000
+            elif platform=='landsat8':
+                bandNames = ['B2','B3','B4','B5','B6','B7']
+                collectionid = 'LANDSAT/LC08/C01/T1_RT'
+                cloudcover = 'CLOUD_COVER' 
+                displaymax = 20000 
+            elif platform=='landsat7':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                collectionid = 'LANDSAT/LE07/C01/T1_RT'
+                cloudcover = 'CLOUD_COVER' 
+                displaymax = 255
+            else:
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                collectionid = 'LANDSAT/LT5_L1T'
+                cloudcover = 'CLOUD_COVER' 
+                displaymax = 255
+            if request.form.has_key('assexport'):        
+                assexportscale = float(request.form['assexportscale'])
+                assexportdir = request.form['assexportdir']
+                assexport = request.form['assexport']
+            else:
+                assexport = 'none'
+#          gather info               
+            collection = ee.ImageCollection(collectionid) \
+                           .select(bandNames) \
+                           .filterBounds(ulPoint) \
+                           .filterBounds(lrPoint) \
+                           .filterDate(ee.Date(startDate),ee.Date(endDate)) \
+                           .filter(ee.Filter.calendarRange(month1,month2,'month')) \
+                           .filterMetadata(cloudcover,'less_than',maxcloudcover) \
+                           .sort(cloudcover)                          
+            count = collection.toList(100).length().getInfo()    
+            if count<2:
+                raise ValueError('Less than two images found for chosen time interval')   
+            systemids =  ee.List(collection.aggregate_array('system:id')).getInfo() 
+            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()  
+            timestamplist = []
+            for timestamp in acquisition_times:
+                tmp = time.gmtime(int(timestamp)/1000)
+                timestamplist.append(time.strftime('%x', tmp))   
+            timestamps = str(timestamplist).replace("'",'')
+            cloudcovers = ee.List(collection.aggregate_array(cloudcover)).getInfo()        
+            imList = collection.toList(100)
+            reference = ee.Image(imList.get(refnumber-1))
+            refid = reference.get('system:id').getInfo()
+            imList = imList.remove(reference)
+            timestamp = ee.Date(reference.get('system:time_start')).getInfo()
+            timestamp = time.gmtime(int(timestamp['value'])/1000)
+            timestamp = time.strftime('%x', timestamp)                      
+            referenceclip = reference.clip(rect)
+            rgb = reference.select(1,2,3)            
+            rgbclip = referenceclip.select(1,2,3)                 
+            mapid = rgb.getMapId({'min':0, 'max':displaymax, 'opacity': 0.6}) 
+            mapidclip = rgbclip.getMapId({'min':0, 'max':displaymax, 'opacity': 1.0}) 
+            refcloudcover = reference.get(cloudcover).getInfo()
+            msg1 = 'Batch export not submitted'
+            if assexport != 'none':
+#              batch normalization 
+                log = ee.List(['RADCAL '+time.asctime(),'REFERENCE:', refid, 'TARGETS:'])            
+                first = ee.Dictionary({'reference':reference,'rect':rect,'niter':niter,'log':log,'normalizedimages':ee.List([reference])})
+                result = ee.Dictionary(imList.iterate(radcalbatch,first))
+#              export log as featureCollection to Google Drive                
+                log = ee.FeatureCollection(ee.List(result.get('log')).map(makefeature)) 
+                gdmetaexport = ee.batch.Export.table.toDrive(log,
+                             description='driveExportTask', 
+                             folder = 'EarthEngineImages',
+                             fileNamePrefix=assexportdir.replace('/','-') )           
+                gdmetaexport.start()                  
+#              export normalized images to Assets 
+                imlist = ee.List(result.get('normalizedimages'))      
+                for k in range(count):
+                    if k == (refnumber-1):
+                        suffix = '_REF'
+                    else:
+                        suffix = '_NORM'
+                    assetId = assexportdir+systemids[k].replace('/','-')+suffix
+                    assexport = ee.batch.Export.image.toAsset(imlist.get(k),
+                                assetId = assetId,                 
+                                description=assetId.replace('/','-'), 
+                                scale=assexportscale,
+                                maxPixels=1e9)
+                    assexport.start()
+                msg1 = 'Batch export submitted'         
+#          return info            
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat 
+            glbls['startDate'] = startDate
+            glbls['endDate'] = endDate 
+            glbls['month1'] = month1
+            glbls['month2'] = month2
+             
+            return render_template('radcalout.html',
+                                    title = 'Radiometric Normalization: '+msg1,
+                                    count = count,
+                                    mapid = mapid['mapid'], 
+                                    token = mapid['token'], 
+                                    mapidclip = mapidclip['mapid'], 
+                                    tokenclip = mapidclip['token'], 
+                                    refcloudcover = refcloudcover,
+                                    timestamp = timestamp,
+                                    timestamps =timestamps,
+                                    systemids = str(systemids),
+                                    cloudcovers = cloudcovers,
+                                    centerLon = centerLon,
+                                    centerLat = centerLat)
+                              
+        except Exception as e:
+            return '<br />An error occurred in Radcal: %s<br /><a href="/radcal.html" name="return"> Return</a>'%e 
+
+
 @app.route('/omnibus.html', methods = ['GET', 'POST'])
 def Omnibus():       
     global glbls, msg, local, zoom
@@ -642,12 +824,14 @@ def Omnibus():
                                         maxLon = glbls['maxLon'],
                                         centerLon = glbls['centerLon'],
                                         centerLat = glbls['centerLat'],
+                                        startDate = glbls['startDate'],
+                                        endDate = glbls['endDate'],
                                         zoom = zoom)
     else:
         try: 
             hint = '(enable export to bypass this error)' 
-            startdate = request.form['startdate']  
-            enddate = request.form['enddate']  
+            startDate = request.form['startDate']  
+            endDate = request.form['endDate']  
             orbitpass = request.form['pass']
             display = request.form['display']
             polarization1 = request.form['polarization']
@@ -676,9 +860,7 @@ def Omnibus():
             if request.form.has_key('median'):        
                 median = True
             else:
-                median = False                
-            start = ee.Date(startdate)
-            finish = ee.Date(enddate)            
+                median = False                           
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
             centerLon = (minLon + maxLon)/2.0
             centerLat = (minLat + maxLat)/2.0 
@@ -687,7 +869,7 @@ def Omnibus():
             collection = ee.ImageCollection('COPERNICUS/S1_GRD') \
                         .filterBounds(ulPoint) \
                         .filterBounds(lrPoint) \
-                        .filterDate(start, finish) \
+                        .filterDate(ee.Date(startDate), ee.Date(endDate)) \
                         .filter(ee.Filter.eq('transmitterReceiverPolarisation', polarization)) \
                         .filter(ee.Filter.eq('resolution_meters', 10)) \
                         .filter(ee.Filter.eq('instrumentMode', 'IW')) \
@@ -794,7 +976,9 @@ def Omnibus():
             glbls['maxLat'] = maxLat
             glbls['maxLon'] = maxLon  
             glbls['centerLon'] = centerLon
-            glbls['centerLat'] = centerLat                                                 
+            glbls['centerLat'] = centerLat
+            glbls['startDate'] = startDate
+            glbls['endDate'] = endDate                                                  
                 
             return render_template('omnibusout.html',
                                     mapid = mapid['mapid'], 
@@ -815,7 +999,7 @@ def Omnibus():
                                     relativeorbitnumbers = relativeorbitnumbers)                                          
         except Exception as e:
             if isinstance(e,ValueError):
-                return 'Error in omnibus: %s'%e
+                return '<br />An error occurred in Omnibus: %s<br /><a href="%s" name="return"> Return</a>'%(e,omnibus1)
             else:
                 return render_template('omnibusout.html', 
                                         title = 'Error in omnibus: %s '%e + hint,

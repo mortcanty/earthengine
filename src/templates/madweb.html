@@ -11,7 +11,7 @@
 </head>
 
 <body>
-<h2>Run the iMAD Algorithm on Optical/Infrared Images</h2>
+<h2>IR-MAD Change Detection</h2>
 {{msg|safe}}
 <p><a href="/" name="return"> Return</a></p>
 
@@ -30,26 +30,26 @@
 	<p><input type="submit" id = "submit" value="Go"></p>
 	</td></tr></table>
 	
-	<p><b>Image 1</b><br />
+	<b>Image 1</b><br />
 	Start search (yyyy-mm-dd) :
-	<input type="text" value = "2016-03-01" name = "startdate1" size = 8><br />
+	<input type="text" value = {{startDate1}} name = "startDate1" size = 8><br />
 	End search (yyyy-mm-dd) :
-	<input type="text" value = "2016-07-01" name = "enddate1" size = 8><br />
+	<input type="text" value = {{endDate1}} name = "endDate1" size = 8><br />
 	<b>Image 2</b><br />
 	Start search (yyyy-mm-dd) :
-	<input type="text" value = "2016-07-01" name = "startdate2" size = 8><br />
+	<input type="text" value = {{startDate2}} name = "startDate2" size = 8><br />
 	End search (yyyy-mm-dd) :
-	<input type="text" value = "2016-11-01" name = "enddate2" size = 8></p>	
-	<p>Iterations : <input type="text" value = "30" name = "iterations" size = 2></p>
+	<input type="text" value = {{endDate2}} name = "endDate2" size = 8><br />
+	Iterations : <input type="text" value = "50" name = "iterations" size = 2><br />
 	
 	<table style="width:300px">
 	  <tr>
-	    <td>maxLat: <input type="text" value = {{maxLat}} id = "maxlat" name = "maxLat" size = 8></td>
-	    <td>minLon: <input type="text" value = {{minLon}} id = "minlon" name = "minLon" size = 8></td> 
+	    <td>maxLat: <input type="text" value = {{maxLat}} id = "maxLat" name = "maxLat" size = 8></td>
+	    <td>minLon: <input type="text" value = {{minLon}} id = "minLon" name = "minLon" size = 8></td> 
 	  </tr>
 	  <tr>
-	    <td>minLat: <input type="text" value = {{minLat}} id = "minlat" name = "minLat" size = 8></td>
-	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxlon" name = "maxLon" size = 8></td> 
+	    <td>minLat: <input type="text" value = {{minLat}} id = "minLat" name = "minLat" size = 8></td>
+	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxLon" name = "maxLon" size = 8></td> 
 	  </tr>
 	 </table>
 	
@@ -118,10 +118,10 @@ mymap.on(L.Draw.Event.CREATED, function(e) {
    var layer = e.layer;
    drawnItems.addLayer(layer);
    var latLngs = (layer.getLatLngs())[0];
-   document.getElementById("minlat").value = (latLngs[0]).lat.toString();
-   document.getElementById("maxlat").value = (latLngs[1]).lat.toString();
-   document.getElementById("minlon").value = (latLngs[0]).lng.toString();
-   document.getElementById("maxlon").value = (latLngs[2]).lng.toString();
+   document.getElementById("minLat").value = (latLngs[0]).lat.toString();
+   document.getElementById("maxLat").value = (latLngs[1]).lat.toString();
+   document.getElementById("minLon").value = (latLngs[0]).lng.toString();
+   document.getElementById("maxLon").value = (latLngs[2]).lng.toString();
    document.getElementById("submit").disabled = false;   
 });     
 

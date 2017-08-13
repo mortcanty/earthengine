@@ -645,6 +645,7 @@ function setDocumentScrollTop(ypos)
 <p>The local version runs in a Docker container serving the Flask web application on <strong>localhost:5000</strong>. Assuming you have been authenticated (see below) to the Earth Engine, you can carry out the following tasks:</p> 
 <ol> 
  <li> <p>Run the iMAD (iteratively re-weighted MAD) algorithm on Landsat 5, 7, 8 and Sentinel-2 optical/infrared bitemporal imagery.</p> <a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=4695"> A. A. Nielsen (2007). The Regularized Iteratively Reweighted MAD Method for Change Detection in Multi- and Hyperspectral Data.</a> <p><a href="http://www.amazon.com/Analysis-Classification-Change-Detection-Sensing/dp/1466570377/ref=dp_ob_title_bk"> M. J.Canty (2014). Image Analysis, Classification and Change Detection in Remote Sensing, 3rd Ed., CRC Press 2014</a>;</p> </li> 
+ <li> <p>Perform automatic radiometric normalization of a sequence full optical/infrared scenes.</p> <a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=5362"> M. J. Canty and A. A. Nielsen (2008). Automatic Radiometric Normalization of Multitemporal Satellite Imagery with the Iteratively Re-weighted MAD Transformation.</a> </li> 
  <li> <p>Run the (sequential) omnibus algorithm on polarimetric SAR multitemporal data on Sentinel-1 dual pol, diagonal only, or single pol images.</p> <a href="http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6825"> K. Conradsen et al. (2016). Determining the points of change in time series of polarimetric SAR data. IEEE TGRS 54 (5) 3007-3024.</a> </li> 
  <li> <p>Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing, for example with <a href="http://mortcanty.github.io/SARDocker/"> SARDocker</a>.</p> </li> 
 </ol> 
@@ -661,9 +662,7 @@ function setDocumentScrollTop(ypos)
 </code></pre> <p>to start work.</p> </li> 
  <li> <p>When finished, hit</p> <pre><code>Ctrl C 
 </code></pre> <p>in the command window to stop the Flask application server and</p> <pre><code>exit 
-</code></pre> <p>to leave the container.</p> </li> 
- <li> <p>Stop the container with</p> <pre><code>docker stop ee
-</code></pre> </li> 
+</code></pre> <p>to leave the container. The container will then stop.</p> </li> 
  <li> <p>Re-start and enter the container with</p> <pre><code>docker start -ai ee
 </code></pre> </li> 
  <li> <p>Run the command</p> <pre><code>./app.py

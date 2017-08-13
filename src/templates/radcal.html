@@ -2,7 +2,7 @@
 <link type="text/css" rel="stylesheet" href="/static/css/mystyle.css" />
 <script language="JavaScript" src="/static/js/ajax.js"></script>
 <head>
-	<title>iMAD</title>
+	<title>Radcal</title>
 	<meta charset="utf-8" />
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,14 +11,13 @@
 </head>
 
 <body>
-<h2>IR-MAD Change Detection</h2>
+<h2>Automatic Radiometric Normalization</h2>
 {{msg|safe}}
 <p><a href="/" name="return"> Return</a></p>
-
 	
 	<div id="mapid" style="width: 640px; height: 480px;"></div>
 
-<form method="post" action = "/mad.html" >
+<form method="post" action = "/radcal.html" >
 
 	<table><tr><td><b>
 	<p><input type="radio" name="platform"  value="sentinel2_10" checked="checked" /> Sentinel 2 10m<br />
@@ -29,40 +28,39 @@
     </b></td> <td>
 	<p><input type="submit" id = "submit" value="Go"></p>
 	</td></tr></table>
-	
-	<b>Image 1</b><br />
 	Start search (yyyy-mm-dd) :
-	<input type="text" value = {{startDate1}} name = "startDate1" size = 8><br />
+	<input id="sd" type="text" value = {{startDate}}  name = "startDate" size = 8><br />
 	End search (yyyy-mm-dd) :
-	<input type="text" value = {{endDate1}} name = "endDate1" size = 8><br />
-	<b>Image 2</b><br />
-	Start search (yyyy-mm-dd) :
-	<input type="text" value = {{startDate2}} name = "startDate2" size = 8><br />
-	End search (yyyy-mm-dd) :
-	<input type="text" value = {{endDate2}} name = "endDate2" size = 8><br />
-	Iterations : <input type="text" value = "50" name = "iterations" size = 2><br />	
-		
-	
+	<input id="ed" type="text" value = {{endDate}} name = "endDate" size = 8><br />
+	Season from month
+	<input id="m1" type="text" value = {{month1}} name = "month1" size = 2>
+	to month
+   <input id="m2" type="text" value = {{month2}} name = "month2" size = 2><br />
+	Maximum cloud cover (%)
+	<input id="ccm" type="text" value = "5" name = "maxcloudcover" size = 2><br />
+	Iterations : 
+	<input id="it" type="text" value = "50" name = "niter" size = 2><br />	
 	
     <table style="width:300px">
 	  <tr>
-	    <td>maxLat: <input type="text" value = {{maxLat}} id = "maxLat" name = "maxLat" size = 8></td>
-	    <td>minLon: <input type="text" value = {{minLon}} id = "minLon" name = "minLon" size = 8></td> 
+	    <td>maxLat: <input id="maxLat" type="text" value = {{maxLat}}  name = "maxLat" size = 6></td>
+	    <td>minLon: <input id="minLon" type="text" value = {{minLon}}  name = "minLon" size = 6></td> 
 	  </tr>
 	  <tr>
-	    <td>minLat: <input type="text" value = {{minLat}} id = "minLat" name = "minLat" size = 8></td>
-	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxLon" name = "maxLon" size = 8></td> 
+	    <td>minLat: <input id="minLat" type="text" value = {{minLat}}  name = "minLat" size = 6></td>
+	    <td>maxLon: <input id="maxLon" type="text" value = {{maxLon}}  name = "maxLon" size = 6></td> 
 	  </tr>
-	 </table>
-   <input type="checkbox" name="assexport" value="assexport" >Export to Assets as: 
-                       <input type="text" value = "users/mortcanty/imad" name = "assexportname" size = 20>
-               at scale <input type="text" value = "10" name = "assexportscale" size = 4> meters<br />
-    <input type="checkbox" name="gdexport" value="gdexport" >Export to Google Drive as: 
-                       <input type="text" value = "imad" name = "gdexportname" size = 12>
-               at scale <input type="text" value = "10" name = "gdexportscale" size = 2> meters<br />
-   	
+	 </table>	 
+     Reference image number (in order of increasing cloud cover):
+     <input id="refnumber" type="text" value = "1" name = "refnumber" size = 2><br /> 
+     <input type="checkbox" name="assexport" value="assexport" >Export to Assets in directory:     	
+     <input id="assn" type="text" value = "users/mortcanty/radcal/" name = "assexportdir" size = 20>
+   at scale:
+     <input id="asssc" type="text" value = "10" name = "assexportscale" size = 2> meters<br />
+    
 </form>
 
+<div id="answer"></div>
 
 <script src="https://npmcdn.com/leaflet@1.0.0-rc.2/dist/leaflet.js"></script>
 

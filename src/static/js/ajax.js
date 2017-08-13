@@ -1,11 +1,11 @@
 function sndReq(url,body) {
   resOb.open('post', url, true);
   resOb.onreadystatechange = handleResponse;
-  resOb.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+  resOb.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
   resOb.send(body);
  }
 function handleResponse() {
-  if(resOb.readyState == 4){
+  if(resOb.readyState == 4 && resOb.status==200){
     document.getElementById("answer").innerHTML = resOb.responseText;
     document.body.style.cursor='default';
   }
