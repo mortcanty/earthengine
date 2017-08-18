@@ -20,15 +20,23 @@
 
 <form method="post" action = "/mad.html" >
 
-	<table><tr><td><b>
-	<p><input type="radio" name="platform"  value="sentinel2_10" checked="checked" /> Sentinel 2 10m<br />
-	<input type="radio" name="platform"  value="sentinel2_20" /> Sentinel 2 20m<br />
-    <input type="radio" name="platform"  value="landsat8" /> Landsat 8 T1<br />
-    <input type="radio" name="platform"  value="landsat7" /> Landsat 7 ETM<br />
-    <input type="radio" name="platform"  value="landsat5"  /> Landsat 5 TM<br /></p>
-    </b></td> <td>
-	<p><input type="submit" id = "submit" value="Go"></p>
-	</td></tr></table>
+	<table>
+    <td><b><p>
+    <input type="radio" name="collectionid"  value="LANDSAT/LT4_L1T_TOA" />LANDSAT/LT4_L1T_TOA<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LT05/C01/T1_TOA" />LANDSAT/LT05/C01/T1_TOA<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LE07/C01/T1_RT_TOA" />LANDSAT/LE07/C01/T1_RT_TOA<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LC08/C01/T1_RT_TOA" />LANDSAT/LC08/C01/T1_RT_TOA<br />
+	<input type="radio" name="collectionid"  value="COPERNICUS/S2_10"  checked="checked" /> COPERNICUS/S2  (VNIR/SWIR)<br />	
+    </p>
+    </b></td> <td> 	
+	<td><b><p>
+	<input type="radio" name="collectionid"  value="LANDSAT/LT4_L1T"  />LANDSAT/LT4_L1T<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LT05/C01/T1"  />LANDSAT/LT05/C01/T1<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LE07/C01/T1_RT" />LANDSAT/LE07/C01/T1_RT<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LC08/C01/T1_RT" />LANDSAT/LC08/C01/T1_RT<br />
+    <input type="radio" name="collectionid"  value="COPERNICUS/S2_20)" /> COPERNICUS/S2  (NIR/SWIR)<br />
+    </p></td>
+    </tr></table> 
 	
 	<b>Image 1</b><br />
 	Start search (yyyy-mm-dd) :
@@ -52,7 +60,7 @@
 	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxLon" name = "maxLon" size = 8></td> 
 	  </tr>
 	 </table>
-	
+	<input type="submit" id = "submit" value="Go">
     	
 </form>
 

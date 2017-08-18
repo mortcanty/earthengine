@@ -397,7 +397,7 @@ def Mad():
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
             maxLon = float(request.form['maxLon'])
-            platform = request.form['platform']
+            collectionid = request.form['collectionid']
             if request.form.has_key('assexport'):        
                 assexportscale = float(request.form['assexportscale'])
                 assexportname = request.form['assexportname']
@@ -415,128 +415,47 @@ def Mad():
             centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat]) 
-            if (platform=='sentinel2_10') or (platform=='sentinel2_20'):
-                collection = ee.ImageCollection('COPERNICUS/S2') \
-                            .filterBounds(ulPoint) \
-                            .filterBounds(lrPoint) \
-                            .filterDate(ee.Date(startDate1), ee.Date(endDate1)) \
-                            .sort('CLOUDY_PIXEL_PERCENTAGE', True) 
-                count = collection.toList(100).length().getInfo()    
-                if count==0:
-                    raise ValueError('No images found for first time interval')    
-                if platform=='sentinel2_10':   
-                    image1 = ee.Image(collection.first()).select('B2','B3','B4','B8')    
-                else:
-                    image1 = ee.Image(collection.first()).select('B5','B6','B7','B8A','B11','B12')               
-                timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
-                timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
-                timestamp1 = time.strftime('%c', timestamp1)               
-                systemid1 = image1.get('system:id').getInfo()
-                cloudcover1 = image1.get('CLOUDY_PIXEL_PERCENTAGE').getInfo()
-                collection = ee.ImageCollection('COPERNICUS/S2') \
-                            .filterBounds(ulPoint) \
-                            .filterBounds(lrPoint) \
-                            .filterDate(ee.Date(startDate2), ee.Date(endDate2)) \
-                            .sort('CLOUDY_PIXEL_PERCENTAGE', True) 
-                count = collection.toList(100).length().getInfo()    
-                if count==0:
-                    raise ValueError('No images found for second time interval')        
-                if platform=='sentinel2_10':   
-                    image2 = ee.Image(collection.first()).clip(rect).select('B2','B3','B4','B8')    
-                else:
-                    image2 = ee.Image(collection.first()).select('B5','B6','B7','B8A','B11','B12')  
-                timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
-                timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
-                timestamp2 = time.strftime('%c', timestamp2) 
-                systemid2 = image2.get('system:id').getInfo()  
-                cloudcover2 = image2.get('CLOUDY_PIXEL_PERCENTAGE').getInfo()               
-            elif platform=='landsat8':
-                collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_RT') \
-                            .filterBounds(ulPoint) \
-                            .filterBounds(lrPoint) \
-                            .filterDate(ee.Date(startDate1), ee.Date(endDate1)) \
-                            .sort('CLOUD_COVER', True) 
-                count = collection.toList(100).length().getInfo()    
-                if count==0:
-                    raise ValueError('No images found for first time interval')
-                image1 = ee.Image(collection.first()).select('B2','B3','B4','B5','B6','B7')               
-                timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
-                timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
-                timestamp1 = time.strftime('%c', timestamp1) 
-                systemid1 = image1.get('system:id').getInfo()
-                cloudcover1 = image1.get('CLOUD_COVER').getInfo()
-                collection = ee.ImageCollection('LANDSAT/LC08/C01/T1') \
-                            .filterBounds(ulPoint) \
-                            .filterBounds(lrPoint) \
-                            .filterDate(ee.Date(startDate2), ee.Date(endDate2)) \
-                            .sort('CLOUD_COVER', True) 
-                count = collection.toList(100).length().getInfo()    
-                if count==0:
-                    raise ValueError('No images found for second time interval')        
-                image2 = ee.Image(collection.first()).select('B2','B3','B4','B5','B6','B7') 
-                timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
-                timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
-                timestamp2 = time.strftime('%c', timestamp2) 
-                systemid2 = image2.get('system:id').getInfo()  
-                cloudcover2 = image2.get('CLOUD_COVER').getInfo()                       
-            elif platform=='landsat7':
-                collection = ee.ImageCollection('LANDSAT/LE07/C01/T1_RT') \
-                            .filterBounds(ulPoint) \
-                            .filterBounds(lrPoint) \
-                            .filterDate(ee.Date(startDate1), ee.Date(endDate1)) \
-                            .sort('CLOUD_COVER', True) 
-                count = collection.toList(100).length().getInfo()    
-                if count==0:
-                    raise ValueError('No images found for first time interval')        
-                image1 = ee.Image(collection.first()).select('B1','B2','B3','B4','B5','B7')               
-                timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
-                timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
-                timestamp1 = time.strftime('%c', timestamp1) 
-                systemid1 = image1.get('system:id').getInfo()
-                cloudcover1 = image1.get('CLOUD_COVER').getInfo()
-                collection = ee.ImageCollection('LANDSAT/LE7') \
-                            .filterBounds(ulPoint) \
-                            .filterBounds(lrPoint) \
-                            .filterDate(ee.Date(startDate2), ee.Date(endDate2)) \
-                            .sort('CLOUD_COVER', True) 
-                count = collection.toList(100).length().getInfo()    
-                if count==0:
-                    raise ValueError('No images found for second time interval')        
-                image2 = ee.Image(collection.first()).select('B1','B2','B3','B4','B5','B7') 
-                timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
-                timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
-                timestamp2 = time.strftime('%c', timestamp2) 
-                systemid2 = image2.get('system:id').getInfo()  
-                cloudcover2 = image2.get('CLOUD_COVER').getInfo()   
-            elif platform=='landsat5':
-                collection = ee.ImageCollection('LANDSAT/LT5_L1T') \
-                            .filterBounds(ulPoint) \
-                            .filterBounds(lrPoint) \
-                            .filterDate(ee.Date(startDate1), ee.Date(endDate1)) \
-                            .sort('CLOUD_COVER', True) 
-                count = collection.toList(100).length().getInfo()    
-                if count==0:
-                    raise ValueError('No images found for first time interval')        
-                image1 = ee.Image(collection.first()).select('B1','B2','B3','B4','B5','B7')               
-                timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
-                timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
-                timestamp1 = time.strftime('%c', timestamp1) 
-                systemid1 = image1.get('system:id').getInfo()
-                cloudcover1 = image1.get('CLOUD_COVER').getInfo()
-                collection = ee.ImageCollection('LT5_L1T') \
-                            .filterBounds(ulPoint) \
-                            .filterBounds(lrPoint) \
-                            .filterDate(ee.Date(startDate2), ee.Date(endDate2)) \
-                            .sort('CLOUD_COVER', True) 
-                count = collection.toList(100).length().getInfo()    
-                if count==0:
-                    raise ValueError('No images found for second time interval')        
-                image2 = ee.Image(collection.first()).select('B1','B2','B3','B4','B5','B7') 
-                timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
-                timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
-                timestamp2 = time.strftime('%c', timestamp2) 
-                systemid2 = image2.get('system:id').getInfo()  
-                cloudcover2 = image2.get('CLOUD_COVER').getInfo()  
+            cloudcover = 'CLOUD_COVER'
+            if collectionid=='COPERNICUS/S2_10':
+                collectionid = 'COPERNICUS/S2'
+                bands = ['B2','B3','B4','B8']
+                cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
+            elif collectionid=='COPERNICUS/S2_20':   
+                collectionid = 'COPERNICUS/S2'
+                bands = ['B5','B6','B7','B8A','B11','B12']
+                cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
+            elif (collectionid=='LANDSAT/LC08/C01/T1_RT_TOA') or (collectionid=='LANDSAT/LC08/C01/T1_RT_TOA'):
+                bands = ['B2','B3','B4','B5','B6','B7']               
+            else:
+                bands = ['B1','B2','B3','B4','B5','B7']                  
+            collection = ee.ImageCollection(collectionid) \
+                        .filterBounds(ulPoint) \
+                        .filterBounds(lrPoint) \
+                        .filterDate(ee.Date(startDate1), ee.Date(endDate1)) \
+                        .sort(cloudcover, True) 
+            count = collection.toList(100).length().getInfo()    
+            if count==0:
+                raise ValueError('No images found for first time interval')      
+            image1 = ee.Image(collection.first()).select(bands)     
+            timestamp1 = ee.Date(image1.get('system:time_start')).getInfo()
+            timestamp1 = time.gmtime(int(timestamp1['value'])/1000)
+            timestamp1 = time.strftime('%c', timestamp1)               
+            systemid1 = image1.get('system:id').getInfo()
+            cloudcover1 = image1.get(cloudcover).getInfo()
+            collection = ee.ImageCollection(collectionid) \
+                        .filterBounds(ulPoint) \
+                        .filterBounds(lrPoint) \
+                        .filterDate(ee.Date(startDate2), ee.Date(endDate2)) \
+                        .sort(cloudcover, True) 
+            count = collection.toList(100).length().getInfo()    
+            if count==0:
+                raise ValueError('No images found for second time interval')        
+            image2 = ee.Image(collection.first()).clip(rect).select(bands)    
+            timestamp2 = ee.Date(image2.get('system:time_start')).getInfo()
+            timestamp2 = time.gmtime(int(timestamp2['value'])/1000)
+            timestamp2 = time.strftime('%c', timestamp2) 
+            systemid2 = image2.get('system:id').getInfo()  
+            cloudcover2 = image2.get(cloudcover).getInfo()
             nbands = image1.bandNames().length().getInfo() 
             madnames = ['MAD'+str(i+1) for i in range(nbands)]
 #          register
@@ -683,38 +602,48 @@ def Radcal():
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
             maxLon = float(request.form['maxLon'])
-            platform = request.form['platform']  
+            collectionid = request.form['collectionid']  
             refnumber = int(request.form['refnumber'])
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
             centerLon = (minLon + maxLon)/2.0
             centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat]) 
-            if platform=='sentinel2_10':
+            cloudcover = 'CLOUD_COVER'
+            if collectionid=='COPERNICUS/S2_10':
                 bandNames = ['B2','B3','B4','B8']
                 collectionid = 'COPERNICUS/S2'
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
-                displaymax = 2000
-            elif platform =='sentinel2_20':
+                displaymax = 5000
+            elif collectionid =='COPERNICUS/S2_20':
                 bandNames = ['B5','B6','B7','B8A','B11','B12']
                 collectionid = 'COPERNICUS/S2'
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE' 
                 displaymax = 5000
-            elif platform=='landsat8':
-                bandNames = ['B2','B3','B4','B5','B6','B7']
-                collectionid = 'LANDSAT/LC08/C01/T1_RT'
-                cloudcover = 'CLOUD_COVER' 
+            elif collectionid=='LANDSAT/LC08/C01/T1_RT':
+                bandNames = ['B2','B3','B4','B5','B6','B7'] 
                 displaymax = 20000 
-            elif platform=='landsat7':
+            elif collectionid=='LANDSAT/LC08/C01/T1_RT_TOA': 
+                bandNames = ['B2','B3','B4','B5','B6','B7'] 
+                displaymax = 1   
+            elif collectionid=='LANDSAT/LE07/C01/T1_RT':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                collectionid = 'LANDSAT/LE07/C01/T1_RT'
-                cloudcover = 'CLOUD_COVER' 
                 displaymax = 255
-            else:
+            elif collectionid=='LANDSAT/LE07/C01/T1_RT_TOA':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                collectionid = 'LANDSAT/LT5_L1T'
-                cloudcover = 'CLOUD_COVER' 
+                displaymax = 1
+            elif collectionid=='LANDSAT/LT05/C01/T1':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
                 displaymax = 255
+            elif collectionid=='LANDSAT/LT05/C01/T1_TOA':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displaymax = 1   
+            elif collectionid=='LANDSAT/LT4_L1T':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displaymax = 255
+            elif collectionid=='LANDSAT/LT4_L1T_TOA':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displaymax = 1            
             if request.form.has_key('assexport'):        
                 assexportscale = float(request.form['assexportscale'])
                 assexportdir = request.form['assexportdir']
