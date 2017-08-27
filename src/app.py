@@ -425,9 +425,14 @@ def Mad():
                 bands = ['B5','B6','B7','B8A','B11','B12']
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
             elif (collectionid=='LANDSAT/LC08/C01/T1_RT_TOA') or (collectionid=='LANDSAT/LC08/C01/T1_RT_TOA'):
-                bands = ['B2','B3','B4','B5','B6','B7']               
+                bands = ['B2','B3','B4','B5','B6','B7']                  
+            elif (collectionid=='LANDSAT/LE07/C01/T1_RT') or (collectionid=='LANDSAT/LE07/C01/T1_RT_TOA') \
+                    or (collectionid=='LANDSAT/LT05/C01/T1') or (collectionid=='LANDSAT/LT05/C01/T1_TOA') \
+                    or (collectionid=='LANDSAT/LT4_L1T') or (collectionid=='LANDSAT/LT4_L1T_TOA'):                
+                bands = ['B1','B2','B3','B4','B5','B7']     
             else:
-                bands = ['B1','B2','B3','B4','B5','B7']                  
+                collectionid = request.form['collectionID']
+                bands =  request.form['bandnames'].split()                 
             collection = ee.ImageCollection(collectionid) \
                         .filterBounds(ulPoint) \
                         .filterBounds(lrPoint) \
@@ -506,14 +511,14 @@ def Mad():
                              folder = 'EarthEngineImages',
                              fileNamePrefix=assexportname.replace('/','-') )
                 gdrhosexportid = str(gdmetaexport.id)
-                print '****Exporting correlations as CSV to Drive, task id: %s '%gdrhosexportid            
+                print >> sys.stderr, '****Exporting correlations as CSV to Drive, task id: %s '%gdrhosexportid            
                 gdmetaexport.start()                  
 #              export to Assets 
                 assexport = ee.batch.Export.image.toAsset(MAD,
                                                           description='assetExportTask', 
                                                           assetId=assexportname,scale=assexportscale,maxPixels=1e9)
                 assexportid = str(assexport.id)
-                print '****Exporting MAD image to Assets, task id: %s '%assexportid
+                print >> sys.stderr, '****Exporting MAD image to Assets, task id: %s '%assexportid
                 assexport.start() 
             else:
                 assexportid = 'none'                
@@ -614,36 +619,40 @@ def Radcal():
                 bandNames = ['B2','B3','B4','B8']
                 collectionid = 'COPERNICUS/S2'
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
-                displaymax = 5000
+                displayMax = 5000
             elif collectionid =='COPERNICUS/S2_20':
                 bandNames = ['B5','B6','B7','B8A','B11','B12']
                 collectionid = 'COPERNICUS/S2'
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE' 
-                displaymax = 5000
+                displayMax = 5000
             elif collectionid=='LANDSAT/LC08/C01/T1_RT':
                 bandNames = ['B2','B3','B4','B5','B6','B7'] 
-                displaymax = 20000 
+                displayMax = 20000 
             elif collectionid=='LANDSAT/LC08/C01/T1_RT_TOA': 
                 bandNames = ['B2','B3','B4','B5','B6','B7'] 
-                displaymax = 1   
+                displayMax = 1   
             elif collectionid=='LANDSAT/LE07/C01/T1_RT':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displaymax = 255
+                displayMax = 255
             elif collectionid=='LANDSAT/LE07/C01/T1_RT_TOA':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displaymax = 1
+                displayMax = 1
             elif collectionid=='LANDSAT/LT05/C01/T1':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displaymax = 255
+                displayMax = 255
             elif collectionid=='LANDSAT/LT05/C01/T1_TOA':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displaymax = 1   
+                displayMax = 1   
             elif collectionid=='LANDSAT/LT4_L1T':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displaymax = 255
+                displayMax = 255
             elif collectionid=='LANDSAT/LT4_L1T_TOA':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displaymax = 1            
+                displayMax = 1    
+            else:
+                collectionid = request.form['collectionID']
+                bandNames =  request.form['bandnames'].split()
+                displayMax = float(request.form['displaymax'])           
             if request.form.has_key('assexport'):        
                 assexportscale = float(request.form['assexportscale'])
                 assexportdir = request.form['assexportdir']
@@ -680,8 +689,8 @@ def Radcal():
             referenceclip = reference.clip(rect)
             rgb = reference.select(1,2,3)            
             rgbclip = referenceclip.select(1,2,3)                 
-            mapid = rgb.getMapId({'min':0, 'max':displaymax, 'opacity': 0.6}) 
-            mapidclip = rgbclip.getMapId({'min':0, 'max':displaymax, 'opacity': 1.0}) 
+            mapid = rgb.getMapId({'min':0, 'max':displayMax, 'opacity': 0.6}) 
+            mapidclip = rgbclip.getMapId({'min':0, 'max':displayMax, 'opacity': 1.0}) 
             refcloudcover = reference.get(cloudcover).getInfo()
             msg1 = 'Batch export not submitted'
             if assexport != 'none':

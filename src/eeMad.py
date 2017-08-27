@@ -70,7 +70,7 @@ def radcalbatch(current,prev):
     result = ee.Dictionary(inputlist.iterate(imad,first))                
     chi2 = ee.Image(result.get('chi2')).rename(['chi2'])
     allrhos = ee.List(result.get('allrhos'))
-#  run radcal on the subset    
+#  run radcal     
     ncmask = chi2cdf(chi2,nbands).lt(ee.Image.constant(0.05))                     
     inputlist1 = ee.List.sequence(0,nbands.subtract(1))
     first = ee.Dictionary({'image':image,

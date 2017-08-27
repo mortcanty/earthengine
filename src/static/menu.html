@@ -60,7 +60,7 @@ as an overlay. You can download the change maps directly, but this may be unreli
 
 <h3><a name="h5">Algorithm/iMAD</a></h3>
 <p>
-Run the IR-MAD algorithm on two images from the same platform. Available platforms are:
+Run the IR-MAD algorithm on two images from the same GEE archive collection ID. Available collection ID's are:
 <p>
 <table>
 <tr><td>Platform</td><td>Bands</td><td>Spectrum</td><td>Pixel</td><td>Collection ID</td><td>Info</td></tr>
@@ -76,7 +76,8 @@ Run the IR-MAD algorithm on two images from the same platform. Available platfor
 <tr><td>Sentinel 2  </td><td>6 </td><td>NIR/SWIR</td><td>20m</td><td>COPERNICUS/S2</td><td>TOA reflectance scaled by 10000</td></tr>
 </table>
 </p>
-
+Alternatively, yiu can "roll your own", i.e., choose your own GEE collection ID or a collection from your own assets. In taht case you must
+also enter the relevantd band names.
 Choose the time ranges
 for the images (the image with least cloud cover will be selected for each range). Select the maximum number of iterations and
 use the map rectangle tool to set a region of interest. If desired, and if
@@ -94,7 +95,7 @@ image as an overlay. You can download the MAD change image directly, but this ma
 
 <h3><a name="h5">Algorithm/Radcal</a></h3>
 <p>
-Normalize a sequence of full scenes from the same platform. Available platforms are as shown above for iMAD.
+Normalize a sequence of full scenes from the same collectionID. Available collections are as shown above for iMAD.
 Choose the time range for the image sequence, the beginning
 and ending months of the year and the maximum cloud cover in percent. Select the maximum number of iterations for IR-MAD and
 use the map rectangle tool to set the region to be used to extract the radiometric normalization coefficients. 

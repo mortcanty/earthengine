@@ -26,16 +26,20 @@
     <input type="radio" name="collectionid"  value="LANDSAT/LE07/C01/T1_RT_TOA" />LANDSAT/LE07/C01/T1_RT_TOA<br />
     <input type="radio" name="collectionid"  value="LANDSAT/LC08/C01/T1_RT_TOA" />LANDSAT/LC08/C01/T1_RT_TOA<br />
 	<input type="radio" name="collectionid"  value="COPERNICUS/S2_10"  checked="checked" /> COPERNICUS/S2  (VNIR/SWIR)<br />	
-    </p>
+    </b></p>
     </b></td> <td> 	
 	<td><b><p>
 	<input type="radio" name="collectionid"  value="LANDSAT/LT4_L1T"  />LANDSAT/LT4_L1T<br />
     <input type="radio" name="collectionid"  value="LANDSAT/LT05/C01/T1"  />LANDSAT/LT05/C01/T1<br />
     <input type="radio" name="collectionid"  value="LANDSAT/LE07/C01/T1_RT" />LANDSAT/LE07/C01/T1_RT<br />
     <input type="radio" name="collectionid"  value="LANDSAT/LC08/C01/T1_RT" />LANDSAT/LC08/C01/T1_RT<br />
-    <input type="radio" name="collectionid"  value="COPERNICUS/S2_20)" /> COPERNICUS/S2  (NIR/SWIR)<br />
-    </p></td>
-    </tr></table> 
+    <input type="radio" name="collectionid"  value="COPERNICUS/S2_20" /> COPERNICUS/S2  (NIR/SWIR)<br />
+    </b></p></td>
+    </tr></table>
+    <input type="radio" name="collectionid"  value="none" /> <b>Roll Your Own</b> 
+	<input id="sd" type="text" value = "LANDSAT/LM5_L1T"  name = "collectionID" size = 16>
+	Bands<input id="sd" type="text" value = "B1 B2 B3 B4"  name = "bandnames" size = 12>
+	Maximum value<input id="sd" type="text" value = "255"  name = "displaymax" size = 12><br /> 
 	Start search (yyyy-mm-dd) :
 	<input id="sd" type="text" value = {{startDate}}  name = "startDate" size = 8><br />
 	End search (yyyy-mm-dd) :

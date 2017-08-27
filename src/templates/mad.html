@@ -37,7 +37,9 @@
     <input type="radio" name="collectionid"  value="COPERNICUS/S2_20)" /> COPERNICUS/S2  (NIR/SWIR)<br />
     </p></td>
     </tr></table> 
-	
+	<input type="radio" name="collectionid"  value="none" /> <b>Roll Your Own</b> 
+	<input id="sd" type="text" value = "LANDSAT/LM5_L1T"  name = "collectionID" size = 16>
+	Bands<input id="sd" type="text" value = "B1 B2 B3 B4"  name = "bandnames" size = 12><br /> 
 	<b>Image 1</b><br />
 	Start search (yyyy-mm-dd) :
 	<input type="text" value = {{startDate1}} name = "startDate1" size = 8><br />
