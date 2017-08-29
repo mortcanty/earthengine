@@ -682,7 +682,12 @@ def Radcal():
             imList = collection.toList(100)
             reference = ee.Image(imList.get(refnumber-1))
             refid = reference.get('system:id').getInfo()
-            imList = imList.remove(reference)
+            imList = imList.remove(reference)            
+#          rearrange ids to correspond to normalization output               
+            ids = systemids[:]
+            ids[0] = systemids[refnumber-1]
+            for i in range(refnumber-1):
+                ids[i+1]=systemids[i]          
             timestamp = ee.Date(reference.get('system:time_start')).getInfo()
             timestamp = time.gmtime(int(timestamp['value'])/1000)
             timestamp = time.strftime('%x', timestamp)                      
@@ -706,13 +711,13 @@ def Radcal():
                              fileNamePrefix=assexportdir.replace('/','-') )           
                 gdmetaexport.start()                  
 #              export normalized images to Assets 
-                imlist = ee.List(result.get('normalizedimages'))      
+                imlist = ee.List(result.get('normalizedimages'))                  
                 for k in range(count):
-                    if k == (refnumber-1):
+                    if k == 0:
                         suffix = '_REF'
                     else:
                         suffix = '_NORM'
-                    assetId = assexportdir+systemids[k].replace('/','-')+suffix
+                    assetId = assexportdir+ids[k].replace('/','-')+suffix
                     assexport = ee.batch.Export.image.toAsset(imlist.get(k),
                                 assetId = assetId,                 
                                 description=assetId.replace('/','-'), 
