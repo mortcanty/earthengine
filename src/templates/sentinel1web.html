@@ -22,9 +22,9 @@
 <form method="post" action = "/sentinel1.html" >
 	
 	<p> Start search (yyyy-mm-dd) :
-	<input type="text" value = "2016-04-01" name = "startdate" size = 8><br />
+	<input type="text" value = "2016-04-01" name = "startDate" size = 8><br />
 	End search (yyyy-mm-dd) :
-	<input type="text" value = "2016-09-01" name = "enddate" size = 8></p>		
+	<input type="text" value = "2016-09-01" name = "endDate" size = 8></p>		
 	<p> orbit :
 	<input type="text" value = "ASCENDING" name = "pass" size = 10><br />
 	polarization :
@@ -43,6 +43,7 @@
 	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxlon" name = "maxLon" size = 8></td> 
 	  </tr>
 	 </table>
+	 <input type="checkbox" name="slanes" value="slanes" >Maximum intensity image only (shipping lanes)<br /> 
 	<p><input type="submit" id = "submit" value="Go"></p>	
 </form>
 

@@ -2,7 +2,7 @@
 <link type="text/css" rel="stylesheet" href="/static/css/mystyle.css" />
 <script language="JavaScript" src="/static/js/ajax.js"></script>
 <head>
-	<title>Sentinel2</title>
+	<title>VisualInfrared</title>
 	<meta charset="utf-8" />
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +11,7 @@
 </head>
 
 <body>
-<h2>View/retrieve Sentinel-2 Imagery</h2>
+<h2>Retrieve Visual/Infrared Imagery</h2>
 {{msg|safe}}
 <p>
 <a href="/" name="return"> Return</a>
@@ -19,24 +19,49 @@
 
 <div id="mapid" style="width: 640px; height: 480px;"></div>
 
-<form method="post" action = "/sentinel2.html" >
+<form method="post" action = "/visinfrared.html" >
+
+	<table>
+    <td><b><p>
+    <input type="radio" name="collectionid"  value="LANDSAT/LT4_L1T_TOA" />LANDSAT/LT4_L1T_TOA<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LT05/C01/T1_TOA" />LANDSAT/LT05/C01/T1_TOA<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LE07/C01/T1_RT_TOA" />LANDSAT/LE07/C01/T1_RT_TOA<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LC08/C01/T1_RT_TOA" />LANDSAT/LC08/C01/T1_RT_TOA<br />
+	<input type="radio" name="collectionid"  value="COPERNICUS/S2_10"  checked="checked" /> COPERNICUS/S2  (VNIR/SWIR)<br />	
+    </p>
+    </b></td> <td> 	
+	<td><b><p>
+	<input type="radio" name="collectionid"  value="LANDSAT/LT4_L1T"  />LANDSAT/LT4_L1T<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LT05/C01/T1"  />LANDSAT/LT05/C01/T1<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LE07/C01/T1_RT" />LANDSAT/LE07/C01/T1_RT<br />
+    <input type="radio" name="collectionid"  value="LANDSAT/LC08/C01/T1_RT" />LANDSAT/LC08/C01/T1_RT<br />
+    <input type="radio" name="collectionid"  value="COPERNICUS/S2_20" /> COPERNICUS/S2  (NIR/SWIR)<br />
+    </p></td>
+    </tr></table> 
+	<input type="radio" name="collectionid"  value="none" /> <b>Roll Your Own</b> 
+	<input id="sd" type="text" value = "LANDSAT/LM5_L1T"  name = "collectionID" size = 16>
+	Bands<input id="sd" type="text" value = "B1 B2 B3 B4"  name = "bandnames" size = 12>
+	Maximum value<input id="sd" type="text" value = "255"  name = "displaymax" size = 12><br /> 
 
 	<p> Start search (yyyy-mm-dd) :
-	<input type="text" value = "2016-04-01" name = "startdate" size = 8><br />
+	<input type="text" value = {{startDate}} name = "startDate" size = 8><br />
 	End search (yyyy-mm-dd) :
-	<input type="text" value = "2016-09-01" name = "enddate" size = 8></p>	
-	<p> Desired projection:
-	<input type="text" value = "default" name = "projection" size = 10></p>	
-	<table style="width:300px">
+	<input type="text" value = {{endDate}} name = "endDate" size = 8></p>	
+	
+    <table style="width:300px">
 	  <tr>
-	    <td>maxLat: <input type="text" value = {{maxLat}} id = "maxlat" name = "maxLat" size = 8></td>
-	    <td>minLon: <input type="text" value = {{minLon}} id = "minlon" name = "minLon" size = 8></td> 
+	    <td>maxLat: <input type="text" value = {{maxLat}} id = "maxLat" name = "maxLat" size = 8></td>
+	    <td>minLon: <input type="text" value = {{minLon}} id = "minLon" name = "minLon" size = 8></td> 
 	  </tr>
 	  <tr>
-	    <td>minLat: <input type="text" value = {{minLat}} id = "minlat" name = "minLat" size = 8></td>
-	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxlon" name = "maxLon" size = 8></td> 
+	    <td>minLat: <input type="text" value = {{minLat}} id = "minLat" name = "minLat" size = 8></td>
+	    <td>maxLon: <input type="text" value = {{maxLon}} id = "maxLon" name = "maxLon" size = 8></td> 
 	  </tr>
 	 </table>
+
+    <input type="checkbox" name="egdxport" value="gdexport" >Export to Google Drive as: 
+                       <input type="text" value = "visinfrared" name = "gdexportname" size = 10>
+              at scale <input type="text" value = "10" name = "gdexportscale" size = 2> meters<br /> 		 
 	<p><input type="submit" id = "submit" value="Go"></p>
 	
 </form>
@@ -69,7 +94,7 @@ osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 });
 
 var LAT = {{centerLat}}
-var LON = {{centerLon}}  
+var LON = {{centerLon}} 
 var ZOOM = {{zoom}} 
 
 var mymap = L.map('mapid', {layers:[mapboxss,mapboxs,osm]}).setView([LAT, LON], ZOOM);
@@ -102,10 +127,10 @@ mymap.on(L.Draw.Event.CREATED, function(e) {
    var layer = e.layer;
    drawnItems.addLayer(layer);
    var latLngs = (layer.getLatLngs())[0];
-   document.getElementById("minlat").value = (latLngs[0]).lat.toString();
-   document.getElementById("maxlat").value = (latLngs[1]).lat.toString();
-   document.getElementById("minlon").value = (latLngs[0]).lng.toString();
-   document.getElementById("maxlon").value = (latLngs[2]).lng.toString(); 
+   document.getElementById("minLat").value = (latLngs[0]).lat.toString();
+   document.getElementById("maxLat").value = (latLngs[1]).lat.toString();
+   document.getElementById("minLon").value = (latLngs[0]).lng.toString();
+   document.getElementById("maxLon").value = (latLngs[2]).lng.toString();  
 });     
 
 var popup = L.popup();

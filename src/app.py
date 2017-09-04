@@ -24,7 +24,7 @@ if local:
     ee.Initialize()
     msg = 'Choose a rectangular region'
     sentinel1 = 'sentinel1.html'
-    sentinel2 = 'sentinel2.html'
+    visinfrared = 'visinfrared.html'
     mad1 = 'mad.html'
     radcal1 = 'radcal.html'
     omnibus1 = 'omnibus.html'
@@ -34,7 +34,7 @@ else:
     msg = 'Choose a SMALL rectangular region'
     ee.Initialize(config.EE_CREDENTIALS, 'https://earthengine.googleapis.com')
     sentinel1 = 'sentinel1web.html'
-    sentinel2 = 'sentinel2web.html'
+    visinfrared = 'visinfraredweb.html'
     mad1 = 'madweb.html'
     radcal1 = 'radcalweb.html'
     omnibus1 = 'omnibusweb.html'    
@@ -260,11 +260,11 @@ def Sentinel1():
             return '<br />An error occurred in Sentinel1: %s<br /><a href="%s" name="return"> Return</a>'%(e,sentinel1) 
                   
 
-@app.route('/sentinel2.html', methods = ['GET', 'POST'])
-def Sentinel2():
+@app.route('/visinfrared.html', methods = ['GET', 'POST'])
+def Visinfrared():
     global glbls, msg, local, zoom
     if request.method == 'GET':
-        return render_template(sentinel2, msg = msg,
+        return render_template(visinfrared, msg = msg,
                                           minLat = glbls['minLat'],
                                           minLon = glbls['minLon'],
                                           maxLat = glbls['maxLat'],
@@ -276,18 +276,64 @@ def Sentinel2():
                                           zoom = zoom)
     else:
         try:
-            startDate = request.form['startDate']  
+            startDate = request.form['startDate']
             endDate = request.form['endDate']
             minLat = float(request.form['minLat'])
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
             maxLon = float(request.form['maxLon'])
-            if request.form.has_key('export'):        
-                export = request.form['export']
-                gdexportname = request.form['exportname'] 
-                gdexportscale = float(request.form['gdexportscale']) 
+            collectionid = request.form['collectionid']  
+            rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
+            centerLon = (minLon + maxLon)/2.0
+            centerLat = (minLat + maxLat)/2.0 
+            ulPoint = ee.Geometry.Point([minLon,maxLat])   
+            lrPoint = ee.Geometry.Point([maxLon,minLat]) 
+            cloudcover = 'CLOUD_COVER'
+            
+            if collectionid=='COPERNICUS/S2_10':
+                bandNames = ['B2','B3','B4','B8']
+                collectionid = 'COPERNICUS/S2'
+                cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
+                displayMax = 5000
+            elif collectionid =='COPERNICUS/S2_20':
+                bandNames = ['B5','B6','B7','B8A','B11','B12']
+                collectionid = 'COPERNICUS/S2'
+                cloudcover = 'CLOUDY_PIXEL_PERCENTAGE' 
+                displayMax = 5000
+            elif collectionid=='LANDSAT/LC08/C01/T1_RT':
+                bandNames = ['B2','B3','B4','B5','B6','B7'] 
+                displayMax = 20000 
+            elif collectionid=='LANDSAT/LC08/C01/T1_RT_TOA': 
+                bandNames = ['B2','B3','B4','B5','B6','B7'] 
+                displayMax = 1   
+            elif collectionid=='LANDSAT/LE07/C01/T1_RT':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 255
+            elif collectionid=='LANDSAT/LE07/C01/T1_RT_TOA':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 1
+            elif collectionid=='LANDSAT/LT05/C01/T1':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 255
+            elif collectionid=='LANDSAT/LT05/C01/T1_TOA':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 1   
+            elif collectionid=='LANDSAT/LT4_L1T':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 255
+            elif collectionid=='LANDSAT/LT4_L1T_TOA':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 1    
             else:
-                export = ' '          
+                collectionid = request.form['collectionID']
+                bandNames =  request.form['bandnames'].split()
+                displayMax = float(request.form['displaymax'])           
+            if request.form.has_key('gdexport'):        
+                gdexportscale = float(request.form['gdexportscale'])
+                gdexportname = request.form['gdexportname']
+                gdexport = request.form['gdexport']
+            else:
+                gdexport = ' '
             start = ee.Date(startDate)
             finish = ee.Date(endDate)           
             rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
@@ -295,11 +341,11 @@ def Sentinel2():
             centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat]) 
-            collection = ee.ImageCollection('COPERNICUS/S2') \
+            collection = ee.ImageCollection(collectionid) \
                         .filterBounds(ulPoint) \
                         .filterBounds(lrPoint) \
                         .filterDate(start, finish) \
-                        .sort('CLOUD_COVERAGE_ASSESSMENT', True) 
+                        .sort(cloudcover, True) 
             acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                         
             count = collection.toList(100).length().getInfo()    
             if count==0:
@@ -316,10 +362,10 @@ def Sentinel2():
             image = ee.Image(collection.first())         
             imageclip = image.clip(rect)              
             systemid = image.get('system:id').getInfo()
-            cloudcover = image.get('CLOUD_COVERAGE_ASSESSMENT').getInfo()
+            cloudcover = image.get(cloudcover).getInfo()
             projection = image.select('B2').projection().getInfo()['crs']
             downloadpath = image.getDownloadUrl({'scale':30,'crs':projection})    
-            if export == 'export':
+            if gdexport == 'gdexport':
 #              export to Google Drive --------------------------
                 gdexport = ee.batch.Export.image.toDrive(imageclip.select('B2','B3','B4','B8'),
                                          description='driveExportTask', 
@@ -333,11 +379,11 @@ def Sentinel2():
             else:
                 gdexportid = 'none'
 #              --------------------------------------------------                    
-            downloadpathclip = imageclip.select('B2','B3','B4','B8').getDownloadUrl({'scale':10, 'crs':projection})
-            rgb = image.select('B2','B3','B4')            
-            rgbclip = imageclip.select('B2','B3','B4')                 
-            mapid = rgb.getMapId({'min':0, 'max':2000, 'opacity': 0.6}) 
-            mapidclip = rgbclip.getMapId({'min':0, 'max':3000, 'opacity': 1.0}) 
+            downloadpathclip = imageclip.select(bandNames).getDownloadUrl({'scale':10, 'crs':projection})
+            rgb = image.select(0,1,2)            
+            rgbclip = imageclip.select(0,1,2)                 
+            mapid = rgb.getMapId({'min':0, 'max':displayMax, 'opacity': 0.6}) 
+            mapidclip = rgbclip.getMapId({'min':0, 'max':displayMax, 'opacity': 1.0}) 
             
             glbls['minLat'] = minLat
             glbls['minLon'] = minLon
@@ -346,9 +392,9 @@ def Sentinel2():
             glbls['centerLon'] = centerLon
             glbls['centerLat'] = centerLat  
             glbls['startDate'] = startDate
-            glbls['endDate'] = endDate 
+            glbls['endDate'] = endDate
                                  
-            return render_template('sentinel2out.html',
+            return render_template('visinfraredout.html',
                                     mapidclip = mapidclip['mapid'], 
                                     tokenclip = mapidclip['token'], 
                                     mapid = mapid['mapid'], 
@@ -363,11 +409,10 @@ def Sentinel2():
                                     cloudcover = cloudcover,
                                     projection = projection,
                                     count = count,
-                                    sensingorbitnumbers = sensingorbitnumbers,
                                     timestamps = timestamps,
                                     timestamp = timestamp)  
         except Exception as e:
-            return '<br />An error occurred in Sentinel2: %s<br /><a href="%s" name="return"> Return</a>'%(e,sentinel2)   
+            return '<br />An error occurred in visinfrared: %s<br /><a href="%s" name="return"> Return</a>'%(e,visinfrared)   
         
 @app.route('/mad.html', methods = ['GET', 'POST'])
 def Mad():

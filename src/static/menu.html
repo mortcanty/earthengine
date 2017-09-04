@@ -21,7 +21,7 @@ new scale.</p>
 
 <h3><a name="h1">Retrieve/Sentinel1</a></h3>
 <p>
-Retrieve a  time series of Sentinel-1 images:
+Retrieve a  time series of Sentinel-1 image spatail subsets:
 Select a start and end date, "ASCENDING" or "DESCENDING" pass, relative orbit number (default any), 
 and polarization ("VV,VH", "VV",  "VH", "HH,HV", "HH" or "HV").  If desired, and if
 you are authenticated, select "Export to Google Drive" with a filename and scale. Use the
@@ -31,13 +31,31 @@ you can download the time series directly, but this may be unreliable. The Expor
 <a href="#h0"> top</a>
 </p>
 
-<h3><a name="h2">Retrieve/Sentinel2</a></h3>
+<h3><a name="h2">Retrieve/Visual-Infrared</a></h3>
 <p>
-Retrieve a single Sentinel-2 image (the 10m optical/infrared bands only):
+Retrieve a spatial subset of a single visual/infrared image:
+Choose the desired collection ID. Available collection ID's are:
+<p>
+<table>
+<tr><td>Platform</td><td>Bands</td><td>Spectrum</td><td>Pixel</td><td>Collection ID</td><td>Info</td></tr>
+<tr><td>Landsat 4 TM</td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LT4_L1T</td><td>DN values, scaled, calibrated at-sensor radiance, orthorectified</td></tr>
+<tr><td>Landsat 4 TM</td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LT4_L1T_TOA</td><td>Calibrated top-of-atmosphere reflectance, orthorectified.</td></tr>
+<tr><td>Landsat 5 TM</td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LT05/C01/T1</td><td>DN values, scaled, calibrated at-sensor radiance, orthorectified</td></tr>
+<tr><td>Landsat 5 TM</td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LT05/C01/T1_TOA</td><td>Calibrated top-of-atmosphere reflectance, orthorectified </td></tr>
+<tr><td>Landsat 7 ETM</td><td>6</td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LE07/C01/T1_RT</td><td>Tier 1 and Real-Time data DN values, scaled, calibrated at-sensor radiance</td</tr>
+<tr><td>Landsat 7 ETM</td><td>6</td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LE07/C01/T1_RT_TOA</td><td>Tier 1 and Real-Time data calibrated top-of-atmosphere reflectance</td</tr>
+<tr><td>Landsat 8  </td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LC08/C01/T1_RT</td><td> Tier 1 and Real-Time data DN values, scaled, calibrated at-sensor radiance</td</tr>
+<tr><td>Landsat 8  </td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LC08/C01/T1_RT_TOA</td><td> Tier 1 and Real-Time data calibrated top-of-atmosphere reflectance</td</tr>
+<tr><td>Sentinel 2  </td><td>4</td><td> VNIR/SWIR</td><td>10m</td><td>COPERNICUS/S2</td><td>TOA reflectance scaled by 10000</td></tr>
+<tr><td>Sentinel 2  </td><td>6 </td><td>NIR/SWIR</td><td>20m</td><td>COPERNICUS/S2</td><td>TOA reflectance scaled by 10000</td></tr>
+</table>
+</p>
+Alternatively, you can "roll your own", i.e., choose your own GEE collection ID or a collection from your own assets. In that case you must
+also enter the relevant band names and maximum display value.
 Choose a start and end date for the search. The most cloud-free image in the period will be selected.  
 If desired, and if you are authenticated, select "Export to Google Drive" with a filename and scale. Use the
 map rectangle tool to set a region of interest. Then click GO to start. When the result page appears
-you can download the image directly, but this may be unreliable. The Export to Drive is recommended. 
+you can download the image intersection directly, but this may be unreliable. The Export to Drive is recommended.
 <br />
 <a href="#h0"> top</a>
 </p>
@@ -60,24 +78,7 @@ as an overlay. You can download the change maps directly, but this may be unreli
 
 <h3><a name="h5">Algorithm/iMAD</a></h3>
 <p>
-Run the IR-MAD algorithm on two images from the same GEE archive collection ID. Available collection ID's are:
-<p>
-<table>
-<tr><td>Platform</td><td>Bands</td><td>Spectrum</td><td>Pixel</td><td>Collection ID</td><td>Info</td></tr>
-<tr><td>Landsat 4 TM</td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LT4_L1T</td><td>DN values, scaled, calibrated at-sensor radiance, orthorectified</td></tr>
-<tr><td>Landsat 4 TM</td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LT4_L1T_TOA</td><td>Calibrated top-of-atmosphere reflectance, orthorectified.</td></tr>
-<tr><td>Landsat 5 TM</td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LT05/C01/T1</td><td>DN values, scaled, calibrated at-sensor radiance, orthorectified</td></tr>
-<tr><td>Landsat 5 TM</td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LT05/C01/T1_TOA</td><td>Calibrated top-of-atmosphere reflectance, orthorectified </td></tr>
-<tr><td>Landsat 7 ETM</td><td>6</td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LE07/C01/T1_RT</td><td>Tier 1 and Real-Time data DN values, scaled, calibrated at-sensor radiance</td</tr>
-<tr><td>Landsat 7 ETM</td><td>6</td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LE07/C01/T1_RT_TOA</td><td>Tier 1 and Real-Time data calibrated top-of-atmosphere reflectance</td</tr>
-<tr><td>Landsat 8  </td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LC08/C01/T1_RT</td><td> Tier 1 and Real-Time data DN values, scaled, calibrated at-sensor radiance</td</tr>
-<tr><td>Landsat 8  </td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LC08/C01/T1_RT_TOA</td><td> Tier 1 and Real-Time data calibrated top-of-atmosphere reflectance</td</tr>
-<tr><td>Sentinel 2  </td><td>4</td><td> VNIR/SWIR</td><td>10m</td><td>COPERNICUS/S2</td><td>TOA reflectance scaled by 10000</td></tr>
-<tr><td>Sentinel 2  </td><td>6 </td><td>NIR/SWIR</td><td>20m</td><td>COPERNICUS/S2</td><td>TOA reflectance scaled by 10000</td></tr>
-</table>
-</p>
-Alternatively, yiu can "roll your own", i.e., choose your own GEE collection ID or a collection from your own assets. In that case you must
-also enter the relevant band names.
+Run the IR-MAD algorithm on two images from the same GEE archive collection ID. Available collection ID's are as shown above for Visual-Infrared.
 Choose the time ranges
 for the images (the image with least cloud cover will be selected for each range). Select the maximum number of iterations and
 use the map rectangle tool to set a region of interest. If desired, and if
@@ -95,14 +96,14 @@ image as an overlay. You can download the MAD change image directly, but this ma
 
 <h3><a name="h5">Algorithm/Radcal</a></h3>
 <p>
-Normalize a sequence of full scenes from the same collectionID. Available collections are as shown above for iMAD.
+Radiometrically normalize a sequence of full scenes from the same collectionID. Available collection IDs are as shown above for Visual-Infrared.
 Choose the time range for the image sequence, the beginning
 and ending months of the year and the maximum cloud cover in percent. Select the maximum number of iterations for IR-MAD and
 use the map rectangle tool to set the region to be used to extract the radiometric normalization coefficients. 
 Select the image number (in order of increasing cloud cover) to be used as reference. (Leaving "Export to Assets" unchecked will
 show the list of images found in order of increasing cloud cover without actually triggering the calculations.)
 If you are authenticated, select "Export to Assets" with a directory name where the normalized scenes will be stored, and the export scale. 
-Click GO to start. Metadata for the calculation will be exported to Google Drive, showing the statistics for each of the registrations. 
+Click GO to start. Metadata for the calculation will be exported to Google Drive, showing the statistics for each of the normalizations. 
 <br />
 <a href="#h0"> top</a>
 </p>
