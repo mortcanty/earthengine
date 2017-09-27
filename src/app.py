@@ -7,7 +7,7 @@ from eeWishart import omnibus
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
 #------------
-local = True
+local = False
 #------------
 
 glbls = {'centerLon':8.5,'centerLat':50.05,
@@ -167,7 +167,15 @@ def Sentinel1():
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             collection = collection.sort('system:time_start')                             
             systemids =  str(ee.List(collection.aggregate_array('system:id')).getInfo())                            
-            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                                           
+            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                                                
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat  
+            glbls['startDate'] = startDate
+            glbls['endDate'] = endDate
             count = len(acquisition_times)
             if count==0:
                 raise ValueError('No images found')   
@@ -226,15 +234,6 @@ def Sentinel1():
                 gdexportid = 'none'
 #              --------------------------------------------------                                        
             downloadpathclip =  outimage.getDownloadUrl({'scale':10})       
-            
-            glbls['minLat'] = minLat
-            glbls['minLon'] = minLon
-            glbls['maxLat'] = maxLat
-            glbls['maxLon'] = maxLon  
-            glbls['centerLon'] = centerLon
-            glbls['centerLat'] = centerLat  
-            glbls['startDate'] = startDate
-            glbls['endDate'] = endDate
                                                                     
             return render_template('sentinel1out.html',
                                     mapid = mapid['mapid'],
@@ -346,12 +345,18 @@ def Visinfrared():
                         .filterBounds(lrPoint) \
                         .filterDate(start, finish) \
                         .sort(cloudcover, True) 
-            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                         
-            count = collection.toList(100).length().getInfo()    
+            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                          
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat  
+            glbls['startDate'] = startDate
+            glbls['endDate'] = endDate   
+            count = collection.toList(100).length().getInfo() 
             if count==0:
                 raise ValueError('No images found')        
-            sensingorbitnumbers = str(ee.List(collection.aggregate_array('SENSING_ORBIT_NUMBER')).getInfo())
-            
             timestamplist = []
             for timestamp in acquisition_times:
                 tmp = time.gmtime(int(timestamp)/1000)
@@ -384,15 +389,6 @@ def Visinfrared():
             rgbclip = imageclip.select(0,1,2)                 
             mapid = rgb.getMapId({'min':0, 'max':displayMax, 'opacity': 0.6}) 
             mapidclip = rgbclip.getMapId({'min':0, 'max':displayMax, 'opacity': 1.0}) 
-            
-            glbls['minLat'] = minLat
-            glbls['minLon'] = minLon
-            glbls['maxLat'] = maxLat
-            glbls['maxLon'] = maxLon  
-            glbls['centerLon'] = centerLon
-            glbls['centerLat'] = centerLat  
-            glbls['startDate'] = startDate
-            glbls['endDate'] = endDate
                                  
             return render_template('visinfraredout.html',
                                     mapidclip = mapidclip['mapid'], 
@@ -455,7 +451,7 @@ def Mad():
                 gdexport = request.form['gdexport']
             else:
                 gdexport = 'none'                 
-            rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
+            rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)    
             centerLon = (minLon + maxLon)/2.0
             centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
@@ -482,8 +478,18 @@ def Mad():
                         .filterBounds(ulPoint) \
                         .filterBounds(lrPoint) \
                         .filterDate(ee.Date(startDate1), ee.Date(endDate1)) \
-                        .sort(cloudcover, True) 
-            count = collection.toList(100).length().getInfo()    
+                        .sort(cloudcover, True)                
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat   
+            glbls['startDate1'] = startDate1
+            glbls['endDate1'] = endDate1   
+            glbls['startDate2'] = startDate2
+            glbls['endDate2'] = endDate2   
+            count = collection.toList(100).length().getInfo()
             if count==0:
                 raise ValueError('No images found for first time interval')      
             image1 = ee.Image(collection.first()).select(bands)     
@@ -549,7 +555,9 @@ def Mad():
                                     .cat(['Radiometric Normalization, Invariant Pixels:']) \
                                     .cat([ninvar]) \
                                     .cat(['Slope, Intercept, R:']) \
-                                    .cat(coeffs)      
+                                    .cat(coeffs) \
+                                    .cat(['Polygon']) \
+                                    .cat(rect.getInfo()['coordinates'][0])      
                 hint = '(batch export should complete)'             
                 gdmetaexport = ee.batch.Export.table.toDrive(ee.FeatureCollection(metadata.map(makefeature)),
                              description='driveExportTask', 
@@ -577,18 +585,7 @@ def Mad():
                 print '****Exporting MAD image to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
             else:
-                gdexportid = 'none'    
-                
-            glbls['minLat'] = minLat
-            glbls['minLon'] = minLon
-            glbls['maxLat'] = maxLat
-            glbls['maxLon'] = maxLon  
-            glbls['centerLon'] = centerLon
-            glbls['centerLat'] = centerLat   
-            glbls['startDate1'] = startDate1
-            glbls['endDate1'] = endDate1   
-            glbls['startDate2'] = startDate2
-            glbls['endDate2'] = endDate2     
+                gdexportid = 'none'      
                 
             for rhos in allrhos.getInfo():
                 print >> sys.stderr, rhos               
@@ -712,8 +709,18 @@ def Radcal():
                            .filterDate(ee.Date(startDate),ee.Date(endDate)) \
                            .filter(ee.Filter.calendarRange(month1,month2,'month')) \
                            .filterMetadata(cloudcover,'less_than',maxcloudcover) \
-                           .sort(cloudcover)                          
-            count = collection.toList(100).length().getInfo()    
+                           .sort(cloudcover)                                       
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat 
+            glbls['startDate'] = startDate
+            glbls['endDate'] = endDate 
+            glbls['month1'] = month1
+            glbls['month2'] = month2
+            count = collection.toList(100).length().getInfo()  
             if count<2:
                 raise ValueError('Less than two images found for chosen time interval')   
             systemids =  ee.List(collection.aggregate_array('system:id')).getInfo() 
@@ -745,7 +752,9 @@ def Radcal():
             msg1 = 'Batch export not submitted'
             if assexport != 'none':
 #              batch normalization 
-                log = ee.List(['RADCAL '+time.asctime(),'REFERENCE:', refid, 'TARGETS:'])            
+                log = ee.List(['RADCAL '+time.asctime(),'REFERENCE:', refid, 'TARGETS:']) \
+                        .cat(['Polygon']) \
+                        .cat(rect.getInfo()['coordinates'][0])            
                 first = ee.Dictionary({'reference':reference,'rect':rect,'niter':niter,'log':log,'normalizedimages':ee.List([reference])})
                 result = ee.Dictionary(imList.iterate(radcalbatch,first))
 #              export log as featureCollection to Google Drive                
@@ -771,18 +780,7 @@ def Radcal():
                     assexport.start()
                 msg1 = 'Batch export submitted'         
 #          return info            
-            glbls['minLat'] = minLat
-            glbls['minLon'] = minLon
-            glbls['maxLat'] = maxLat
-            glbls['maxLon'] = maxLon  
-            glbls['centerLon'] = centerLon
-            glbls['centerLat'] = centerLat 
-            glbls['startDate'] = startDate
-            glbls['endDate'] = endDate 
-            glbls['month1'] = month1
-            glbls['month2'] = month2
-             
-            return render_template('radcalout.html',
+                return render_template('radcalout.html',
                                     title = 'Radiometric Normalization: '+msg1,
                                     count = count,
                                     mapid = mapid['mapid'], 
@@ -865,7 +863,15 @@ def Omnibus():
             if relativeorbitnumber != '':
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             collection = collection.sort('system:time_start')                                     
-            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                                           
+            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()         
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat
+            glbls['startDate'] = startDate
+            glbls['endDate'] = endDate                                  
             count = len(acquisition_times) 
             if count<2:
                 raise ValueError('Less than 2 images found')   
@@ -920,7 +926,9 @@ def Omnibus():
                         'Polarization: '+polarization1,            
                         'Timestamps: '+timestamps,
                         'Rel orbit numbers: '+relativeorbitnumbers,
-                        'Asset export name: '+assexportname])   
+                        'Asset export name: '+assexportname]) \
+                        .cat(['Polygon']) \
+                        .cat(rect.getInfo()['coordinates'][0])  
                 hint = '(batch export should complete)'             
                 gdrhosexport = ee.batch.Export.table.toDrive(ee.FeatureCollection(metadata.map(makefeature)),
                              description='driveExportTask', 
@@ -957,16 +965,7 @@ def Omnibus():
                 title = 'Sequential omnibus first change map'
             else:
                 mapid = cmap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4})   
-                title = 'Sequential omnibus last change map'    
-                
-            glbls['minLat'] = minLat
-            glbls['minLon'] = minLon
-            glbls['maxLat'] = maxLat
-            glbls['maxLon'] = maxLon  
-            glbls['centerLon'] = centerLon
-            glbls['centerLat'] = centerLat
-            glbls['startDate'] = startDate
-            glbls['endDate'] = endDate                                                  
+                title = 'Sequential omnibus last change map'                                                      
                 
             return render_template('omnibusout.html',
                                     mapid = mapid['mapid'], 
