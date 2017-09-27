@@ -7,7 +7,7 @@ from eeWishart import omnibus
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
 #------------
-local = False
+local = True
 #------------
 
 glbls = {'centerLon':8.5,'centerLat':50.05,
@@ -256,7 +256,7 @@ def Sentinel1():
                                     polarization = polarization1,
                                     relativeorbitnumbers = relativeorbitnumbers)  
         except Exception as e:
-            return '<br />An error occurred in Sentinel1: %s<br /><a href="%s" name="return"> Return</a>'%(e,sentinel1) 
+            return '<br />An error occurred in Sentinel1: %s<br /><a href="%s" name="return"> Return</a>'%(e,'sentinel1.html') 
                   
 
 @app.route('/visinfrared.html', methods = ['GET', 'POST'])
@@ -408,7 +408,7 @@ def Visinfrared():
                                     timestamps = timestamps,
                                     timestamp = timestamp)  
         except Exception as e:
-            return '<br />An error occurred in visinfrared: %s<br /><a href="%s" name="return"> Return</a>'%(e,visinfrared)   
+            return '<br />An error occurred in visinfrared: %s<br /><a href="%s" name="return"> Return</a>'%(e,'visinfrared.html')   
         
 @app.route('/mad.html', methods = ['GET', 'POST'])
 def Mad():
