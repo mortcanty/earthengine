@@ -167,7 +167,8 @@ def Sentinel1():
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             collection = collection.sort('system:time_start')                             
             systemids =  str(ee.List(collection.aggregate_array('system:id')).getInfo())                            
-            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                                                
+            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                                                          
+            count = len(acquisition_times)
             glbls['minLat'] = minLat
             glbls['minLon'] = minLon
             glbls['maxLat'] = maxLat
@@ -175,8 +176,7 @@ def Sentinel1():
             glbls['centerLon'] = centerLon
             glbls['centerLat'] = centerLat  
             glbls['startDate'] = startDate
-            glbls['endDate'] = endDate
-            count = len(acquisition_times)
+            glbls['endDate'] = endDate          
             if count==0:
                 raise ValueError('No images found')   
             timestamplist = []
@@ -256,7 +256,7 @@ def Sentinel1():
                                     polarization = polarization1,
                                     relativeorbitnumbers = relativeorbitnumbers)  
         except Exception as e:
-            return '<br />An error occurred in Sentinel1: %s<br /><a href="%s" name="return"> Return</a>'%(e,'sentinel1.html') 
+            return '<br />An error occurred in Sentinel1: %s<br /><a href="sentinel1.html" name="return"> Return</a>'%e 
                   
 
 @app.route('/visinfrared.html', methods = ['GET', 'POST'])
@@ -408,7 +408,7 @@ def Visinfrared():
                                     timestamps = timestamps,
                                     timestamp = timestamp)  
         except Exception as e:
-            return '<br />An error occurred in visinfrared: %s<br /><a href="%s" name="return"> Return</a>'%(e,'visinfrared.html')   
+            return '<br />An error occurred in visinfrared: %s<br /><a href="visinfrared.html" name="return"> Return</a>'%e   
         
 @app.route('/mad.html', methods = ['GET', 'POST'])
 def Mad():
@@ -606,7 +606,7 @@ def Mad():
                                     timestamp2 = timestamp2)  
         except Exception as e:
             if isinstance(e,ValueError):
-                return '<br />An error occurred in MAD: %s<br /><a href="%s" name="return"> Return</a>'%(e,mad1) 
+                return '<br />An error occurred in MAD: %s<br /><a href="mad.html" name="return"> Return</a>'%e 
             else:
                 return render_template('madout.html',
                                         title = 'Error in MAD: %s '%e + hint,
@@ -796,7 +796,7 @@ def Radcal():
                                     centerLat = centerLat)
                               
         except Exception as e:
-            return '<br />An error occurred in Radcal: %s<br /><a href="/radcal.html" name="return"> Return</a>'%e 
+            return '<br />An error occurred in Radcal: %s<br /><a href="radcal.html" name="return"> Return</a>'%e 
 
 
 @app.route('/omnibus.html', methods = ['GET', 'POST'])
@@ -930,13 +930,13 @@ def Omnibus():
                         .cat(['Polygon']) \
                         .cat(rect.getInfo()['coordinates'][0])  
                 hint = '(batch export should complete)'             
-                gdrhosexport = ee.batch.Export.table.toDrive(ee.FeatureCollection(metadata.map(makefeature)),
+                gdexport1 = ee.batch.Export.table.toDrive(ee.FeatureCollection(metadata.map(makefeature)),
                              description='driveExportTask', 
                              folder = 'EarthEngineImages',
                              fileNamePrefix=assexportname.replace('/','-') )
-                gdrhosexportid = str(gdrhosexport.id)
-                print '****Exporting correlations as CSV to Drive, task id: %s '%gdrhosexportid            
-                gdrhosexport.start()                
+                gdexportid1 = str(gdexport1.id)
+                print '****Exporting metadata as CSV to Drive, task id: %s '%gdexportid1            
+                gdexport1.start()                
 #              export to Assets 
                 hint = '(batch export should complete)'
                 assexport = ee.batch.Export.image.toAsset(cmaps,
@@ -986,7 +986,7 @@ def Omnibus():
                                     relativeorbitnumbers = relativeorbitnumbers)                                          
         except Exception as e:
             if isinstance(e,ValueError):
-                return '<br />An error occurred in Omnibus: %s<br /><a href="%s" name="return"> Return</a>'%(e,omnibus1)
+                return '<br />An error occurred in Omnibus: %s<br /><a href="omnibus.html" name="return"> Return</a>'%e
             else:
                 return render_template('omnibusout.html', 
                                         title = 'Error in omnibus: %s '%e + hint,
