@@ -138,6 +138,7 @@ def Sentinel1():
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
             maxLon = float(request.form['maxLon'])
+            gdexportid = 'none'
             if request.form.has_key('export'):        
                 export = request.form['export']
                 gdexportname = request.form['exportname']
@@ -230,8 +231,6 @@ def Sentinel1():
                 gdexportid = str(gdexport.id)
                 print >> sys.stderr, '****Exporting to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
-            else:
-                gdexportid = 'none'
 #              --------------------------------------------------                                        
             downloadpathclip =  outimage.getDownloadUrl({'scale':10})       
                                                                     
@@ -830,7 +829,9 @@ def Omnibus():
             minLat = float(request.form['minLat'])
             minLon = float(request.form['minLon'])
             maxLat = float(request.form['maxLat'])
-            maxLon = float(request.form['maxLon'])        
+            maxLon = float(request.form['maxLon'])    
+            assexportid = 'none'     
+            gdexportid = 'none'            
             if request.form.has_key('assexport'):        
                 assexportscale = float(request.form['assexportscale'])
                 assexportname = request.form['assexportname']
@@ -918,8 +919,6 @@ def Omnibus():
             cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist1[1:])  
             downloadpath = cmaps.getDownloadUrl({'scale':10})    
             
-            assexportid = 'none'     
-            gdexportid = 'none'        
             if assexport == 'assexport':
 #              export metadata as CSV to Drive  
                 metadata = ee.List(['SEQUENTIAL OMNIBUS: '+time.asctime(),
