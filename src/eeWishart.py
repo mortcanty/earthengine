@@ -17,8 +17,8 @@ def log_det_sum(imList,j):
     first = ee.Image(ee.List(imList).get(0))
     nbands = first.bandNames().length()   
     return ee.Algorithms.If(nbands.eq(2),  
-        ee.Image(ee.List(imList).slice(0,j).iterate(sumimgs,first)).expression('b(0)*b(1)').log(),
-        ee.Image(ee.List(imList).slice(0,j).iterate(sumimgs,first)).log() )
+        ee.Image(ee.List(imList).slice(1,j).iterate(sumimgs,first)).expression('b(0)*b(1)').log(),
+        ee.Image(ee.List(imList).slice(1,j).iterate(sumimgs,first)).log() )
     
 def log_det(imList,j):
     '''return the log of the the determinant of the jth image in imList'''

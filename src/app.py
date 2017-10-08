@@ -18,6 +18,7 @@ glbls = {'centerLon':8.5,'centerLat':50.05,
          'month1':6,'month2':8}
 zoom = 10
 jet = 'black,blue,cyan,yellow,red'
+ee.data.setDeadline(200000) 
 
 if local:
 # for local flask server
@@ -885,7 +886,6 @@ def Omnibus():
             timestamplist = ['T20'+x[4:]+x[0:4] for x in timestamplist]
 #          in case of duplicates add running integer
             timestamplist1 = [timestamplist[i] + '_' + str(i+1) for i in range(len(timestamplist))]
-#          remove duplicates
             timestamps = str(timestamplist1)
             timestamp = timestamplist1[0]                   
             relativeorbitnumbers = str(ee.List(collection.aggregate_array('relativeOrbitNumber_start')).getInfo())                                                                      
@@ -909,7 +909,7 @@ def Omnibus():
             pList = pcollection.toList(count)   
             first = ee.Dictionary({'imlist':ee.List([]),'rect':rect}) 
             imList = ee.Dictionary(pList.iterate(clipList,first)).get('imlist')  
-#          run the algorithm ------------------------------------------    
+#          run the algorithm ------------------------------------------   
             result = ee.Dictionary(omnibus(imList,significance,median))
 #          ------------------------------------------------------------            
             cmap = ee.Image(result.get('cmap')).byte()   
@@ -954,8 +954,7 @@ def Omnibus():
                                                          fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9)
                 gdexportid = str(gdexport.id)
                 print '****Exporting to Google Drive, task id: %s '%gdexportid
-                gdexport.start() 
- 
+                gdexport.start()  
             if display=='fmap':                                                                                  
                 mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
                 title = 'Sequential omnibus frequency map'
@@ -964,8 +963,7 @@ def Omnibus():
                 title = 'Sequential omnibus first change map'
             else:
                 mapid = cmap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4})   
-                title = 'Sequential omnibus last change map'                                                      
-                
+                title = 'Sequential omnibus last change map'                                                          
             return render_template('omnibusout.html',
                                     mapid = mapid['mapid'], 
                                     token = mapid['token'], 
