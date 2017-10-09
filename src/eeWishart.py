@@ -10,15 +10,24 @@ from eeMad import chi2cdf
 def multbyenl(image):
     return ee.Image(image).multiply(4.9)
 
+# def log_det_sum(imList,j):
+#     '''return the log of the the determinant of the sum of the first j images in imList'''
+#     def sumimgs(current,prev):
+#         return ee.Image(prev).add(current)
+#     first = ee.Image(ee.List(imList).get(0))
+#     nbands = first.bandNames().length()   
+#     return ee.Algorithms.If( nbands.eq(2),  
+#         ee.Image(ee.List(imList).slice(1,j).iterate(sumimgs,first)).expression('b(0)*b(1)').log(),
+#         ee.Image(ee.List(imList).slice(1,j).iterate(sumimgs,first)).log() )
+    
 def log_det_sum(imList,j):
     '''return the log of the the determinant of the sum of the first j images in imList'''
-    def sumimgs(current,prev):
-        return ee.Image(prev).add(current)
-    first = ee.Image(ee.List(imList).get(0))
-    nbands = first.bandNames().length()   
-    return ee.Algorithms.If(nbands.eq(2),  
-        ee.Image(ee.List(imList).slice(1,j).iterate(sumimgs,first)).expression('b(0)*b(1)').log(),
-        ee.Image(ee.List(imList).slice(1,j).iterate(sumimgs,first)).log() )
+    imList = ee.List(imList)
+    nbands = ee.Image(imList.get(0)).bandNames().length() 
+    sumj = ee.ImageCollection(imList.slice(0,j)).reduce(ee.Reducer.sum())
+    return ee.Algorithms.If( nbands.eq(2),                         
+        sumj.expression('b(0)*b(1)').log(),
+        sumj.log() )                    
     
 def log_det(imList,j):
     '''return the log of the the determinant of the jth image in imList'''
