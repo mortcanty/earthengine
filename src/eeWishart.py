@@ -10,16 +10,6 @@ from eeMad import chi2cdf
 def multbyenl(image):
     return ee.Image(image).multiply(4.9)
 
-# def log_det_sum(imList,j):
-#     '''return the log of the the determinant of the sum of the first j images in imList'''
-#     def sumimgs(current,prev):
-#         return ee.Image(prev).add(current)
-#     first = ee.Image(ee.List(imList).get(0))
-#     nbands = first.bandNames().length()   
-#     return ee.Algorithms.If( nbands.eq(2),  
-#         ee.Image(ee.List(imList).slice(1,j).iterate(sumimgs,first)).expression('b(0)*b(1)').log(),
-#         ee.Image(ee.List(imList).slice(1,j).iterate(sumimgs,first)).log() )
-    
 def log_det_sum(imList,j):
     '''return the log of the the determinant of the sum of the first j images in imList'''
     imList = ee.List(imList)
@@ -104,10 +94,8 @@ def filter_j(current,prev):
     tmp = bmap.select(idx)
     bname = bmap.bandNames().get(idx)
     tmp = tmp.where(tst,cmap1)
-    tmp = tmp.rename([bname])
-    
-    bmap = bmap.addBands(tmp,[bname],True)
-    
+    tmp = tmp.rename([bname])    
+    bmap = bmap.addBands(tmp,[bname],True)    
     return ee.Dictionary({'ell':ell,'j':j.add(1),'threshold':threshold,'cmap':cmap,'smap':smap,'fmap':fmap,'bmap':bmap})
 
 def filter_ell(current,prev):
@@ -127,9 +115,7 @@ def filter_ell(current,prev):
                                                                  'bmap':result.get('bmap')})
 
 def omnibus(imList,significance=0.0001,median=False):
-    '''return change maps for sequential omnibus change algorithm'''   
-    def gather(current,first):
-        return ee.Image.cat(first,current)   
+    '''return change maps for sequential omnibus change algorithm'''    
     imList = ee.List(imList).map(multbyenl)    
     p = ee.Image(imList.get(0)).bandNames().length()
     k = imList.length() 
@@ -140,8 +126,8 @@ def omnibus(imList,significance=0.0001,median=False):
 #  filter p-values to generate cmap, smap, fmap and bmap
     cmap = ee.Image(imList.get(0)).select(0).multiply(0.0)
     smap = ee.Image(imList.get(0)).select(0).multiply(0.0)
-    fmap = ee.Image(imList.get(0)).select(0).multiply(0.0)
-    bmap = ee.Image(ee.List.repeat(cmap,k.subtract(2)).iterate(gather,cmap))
+    fmap = ee.Image(imList.get(0)).select(0).multiply(0.0)   
+    bmap = ee.Image.constant(ee.List.repeat(0,k.subtract(1)))    
     threshold = ee.Image.constant(1-significance)
     first = ee.Dictionary({'ell':1,'threshold':threshold,'cmap':cmap,'smap':smap,'fmap':fmap,'bmap':bmap})
     return ee.Dictionary(pv_arr.iterate(filter_ell,first)) 

@@ -15,6 +15,9 @@ glbls = {'centerLon':8.5,'centerLat':50.05,
          'startDate':'2016-04-01','endDate':'2016-09-01',
          'startDate1':'2016-03-07','endDate1':'2016-07-01',
          'startDate2':'2016-07-01','endDate2':'2016-11-01',
+         'significance':'0.01', 'orbitpass':'ASCENDING',
+         'polarization':'VV,VH','relorbitnumber':'any',
+         'iterations':'50',
          'month1':6,'month2':8}
 zoom = 10
 jet = 'black,blue,cyan,yellow,red'
@@ -121,6 +124,9 @@ def Sentinel1():
                                           centerLat = glbls['centerLat'],
                                           startDate = glbls['startDate'],
                                           endDate = glbls['endDate'],
+                                          polarization = glbls['polarization'],
+                                          orbitpass = glbls['orbitpass'],
+                                          relorbitnumber = glbls['relorbitnumber'],
                                           zoom = zoom)
     else:
         try: 
@@ -165,7 +171,7 @@ def Sentinel1():
                         .filter(ee.Filter.eq('resolution_meters', 10)) \
                         .filter(ee.Filter.eq('instrumentMode', 'IW')) \
                         .filter(ee.Filter.eq('orbitProperties_pass', orbitpass))                        
-            if relativeorbitnumber != '':
+            if relativeorbitnumber != 'any':
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             collection = collection.sort('system:time_start')                             
             systemids =  str(ee.List(collection.aggregate_array('system:id')).getInfo())                            
@@ -178,7 +184,10 @@ def Sentinel1():
             glbls['centerLon'] = centerLon
             glbls['centerLat'] = centerLat  
             glbls['startDate'] = startDate
-            glbls['endDate'] = endDate          
+            glbls['endDate'] = endDate    
+            glbls['relorbitnumber'] = relativeorbitnumber    
+            glbls['orbitpass'] = orbitpass  
+            glbls['polarization'] = polarization1       
             if count==0:
                 raise ValueError('No images found')   
             timestamplist = []
@@ -425,6 +434,7 @@ def Mad():
                                     endDate1 = glbls['endDate1'],
                                     startDate2 = glbls['startDate2'],
                                     endDate2 = glbls['endDate2'],
+                                    iterations = glbls['iterations'],
                                     zoom = zoom)
     else:
         try:
@@ -489,6 +499,7 @@ def Mad():
             glbls['endDate1'] = endDate1   
             glbls['startDate2'] = startDate2
             glbls['endDate2'] = endDate2   
+            glbls['iterations'] = niter
             count = collection.toList(100).length().getInfo()
             if count==0:
                 raise ValueError('No images found for first time interval')      
@@ -812,6 +823,10 @@ def Omnibus():
                                         centerLat = glbls['centerLat'],
                                         startDate = glbls['startDate'],
                                         endDate = glbls['endDate'],
+                                        significance = glbls['significance'],
+                                        polarization = glbls['polarization'],
+                                        orbitpass = glbls['orbitpass'],
+                                        relorbitnumber = glbls['relorbitnumber'],
                                         zoom = zoom)
     else:
         try: 
@@ -821,7 +836,7 @@ def Omnibus():
             orbitpass = request.form['pass']
             display = request.form['display']
             polarization1 = request.form['polarization']
-            relativeorbitnumber = request.form['relativeorbitnumber']
+            relativeorbitnumber = request.form['relorbitnumber']
             if polarization1 == 'VV,VH':
                 polarization = ['VV','VH']
             else:
@@ -861,8 +876,8 @@ def Omnibus():
                         .filter(ee.Filter.eq('transmitterReceiverPolarisation', polarization)) \
                         .filter(ee.Filter.eq('resolution_meters', 10)) \
                         .filter(ee.Filter.eq('instrumentMode', 'IW')) \
-                        .filter(ee.Filter.eq('orbitProperties_pass', orbitpass)) 
-            if relativeorbitnumber != '':
+                        .filter(ee.Filter.eq('orbitProperties_pass', orbitpass))                        
+            if relativeorbitnumber != 'any':
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             collection = collection.sort('system:time_start')                                     
             acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()         
@@ -873,7 +888,11 @@ def Omnibus():
             glbls['centerLon'] = centerLon
             glbls['centerLat'] = centerLat
             glbls['startDate'] = startDate
-            glbls['endDate'] = endDate                                  
+            glbls['endDate'] = endDate      
+            glbls['significance'] = significance      
+            glbls['relorbitnumber'] = relativeorbitnumber    
+            glbls['orbitpass'] = orbitpass  
+            glbls['polarization'] = polarization1                
             count = len(acquisition_times) 
             if count<2:
                 raise ValueError('Less than 2 images found')   
