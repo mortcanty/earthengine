@@ -1,10 +1,11 @@
 import ee
 
-def covarw(image, weights, scale=30, maxPixels=1e9):
+def covarw(image, weights, maxPixels=1e9):
     '''Return the weighted centered image and its weighted covariance matrix'''  
     geometry = image.geometry()
     bandNames = image.bandNames()
     N = bandNames.length()
+    scale = image.select(0).projection().nominalScale()
     weightsImage = image.multiply(ee.Image.constant(0)).add(weights)
     means = image.addBands(weightsImage) \
                  .reduceRegion(ee.Reducer.mean().repeat(N).splitWeights(), scale=scale,maxPixels=maxPixels) \

@@ -175,8 +175,7 @@ def Sentinel1():
                 collection = collection.filter(ee.Filter.eq('relativeOrbitNumber_start', int(relativeorbitnumber))) 
             collection = collection.sort('system:time_start')                             
             systemids =  str(ee.List(collection.aggregate_array('system:id')).getInfo())                            
-            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                                                          
-            count = len(acquisition_times)
+            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                                                                   
             glbls['minLat'] = minLat
             glbls['minLon'] = minLon
             glbls['maxLat'] = maxLat
@@ -188,6 +187,7 @@ def Sentinel1():
             glbls['relorbitnumber'] = relativeorbitnumber    
             glbls['orbitpass'] = orbitpass  
             glbls['polarization'] = polarization1       
+            count = len(acquisition_times)
             if count==0:
                 raise ValueError('No images found')   
             timestamplist = []
@@ -212,8 +212,7 @@ def Sentinel1():
             elif polarization1 == 'HV':
                 pcollection = collection.map(get_hv)
             elif polarization1 == 'HH,HV':
-                pcollection = collection.map(get_hhhv)    
-#          clipped image for display on map                
+                pcollection = collection.map(get_hhhv)                 
             if slanes:
 #              just want max for shipping lanes
                 outimage = pcollection.max().clip(rect)
@@ -849,13 +848,11 @@ def Omnibus():
             assexportid = 'none'     
             gdexportid = 'none'            
             if request.form.has_key('assexport'):        
-                assexportscale = float(request.form['assexportscale'])
                 assexportname = request.form['assexportname']
                 assexport = request.form['assexport']
             else:
                 assexport = 'none'
-            if request.form.has_key('gdexport'):  
-                gdexportscale = float(request.form['gdexportscale'])  
+            if request.form.has_key('gdexport'):   
                 gdexportname = request.form['gdexportname']    
                 gdexport = request.form['gdexport']
             else:
@@ -959,7 +956,7 @@ def Omnibus():
                 hint = '(batch export should complete)'
                 assexport = ee.batch.Export.image.toAsset(cmaps,
                                                           description='assetExportTask', 
-                                                          assetId=assexportname,scale=assexportscale,maxPixels=1e9)
+                                                          assetId=assexportname,scale=10,maxPixels=1e9)
                 assexportid = str(assexport.id)
                 print '****Exporting to Assets, task id: %s '%assexportid
                 assexport.start() 
@@ -970,7 +967,7 @@ def Omnibus():
                 gdexport = ee.batch.Export.image.toDrive(cmaps,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
-                                                         fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9)
+                                                         fileNamePrefix=gdexportname,scale=10,maxPixels=1e9)
                 gdexportid = str(gdexport.id)
                 print '****Exporting to Google Drive, task id: %s '%gdexportid
                 gdexport.start()  
