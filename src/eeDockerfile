@@ -16,11 +16,12 @@ RUN apt-get upgrade && \
 	    g++ \
 	    python-dev \ 
 	    python-flask \
-	    python-numpy \
-	    python-scipy \
-	    python-gdal \
 	    libffi-dev \
 	    python-pip    
+	    
+#       python-numpy \
+#	    python-scipy \
+#	    python-gdal \
 
 EXPOSE 5000
 
