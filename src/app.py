@@ -380,7 +380,7 @@ def Visinfrared():
             downloadpath = image.getDownloadUrl({'scale':30,'crs':projection})    
             if gdexport == 'gdexport':
 #              export to Google Drive --------------------------
-                gdexport = ee.batch.Export.image.toDrive(imageclip.select('B2','B3','B4','B8'),
+                gdexport = ee.batch.Export.image.toDrive(imageclip.select(bandNames),
                                          description='driveExportTask', 
                                          folder = 'EarthEngineImages',
                                          fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9) 
@@ -557,7 +557,7 @@ def Mad():
             coeffs = ee.List(result.get('coeffs'))                    
             sel = ee.List.sequence(1,nbands)
             normalized = ee.Image(result.get ('normalized')).select(sel)                                             
-            MAD = ee.Image.cat(MAD,chi2,ncmask,image1.clip(rect),image2.clip(rect),normalized.clip(rect))
+            MADs = ee.Image.cat(MAD,chi2,ncmask,image1.clip(rect),image2.clip(rect),normalized.clip(rect))
             if assexport == 'assexport':
 #              export metadata as CSV to Drive  
                 ninvar = ee.String(ncmask.reduceRegion(ee.Reducer.sum().unweighted(),
@@ -583,7 +583,7 @@ def Mad():
                 print >> sys.stderr, '****Exporting correlations as CSV to Drive, task id: %s '%gdrhosexportid            
                 gdmetaexport.start()                  
 #              export to Assets 
-                assexport = ee.batch.Export.image.toAsset(MAD,
+                assexport = ee.batch.Export.image.toAsset(MADs,
                                                           description='assetExportTask', 
                                                           assetId=assexportname,scale=assexportscale,maxPixels=1e9)
                 assexportid = str(assexport.id)
@@ -594,7 +594,7 @@ def Mad():
             if gdexport == 'gdexport':              
 #              export to Drive 
                 hint = '(batch export should complete)'
-                gdexport = ee.batch.Export.image.toDrive(MAD,description='driveExportTask', 
+                gdexport = ee.batch.Export.image.toDrive(ee.Image.cat(MAD,chi2),description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
                                                          fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9)
                 gdexportid = str(gdexport.id)
