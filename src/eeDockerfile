@@ -11,22 +11,17 @@ RUN apt-get upgrade && \
     apt-get install -y --no-install-recommends \
 	    python \
 	    build-essential \
-	    make \
 	    gcc \
-	    g++ \
 	    python-dev \ 
 	    python-flask \
 	    libffi-dev \
 	    python-pip    
 	    
-#       python-numpy \
-#	    python-scipy \
-#	    python-gdal \
-
 EXPOSE 5000
 
 # server 
 RUN     pip install --upgrade pip &&  \
+        pip install --upgrade setuptools && \
         pip install google-api-python-client && \
         pip install pyCrypto && \
         apt-get install -y libssl-dev

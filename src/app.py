@@ -437,7 +437,13 @@ def Mad():
                                     zoom = zoom)
     else:
         try:
-            hint = '(enable export to bypass this error)' 
+            hint = '' 
+            systemid1 = ''
+            systemid2 = ''
+            cloudcover1 = ''
+            cloudcover2 = ''
+            timestamp1 = ''
+            timestamp2 = ''
             niter = int(request.form['iterations'])
             startDate1 = request.form['startDate1']
             endDate1 = request.form['endDate1']
