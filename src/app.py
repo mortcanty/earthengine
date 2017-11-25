@@ -88,9 +88,22 @@ def get_hhhv(image):
     ''' get 'HH' and 'HV' bands from sentinel-1 imageCollection and restore linear signal from db-values '''
     return image.select('HH','HV').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
 
+def anglestats_iter(current,prev):
+    ''' get dictionary of incident angle statistics of current image and append to list '''
+    prev = ee.Dictionary(prev)
+    rect = ee.Geometry(prev.get('rect'))
+    stats = ee.List(prev.get('stats'))
+    current = ee.Image(current).select('angle')
+    meana = current.reduceRegion(ee.Reducer.mean(),geometry=rect,maxPixels= 1e9).get('angle')
+    mina = current.reduceRegion(ee.Reducer.min(),geometry=rect,maxPixels= 1e9).get('angle')
+    maxa = current.reduceRegion(ee.Reducer.max(),geometry=rect,maxPixels= 1e9).get('angle')
+    stats = stats.add(ee.Dictionary({'mina':mina,'meana':meana,'maxa':maxa}))
+    return ee.Dictionary({'stats':stats,'rect':rect})
+
 def get_image(current,image):
     ''' accumulate a single image from a collection of images '''
     return ee.Image.cat(ee.Image(image),current)    
+
     
 def clipList(current,prev):
     ''' clip a list of images '''
@@ -835,7 +848,6 @@ def Omnibus():
                                         zoom = zoom)
     else:
         try: 
-            hint = '(enable export to bypass this error)' 
             startDate = request.form['startDate']  
             endDate = request.form['endDate']  
             orbitpass = request.form['pass']
@@ -914,6 +926,12 @@ def Omnibus():
             image = ee.Image(collection.first())                       
             systemid = image.get('system:id').getInfo()   
             projection = image.select(0).projection().getInfo()['crs']
+#          gather a list of dictionaries of incidence angle statistics for the ROI
+            first = ee.Dictionary({'stats':ee.List([]),'rect':rect})
+            stats = ee.Dictionary(collection.toList(100).iterate(anglestats_iter,first)).get('stats').getInfo() 
+            meanangles = []
+            for stat in stats:
+                meanangles.append(round(stat['meana'],2))                  
 #          make into collection of VV, VH, HH, HV, HHHV or VVVH images and restore linear scale             
             if polarization1 == 'VV':
                 pcollection = collection.map(get_vv)
@@ -947,6 +965,7 @@ def Omnibus():
                         'Polarization: '+polarization1,            
                         'Timestamps: '+timestamps,
                         'Rel orbit numbers: '+relativeorbitnumbers,
+                        'Mean incidence angles: '+str(meanangles),
                         'Asset export name: '+assexportname]) \
                         .cat(['Polygon']) \
                         .cat(rect.getInfo()['coordinates'][0])  
@@ -959,7 +978,6 @@ def Omnibus():
                 print '****Exporting metadata as CSV to Drive, task id: %s '%gdexportid1            
                 gdexport1.start()                
 #              export to Assets 
-                hint = '(batch export should complete)'
                 assexport = ee.batch.Export.image.toAsset(cmaps,
                                                           description='assetExportTask', 
                                                           assetId=assexportname,scale=10,maxPixels=1e9)
@@ -969,7 +987,6 @@ def Omnibus():
             
             if gdexport == 'gdexport':
 #              export to Drive 
-                hint = '(batch export should complete)'
                 gdexport = ee.batch.Export.image.toDrive(cmaps,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
@@ -1002,13 +1019,14 @@ def Omnibus():
                                     gdexportid = gdexportid,
                                     timestamps = timestamps,
                                     polarization = polarization1,
-                                    relativeorbitnumbers = relativeorbitnumbers)                                          
+                                    relativeorbitnumbers = relativeorbitnumbers,
+                                    meanangles = meanangles)                                         
         except Exception as e:
             if isinstance(e,ValueError):
                 return '<br />An error occurred in Omnibus: %s<br /><a href="omnibus.html" name="return"> Return</a>'%e
             else:
                 return render_template('omnibusout.html', 
-                                        title = 'Error in omnibus: %s '%e + hint,
+                                        title = 'Error in omnibus: %s '%e,
                                         centerLon = centerLon,
                                         centerLat = centerLat,
                                         zoom = zoom,

@@ -1,6 +1,6 @@
 # Change Detection with Google Earth Engine Imagery
 A simple Flask web application for performing change detection tasks with 
-<a href="https://developers.google.com/earth-engine/">Google Earth Engine</a> imagery *.    
+<a href="https://developers.google.com/earth-engine/">Google Earth Engine</a> imagery.    
 
 The <a href="http://ms-image-analysis.appspot.com/static/index.html">AppEngine version</a> (web version) is for demonstration only and has very limited functionality.
 Exporting results to Google Drive or to Earth Engine assets is in particular not possible. 
