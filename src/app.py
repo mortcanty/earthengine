@@ -88,7 +88,7 @@ def get_hhhv(image):
     ''' get 'HH' and 'HV' bands from sentinel-1 imageCollection and restore linear signal from db-values '''
     return image.select('HH','HV').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
 
-def anglestats_iter(current,prev):
+def anglestats(current,prev):
     ''' get dictionary of incident angle statistics of current image and append to list '''
     prev = ee.Dictionary(prev)
     rect = ee.Geometry(prev.get('rect'))
@@ -115,6 +115,29 @@ def clipList(current,prev):
 def makefeature(data):
     ''' for exporting as CSV to Drive '''
     return ee.Feature(None, {'data': data})
+
+def makevideo(current,prev):
+    ''' return a list of RGB frames of bmap bands overlaid onto a background image for video export '''
+    n = ee.Number(current)
+    prev = ee.Dictionary(prev)
+    bmap = ee.Image(prev.get('bmap'))
+    image1 = ee.Image(prev.get('image1'))
+    framelist = ee.List(prev.get('framelist'))
+    bmapband = bmap.select(n)
+    zeroes = image1.multiply(0)
+    ones = zeroes.add(1) 
+    idx = bmapband.eq(ones)    
+    idx1 = image1.gte(ones)
+    imager = image1.where(idx1,ones).where(idx,ones)
+    imagegb = image1.where(idx,zeroes)    
+    frame = imager.addBands(imagegb).addBands(imagegb) \
+            .multiply(512) \
+            .uint8() \
+            .rename(['r','g','b']) 
+    return ee.Dictionary({'bmap':bmap,'image1':image1,'framelist':framelist.add(frame)})
+
+def makeimagelist(element):
+    return ee.Image(element)
 
 #--------------------
 # request handlers
@@ -450,7 +473,6 @@ def Mad():
                                     zoom = zoom)
     else:
         try:
-            hint = '' 
             systemid1 = ''
             systemid2 = ''
             cloudcover1 = ''
@@ -586,8 +608,7 @@ def Mad():
                                     .cat(['Slope, Intercept, R:']) \
                                     .cat(coeffs) \
                                     .cat(['Polygon']) \
-                                    .cat(rect.getInfo()['coordinates'][0])      
-                hint = '(batch export should complete)'             
+                                    .cat(rect.getInfo()['coordinates'][0])                  
                 gdmetaexport = ee.batch.Export.table.toDrive(ee.FeatureCollection(metadata.map(makefeature)),
                              description='driveExportTask', 
                              folder = 'EarthEngineImages',
@@ -606,7 +627,6 @@ def Mad():
                 assexportid = 'none'                
             if gdexport == 'gdexport':              
 #              export to Drive 
-                hint = '(batch export should complete)'
                 gdexport = ee.batch.Export.image.toDrive(ee.Image.cat(MAD,chi2),description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
                                                          fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9)
@@ -638,7 +658,7 @@ def Mad():
                 return '<br />An error occurred in MAD: %s<br /><a href="mad.html" name="return"> Return</a>'%e 
             else:
                 return render_template('madout.html',
-                                        title = 'Error in MAD: %s '%e + hint,
+                                        title = 'Error in MAD: %s '%e,
                                         gdexportid = 'none',
                                         assexportid = 'none',
                                         centerLon = centerLon,
@@ -864,7 +884,8 @@ def Omnibus():
             maxLat = float(request.form['maxLat'])
             maxLon = float(request.form['maxLon'])    
             assexportid = 'none'     
-            gdexportid = 'none'            
+            gdexportid = 'none'       
+            videxportid = 'none'     
             if request.form.has_key('assexport'):        
                 assexportname = request.form['assexportname']
                 assexport = request.form['assexport']
@@ -875,6 +896,11 @@ def Omnibus():
                 gdexport = request.form['gdexport']
             else:
                 gdexport = 'none'   
+            if request.form.has_key('videxport'):   
+                videxportname = request.form['videxportname']    
+                videxport = request.form['videxport']
+            else:
+                videxport = 'none'                    
             if request.form.has_key('median'):        
                 median = True
             else:
@@ -922,13 +948,13 @@ def Omnibus():
             timestamplist1 = [timestamplist[i] + '_' + str(i+1) for i in range(len(timestamplist))]
             timestamps = str(timestamplist1)
             timestamp = timestamplist1[0]                   
-            relativeorbitnumbers = str(ee.List(collection.aggregate_array('relativeOrbitNumber_start')).getInfo())                                                                      
-            image = ee.Image(collection.first())                       
-            systemid = image.get('system:id').getInfo()   
-            projection = image.select(0).projection().getInfo()['crs']
+            relativeorbitnumbers = str(map(int,ee.List(collection.aggregate_array('relativeOrbitNumber_start')).getInfo()))                                                                     
+            image1 = ee.Image(collection.first())                       
+            systemid = image1.get('system:id').getInfo()   
+            projection = image1.select(0).projection().getInfo()['crs']
 #          gather a list of dictionaries of incidence angle statistics for the ROI
             first = ee.Dictionary({'stats':ee.List([]),'rect':rect})
-            stats = ee.Dictionary(collection.toList(100).iterate(anglestats_iter,first)).get('stats').getInfo() 
+            stats = ee.Dictionary(collection.toList(100).iterate(anglestats,first)).get('stats').getInfo() 
             meanangles = []
             for stat in stats:
                 meanangles.append(round(stat['meana'],2))                  
@@ -962,16 +988,17 @@ def Omnibus():
             if assexport == 'assexport':
 #              export metadata as CSV to Drive  
                 metadata = ee.List(['SEQUENTIAL OMNIBUS: '+time.asctime(),
-                        'Polarization: '+polarization1,            
+                        'Polarization: '+polarization1,      
+                        'Orbit pass: '+orbitpass,    
+                        'Significance: '+str(significance),  
                         'Timestamps: '+timestamps,
                         'Rel orbit numbers: '+relativeorbitnumbers,
                         'Mean incidence angles: '+str(meanangles),
                         'Asset export name: '+assexportname]) \
                         .cat(['Polygon']) \
-                        .cat(rect.getInfo()['coordinates'][0])  
-                hint = '(batch export should complete)'             
+                        .cat(rect.getInfo()['coordinates'][0])              
                 gdexport1 = ee.batch.Export.table.toDrive(ee.FeatureCollection(metadata.map(makefeature)),
-                             description='driveExportTask', 
+                             description='driveExportTask_meta', 
                              folder = 'EarthEngineImages',
                              fileNamePrefix=assexportname.replace('/','-') )
                 gdexportid1 = str(gdexport1.id)
@@ -986,14 +1013,41 @@ def Omnibus():
                 assexport.start() 
             
             if gdexport == 'gdexport':
-#              export to Drive 
+#              export change maps to Drive 
                 gdexport = ee.batch.Export.image.toDrive(cmaps,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
                                                          fileNamePrefix=gdexportname,scale=10,maxPixels=1e9)
                 gdexportid = str(gdexport.id)
-                print '****Exporting to Google Drive, task id: %s '%gdexportid
-                gdexport.start()  
+                print '****Exporting change maps to Google Drive, task id: %s '%gdexportid
+                gdexport.start()         
+            if videxport == 'videxport':
+#              export bmap video to drive
+                image1 = ee.Image(ee.ImageCollection('COPERNICUS/S2') \
+                                    .filterBounds(ulPoint) \
+                                    .filterBounds(lrPoint) \
+                                    .filterDate(ee.Date(startDate), ee.Date(endDate)) \
+                                    .sort('CLOUDY_PIXEL_PERCENTAGE',True) \
+                                    .first()) \
+                                    .clip(rect) \
+                                    .select('B8') \
+                                    .divide(10000)                        
+                first = ee.Dictionary({'bmap':bmap.clip(rect),'image1':image1,'framelist':ee.List([])})
+                numbands = bmap.bandNames().length()
+                bandlist = ee.List.sequence(0,numbands.subtract(1))
+                framelist = ee.List(ee.Dictionary(bandlist.iterate(makevideo,first)) \
+                                    .get('framelist'))                                                            
+                video = ee.ImageCollection.fromImages(framelist)        
+                gdexport = ee.batch.Export.video.toDrive(video,
+                                                         description='driveExportTask', 
+                                                         folder = 'EarthEngineImages',
+                                                         dimensions = '500x500',
+                                                         framesPerSecond = 1,
+                                                         fileNamePrefix=videxportname,scale=10,maxPixels=1e9)
+                gdexportid = str(gdexport.id)
+                print '****Exporting video to Google Drive, task id: %s '%gdexportid
+                gdexport.start()     
+#          output  
             if display=='fmap':                                                                                  
                 mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
                 title = 'Sequential omnibus frequency map'
