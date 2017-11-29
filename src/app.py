@@ -121,20 +121,19 @@ def makevideo(current,prev):
     n = ee.Number(current)
     prev = ee.Dictionary(prev)
     bmap = ee.Image(prev.get('bmap'))
-    image1 = ee.Image(prev.get('image1'))
+    background = ee.Image(prev.get('background'))
     framelist = ee.List(prev.get('framelist'))
     bmapband = bmap.select(n)
-    zeroes = image1.multiply(0)
+    zeroes = background.multiply(0)
     ones = zeroes.add(1) 
     idx = bmapband.eq(ones)    
-    idx1 = image1.gte(ones)
-    imager = image1.where(idx1,ones).where(idx,ones)
-    imagegb = image1.where(idx,zeroes)    
+    imager = background.where(idx,ones)
+    imagegb = background.where(idx,zeroes)    
     frame = imager.addBands(imagegb).addBands(imagegb) \
             .multiply(512) \
             .uint8() \
             .rename(['r','g','b']) 
-    return ee.Dictionary({'bmap':bmap,'image1':image1,'framelist':framelist.add(frame)})
+    return ee.Dictionary({'bmap':bmap,'background':background,'framelist':framelist.add(frame)})
 
 def makeimagelist(element):
     return ee.Image(element)
@@ -1004,7 +1003,7 @@ def Omnibus():
                 gdexportid1 = str(gdexport1.id)
                 print '****Exporting metadata as CSV to Drive, task id: %s '%gdexportid1            
                 gdexport1.start()                
-#              export to Assets 
+#              export change maps to Assets 
                 assexport = ee.batch.Export.image.toAsset(cmaps,
                                                           description='assetExportTask', 
                                                           assetId=assexportname,scale=10,maxPixels=1e9)
@@ -1023,7 +1022,7 @@ def Omnibus():
                 gdexport.start()         
             if videxport == 'videxport':
 #              export bmap video to drive
-                image1 = ee.Image(ee.ImageCollection('COPERNICUS/S2') \
+                background = ee.Image(ee.ImageCollection('COPERNICUS/S2') \
                                     .filterBounds(ulPoint) \
                                     .filterBounds(lrPoint) \
                                     .filterDate(ee.Date(startDate), ee.Date(endDate)) \
@@ -1032,18 +1031,20 @@ def Omnibus():
                                     .clip(rect) \
                                     .select('B8') \
                                     .divide(10000)                        
-                first = ee.Dictionary({'bmap':bmap.clip(rect),'image1':image1,'framelist':ee.List([])})
+                first = ee.Dictionary({'bmap':bmap.clip(rect),'background':background,'framelist':ee.List([])})
                 numbands = bmap.bandNames().length()
                 bandlist = ee.List.sequence(0,numbands.subtract(1))
                 framelist = ee.List(ee.Dictionary(bandlist.iterate(makevideo,first)) \
                                     .get('framelist'))                                                            
-                video = ee.ImageCollection.fromImages(framelist)        
+                video = ee.ImageCollection.fromImages(framelist)               
                 gdexport = ee.batch.Export.video.toDrive(video,
                                                          description='driveExportTask', 
                                                          folder = 'EarthEngineImages',
-                                                         dimensions = '500x500',
+                                                         dimensions = 800,
                                                          framesPerSecond = 1,
-                                                         fileNamePrefix=videxportname,scale=10,maxPixels=1e9)
+                                                         fileNamePrefix=videxportname,
+                                                         scale=10,
+                                                         maxPixels=1e9)
                 gdexportid = str(gdexport.id)
                 print '****Exporting video to Google Drive, task id: %s '%gdexportid
                 gdexport.start()     
