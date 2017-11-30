@@ -1022,32 +1022,35 @@ def Omnibus():
                 gdexport.start()         
             if videxport == 'videxport':
 #              export bmap video to drive
-                background = ee.Image(ee.ImageCollection('COPERNICUS/S2') \
+                collection = ee.ImageCollection('COPERNICUS/S2') \
                                     .filterBounds(ulPoint) \
                                     .filterBounds(lrPoint) \
                                     .filterDate(ee.Date(startDate), ee.Date(endDate)) \
-                                    .sort('CLOUDY_PIXEL_PERCENTAGE',True) \
-                                    .first()) \
-                                    .clip(rect) \
-                                    .select('B8') \
-                                    .divide(10000)                        
-                first = ee.Dictionary({'bmap':bmap.clip(rect),'background':background,'framelist':ee.List([])})
-                numbands = bmap.bandNames().length()
-                bandlist = ee.List.sequence(0,numbands.subtract(1))
-                framelist = ee.List(ee.Dictionary(bandlist.iterate(makevideo,first)) \
-                                    .get('framelist'))                                                            
-                video = ee.ImageCollection.fromImages(framelist)               
-                gdexport = ee.batch.Export.video.toDrive(video,
-                                                         description='driveExportTask', 
-                                                         folder = 'EarthEngineImages',
-                                                         dimensions = 800,
-                                                         framesPerSecond = 1,
-                                                         fileNamePrefix=videxportname,
-                                                         scale=10,
-                                                         maxPixels=1e9)
-                gdexportid = str(gdexport.id)
-                print '****Exporting video to Google Drive, task id: %s '%gdexportid
-                gdexport.start()     
+                                    .sort('CLOUDY_PIXEL_PERCENTAGE',True)
+                count = len(ee.List(collection.aggregate_array('system:time_start')).getInfo())
+                if count<1:
+                    raise ValueError('No Sentinel-2 background available')                     
+                else:                    
+                    background = ee.Image(collection.first()) \
+                                           .clip(rect) \
+                                           .select('B8') \
+                                           .divide(10000)                        
+                    first = ee.Dictionary({'bmap':bmap.clip(rect),'background':background,'framelist':ee.List([])})
+                    numbands = bmap.bandNames().length()
+                    bandlist = ee.List.sequence(0,numbands.subtract(1))
+                    framelist = ee.List(ee.Dictionary(bandlist.iterate(makevideo,first)) \
+                                        .get('framelist'))                                                            
+                    video = ee.ImageCollection.fromImages(framelist)               
+                    gdexport = ee.batch.Export.video.toDrive(video,
+                                                             description='driveExportTask_video', 
+                                                             folder = 'EarthEngineImages',
+                                                             framesPerSecond = 1,
+                                                             fileNamePrefix=videxportname,
+                                                             scale=10,
+                                                             maxPixels=1e9)
+                    gdexportid = str(gdexport.id)
+                    print '****Exporting video to Google Drive, task id: %s '%gdexportid
+                    gdexport.start()     
 #          output  
             if display=='fmap':                                                                                  
                 mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
