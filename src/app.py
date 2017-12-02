@@ -965,15 +965,15 @@ def Omnibus():
                                         .filterBounds(lrPoint) \
                                         .filterDate(ee.Date(startDate),ee.Date(endDate)) \
                                         .sort('CLOUDY_PIXEL_PERCENTAGE',True)
-            count = len(ee.List(collection1.aggregate_array('system:time_start')).getInfo())
-            if count>0:
+            count1 = len(ee.List(collection1.aggregate_array('system:time_start')).getInfo())
+            if count1>0:
 #              use sentinel-2 as background                        
                 background = ee.Image(collection1.first()) \
                                        .clip(rect) \
                                        .select('B8') \
                                        .divide(10000)                      
             else: 
-                raise ValueError('No sentinel-2 background available')                                        
+                print 'No sentinel-2 background available, using despeckled sentinel 1'                                        
 #              use temporally de-speckled sentinel-1 as background
                 background = collection.mean() \
                                        .select(0) \
