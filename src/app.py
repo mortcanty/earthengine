@@ -116,25 +116,6 @@ def makefeature(data):
     ''' for exporting as CSV to Drive '''
     return ee.Feature(None, {'data': data})
 
-def makevideo(current,prev):
-    ''' return a list of RGB frames of bmap bands overlaid onto a background image for video export '''
-    n = ee.Number(current)
-    prev = ee.Dictionary(prev)
-    bmap = ee.Image(prev.get('bmap'))
-    background = ee.Image(prev.get('background'))
-    framelist = ee.List(prev.get('framelist'))
-    bmapband = bmap.select(n)
-    zeroes = background.multiply(0)
-    ones = zeroes.add(1) 
-    idx = bmapband.eq(ones)    
-    imager = background.where(idx,ones)
-    imagegb = background.where(idx,zeroes)    
-    frame = imager.addBands(imagegb).addBands(imagegb) \
-            .multiply(512) \
-            .uint8() \
-            .rename(['r','g','b']) 
-    return ee.Dictionary({'bmap':bmap,'background':background,'framelist':framelist.add(frame)})
-
 def makeimagelist(element):
     return ee.Image(element)
 
@@ -894,12 +875,7 @@ def Omnibus():
                 gdexportname = request.form['gdexportname']    
                 gdexport = request.form['gdexport']
             else:
-                gdexport = 'none'   
-            if request.form.has_key('videxport'):   
-                videxportname = request.form['videxportname']    
-                videxport = request.form['videxport']
-            else:
-                videxport = 'none'                    
+                gdexport = 'none'                       
             if request.form.has_key('median'):        
                 median = True
             else:
@@ -948,7 +924,9 @@ def Omnibus():
             timestamps = str(timestamplist1)
             timestamp = timestamplist1[0]                   
             relativeorbitnumbers = str(map(int,ee.List(collection.aggregate_array('relativeOrbitNumber_start')).getInfo()))                                                                     
-            image1 = ee.Image(collection.first())                       
+            image1 = ee.Image(collection.first())       
+            dims = image1.clip(rect).select(0).getInfo()['bands'][0]['dimensions'] 
+            print 'ROI dimension in pixels at full scale: %s'%str(dims)                
             systemid = image1.get('system:id').getInfo()   
             projection = image1.select(0).projection().getInfo()['crs']
 #          gather a list of dictionaries of incidence angle statistics for the ROI
@@ -981,9 +959,29 @@ def Omnibus():
             smap = ee.Image(result.get('smap')).byte()
             fmap = ee.Image(result.get('fmap')).byte()  
             bmap = ee.Image(result.get('bmap')).byte()
-            cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist1[1:])  
+#          background image for video generation                    
+            collection1 = ee.ImageCollection('COPERNICUS/S2') \
+                                        .filterBounds(ulPoint) \
+                                        .filterBounds(lrPoint) \
+                                        .filterDate(ee.Date(startDate),ee.Date(endDate)) \
+                                        .sort('CLOUDY_PIXEL_PERCENTAGE',True)
+            count = len(ee.List(collection1.aggregate_array('system:time_start')).getInfo())
+            if count>0:
+#              use sentinel-2 as background                        
+                background = ee.Image(collection1.first()) \
+                                       .clip(rect) \
+                                       .select('B8') \
+                                       .divide(10000)                      
+            else: 
+                raise ValueError('No sentinel-2 background available')                                        
+#              use temporally de-speckled sentinel-1 as background
+                background = collection.mean() \
+                                       .select(0) \
+                                       .multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()                                                
+                background = background.where(background.gte(1),1).clip(rect)                                 
+            cmaps = ee.Image.cat(cmap,smap,fmap,bmap,background).rename(['cmap','smap','fmap']+timestamplist1[1:]+['background'])  
             downloadpath = cmaps.getDownloadUrl({'scale':10})    
-            
+#          export results             
             if assexport == 'assexport':
 #              export metadata as CSV to Drive  
                 metadata = ee.List(['SEQUENTIAL OMNIBUS: '+time.asctime(),
@@ -1020,37 +1018,7 @@ def Omnibus():
                 gdexportid = str(gdexport.id)
                 print '****Exporting change maps to Google Drive, task id: %s '%gdexportid
                 gdexport.start()         
-            if videxport == 'videxport':
-#              export bmap video to drive
-                collection = ee.ImageCollection('COPERNICUS/S2') \
-                                    .filterBounds(ulPoint) \
-                                    .filterBounds(lrPoint) \
-                                    .filterDate(ee.Date(startDate), ee.Date(endDate)) \
-                                    .sort('CLOUDY_PIXEL_PERCENTAGE',True)
-                count = len(ee.List(collection.aggregate_array('system:time_start')).getInfo())
-                if count<1:
-                    raise ValueError('No Sentinel-2 background available')                     
-                else:                    
-                    background = ee.Image(collection.first()) \
-                                           .clip(rect) \
-                                           .select('B8') \
-                                           .divide(10000)                        
-                    first = ee.Dictionary({'bmap':bmap.clip(rect),'background':background,'framelist':ee.List([])})
-                    numbands = bmap.bandNames().length()
-                    bandlist = ee.List.sequence(0,numbands.subtract(1))
-                    framelist = ee.List(ee.Dictionary(bandlist.iterate(makevideo,first)) \
-                                        .get('framelist'))                                                            
-                    video = ee.ImageCollection.fromImages(framelist)               
-                    gdexport = ee.batch.Export.video.toDrive(video,
-                                                             description='driveExportTask_video', 
-                                                             folder = 'EarthEngineImages',
-                                                             framesPerSecond = 1,
-                                                             fileNamePrefix=videxportname,
-                                                             scale=10,
-                                                             maxPixels=1e9)
-                    gdexportid = str(gdexport.id)
-                    print '****Exporting video to Google Drive, task id: %s '%gdexportid
-                    gdexport.start()     
+            
 #          output  
             if display=='fmap':                                                                                  
                 mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
