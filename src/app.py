@@ -978,10 +978,12 @@ def Omnibus():
                 background = collection.mean() \
                                        .select(0) \
                                        .multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()                                                
-                background = background.where(background.gte(1),1).clip(rect)                                 
-            cmaps = ee.Image.cat(cmap,smap,fmap,bmap,background).rename(['cmap','smap','fmap']+timestamplist1[1:]+['background'])  
+                background = background.where(background.gte(1),1).clip(rect)                 
+#          concatenate results                                
+            cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist1[1:]) 
+            cmaps1 = ee.Image.cat(cmaps,background).rename(['cmap','smap','fmap']+timestamplist1[1:]+['background']) 
             downloadpath = cmaps.getDownloadUrl({'scale':10})    
-#          export results             
+#          export             
             if assexport == 'assexport':
 #              export metadata as CSV to Drive  
                 metadata = ee.List(['SEQUENTIAL OMNIBUS: '+time.asctime(),
@@ -1002,7 +1004,7 @@ def Omnibus():
                 print '****Exporting metadata as CSV to Drive, task id: %s '%gdexportid1            
                 gdexport1.start()                
 #              export change maps to Assets 
-                assexport = ee.batch.Export.image.toAsset(cmaps,
+                assexport = ee.batch.Export.image.toAsset(cmaps1,
                                                           description='assetExportTask', 
                                                           assetId=assexportname,scale=10,maxPixels=1e9)
                 assexportid = str(assexport.id)

@@ -26,9 +26,6 @@ RUN     pip install --upgrade pip &&  \
         pip install pyCrypto && \
         apt-get install -y libssl-dev
 RUN     pip install earthengine-api
-ADD     Crypto /home/Crypto
-ADD     ee /home/ee
-ADD     httplib2 /home/httplib2
 ADD     oauth2client /home/oauth2client
 ADD     static /home/static
 ADD     templates /home/templates   
