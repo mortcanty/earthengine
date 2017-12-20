@@ -347,6 +347,10 @@ def Visinfrared():
             elif collectionid=='LANDSAT/LT4_L1T_TOA':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
                 displayMax = 1    
+            elif collectionid=='ASTER/AST_L1T_003':
+                bandNames = ['B01','B02','B3N']
+                displayMax = 255
+                cloudcover = 'CLOUDCOVER'    
             else:
                 collectionid = request.form['collectionID']
                 bandNames =  request.form['bandnames'].split()
@@ -392,7 +396,7 @@ def Visinfrared():
             imageclip = image.clip(rect)              
             systemid = image.get('system:id').getInfo()
             cloudcover = image.get(cloudcover).getInfo()
-            projection = image.select('B2').projection().getInfo()['crs']
+            projection = image.select(0).projection().getInfo()['crs']
             downloadpath = image.getDownloadUrl({'scale':30,'crs':projection})    
             if gdexport == 'gdexport':
 #              export to Google Drive --------------------------
@@ -501,6 +505,9 @@ def Mad():
                     or (collectionid=='LANDSAT/LT05/C01/T1') or (collectionid=='LANDSAT/LT05/C01/T1_TOA') \
                     or (collectionid=='LANDSAT/LT4_L1T') or (collectionid=='LANDSAT/LT4_L1T_TOA'):                
                 bands = ['B1','B2','B3','B4','B5','B7']     
+            elif collectionid=='ASTER/AST_L1T_003':
+                bands = ['B01','B02','B3N']
+                cloudcover = 'CLOUDCOVER'    
             else:
                 collectionid = request.form['collectionID']
                 bands =  request.form['bandnames'].split()                 
@@ -720,6 +727,10 @@ def Radcal():
             elif collectionid=='LANDSAT/LT4_L1T_TOA':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
                 displayMax = 1    
+            elif collectionid=='ASTER/AST_L1T_003':
+                bandNames = ['B01','B02','B3N']
+                displayMax = 255
+                cloudcover = 'CLOUDCOVER' 
             else:
                 collectionid = request.form['collectionID']
                 bandNames =  request.form['bandnames'].split()
@@ -773,8 +784,8 @@ def Radcal():
             timestamp = time.gmtime(int(timestamp['value'])/1000)
             timestamp = time.strftime('%x', timestamp)                      
             referenceclip = reference.clip(rect)
-            rgb = reference.select(1,2,3)            
-            rgbclip = referenceclip.select(1,2,3)                 
+            rgb = reference.select(0,1,2)            
+            rgbclip = referenceclip.select(0,1,2)                 
             mapid = rgb.getMapId({'min':0, 'max':displayMax, 'opacity': 0.6}) 
             mapidclip = rgbclip.getMapId({'min':0, 'max':displayMax, 'opacity': 1.0}) 
             refcloudcover = reference.get(cloudcover).getInfo()
@@ -809,20 +820,20 @@ def Radcal():
                     assexport.start()
                 msg1 = 'Batch export submitted'         
 #          return info            
-                return render_template('radcalout.html',
-                                    title = 'Radiometric Normalization: '+msg1,
-                                    count = count,
-                                    mapid = mapid['mapid'], 
-                                    token = mapid['token'], 
-                                    mapidclip = mapidclip['mapid'], 
-                                    tokenclip = mapidclip['token'], 
-                                    refcloudcover = refcloudcover,
-                                    timestamp = timestamp,
-                                    timestamps =timestamps,
-                                    systemids = str(systemids),
-                                    cloudcovers = cloudcovers,
-                                    centerLon = centerLon,
-                                    centerLat = centerLat)
+            return render_template('radcalout.html',
+                                title = 'Radiometric Normalization: '+msg1,
+                                count = count,
+                                mapid = mapid['mapid'], 
+                                token = mapid['token'], 
+                                mapidclip = mapidclip['mapid'], 
+                                tokenclip = mapidclip['token'], 
+                                refcloudcover = refcloudcover,
+                                timestamp = timestamp,
+                                timestamps =timestamps,
+                                systemids = str(systemids),
+                                cloudcovers = cloudcovers,
+                                centerLon = centerLon,
+                                centerLat = centerLat)
                               
         except Exception as e:
             return '<br />An error occurred in Radcal: %s<br /><a href="radcal.html" name="return"> Return</a>'%e 
