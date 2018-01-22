@@ -28,8 +28,10 @@ Assuming you have been authenticated (see below) to the Earth Engine, you can ca
 	 <a href = "http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6825"> 
 	K. Conradsen et al. (2016). Determining the points of
 	change in time series of polarimetric SAR data. IEEE TGRS 54 (5) 3007-3024.</a>
+	
+ 4. Perform principal components analysis in visual/infrared full scenes.	
 
- 4. Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing, 
+ 5. Export imagery to your Earth Engine assets folder or to Google Drive for off-line local processing, 
  for example with <a href="http://mortcanty.github.io/SARDocker/"> SARDocker</a>.
  
 

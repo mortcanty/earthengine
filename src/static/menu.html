@@ -50,6 +50,7 @@ Choose the desired collection ID. Available collection ID's are:
 <tr><td>Landsat 8  </td><td>6 </td><td>VNIR/SWIR</td><td>30m</td><td>LANDSAT/LC08/C01/T1_RT_TOA</td><td> Tier 1 and Real-Time data calibrated top-of-atmosphere reflectance</td</tr>
 <tr><td>Sentinel 2  </td><td>4</td><td> VNIR/SWIR</td><td>10m</td><td>COPERNICUS/S2</td><td>TOA reflectance scaled by 10000</td></tr>
 <tr><td>Sentinel 2  </td><td>6 </td><td>NIR/SWIR</td><td>20m</td><td>COPERNICUS/S2</td><td>TOA reflectance scaled by 10000</td></tr>
+<tr><td>ASTER       </td><td>3 </td><td>VNIR</td><td>15m</td><td>ASTER/AST_L1T_003</td><td>calibrated at-sensor radiance</td></tr>
 </table>
 </p>
 Alternatively, you can "roll your own", i.e., choose your own GEE collection ID or a collection from your own assets. In that case you must
@@ -78,9 +79,9 @@ as an overlay. You can download the change maps directly, but this may be unreli
 <a href="#h0"> top</a>
 </p>
 
-<h3><a name="h5">Algorithm/iMAD</a></h3>
+<h3><a name="h4">Algorithm/iMAD</a></h3>
 <p>
-Run the IR-MAD algorithm on two images from the same GEE archive collection ID. Available collection ID's are as shown above for Visual-Infrared.
+Run the IR-MAD algorithm on two images from the same GEE archive collection ID. Available collection ID's are as shown above for <b>Visual-Infrared</b>.
 Choose the time ranges
 for the images (the image with least cloud cover will be selected for each range). Select the maximum number of iterations and
 use the map rectangle tool to set a region of interest. If desired, and if
@@ -98,7 +99,7 @@ image as an overlay. You can download the MAD change image directly, but this ma
 
 <h3><a name="h5">Algorithm/Radcal</a></h3>
 <p>
-Radiometrically normalize a sequence of full scenes from the same collectionID. Available collection IDs are as shown above for Visual-Infrared.
+Radiometrically normalize a sequence of full scenes from the same collectionID. Available collection IDs are as shown above for <b>Visual-Infrared</b>.
 Choose the time range for the image sequence, the beginning
 and ending months of the year and the maximum cloud cover in percent. Select the maximum number of iterations for IR-MAD and
 use the map rectangle tool to set the region to be used to extract the radiometric normalization coefficients. 
@@ -106,6 +107,17 @@ Select the image number (in order of increasing cloud cover) to be used as refer
 show the list of images found in order of increasing cloud cover without actually triggering the calculations.)
 If you are authenticated, select "Export to Assets" with a directory name where the normalized scenes will be stored, and the export scale. 
 Click GO to start. Metadata for the calculation will be exported to Google Drive, showing the statistics for each of the normalizations. 
+<br />
+<a href="#h0"> top</a>
+</p>
+
+<h3><a name="h6">Algorithm/PCA</a></h3>
+<p>
+Peform principal components analysis on the most cloud-free full scene in a sequence of visual/infrared images. 
+Available collection IDs are as shown above for <b>Visual-Infrared</b>. Choose the time range for the image sequence
+Use the map rectangle tool to set a region of interest. Only full scenes which overlap completely will be considered. 
+If you are authenticated, select "Export to Google Drive" with a file name where the pca image will be stored, and the export scale. 
+Click GO to start.
 <br />
 <a href="#h0"> top</a>
 </p>

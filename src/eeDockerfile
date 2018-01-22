@@ -31,6 +31,7 @@ ADD     static /home/static
 ADD     templates /home/templates   
 COPY    eeMad.py /home/eeMad.py
 COPY    eeWishart.py /home/eeWishart.py
+COPY    eePca.py /home/eePca.py
 COPY    app.py /home/app.py
 RUN     chmod +x /home/app.py
 

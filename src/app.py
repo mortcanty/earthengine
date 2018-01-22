@@ -1,9 +1,11 @@
 #! /usr/bin/env python
 import time, math, sys
 import ee
+import eePca
 from flask import Flask, render_template, request
 from eeMad import imad, chi2cdf, radcal, radcalbatch
 from eeWishart import omnibus
+
 
 # Set to True for localhost, False for appengine dev_appserver or deploy
 #------------
@@ -32,6 +34,7 @@ if local:
     mad1 = 'mad.html'
     radcal1 = 'radcal.html'
     omnibus1 = 'omnibus.html'
+    pca1 = 'pca.html'
 else:
 # for appengine deployment or development appserver
     import config
@@ -41,7 +44,8 @@ else:
     visinfrared = 'visinfraredweb.html'
     mad1 = 'madweb.html'
     radcal1 = 'radcalweb.html'
-    omnibus1 = 'omnibusweb.html'    
+    omnibus1 = 'omnibusweb.html' 
+    pca1 = 'pcaweb.html'   
 
 app = Flask(__name__)
 
@@ -437,6 +441,158 @@ def Visinfrared():
                                     timestamp = timestamp)  
         except Exception as e:
             return '<br />An error occurred in visinfrared: %s<br /><a href="visinfrared.html" name="return"> Return</a>'%e   
+        
+@app.route('/pca.html', methods = ['GET', 'POST'])
+def pca():
+    global glbls, msg, local, zoom
+    if request.method == 'GET':
+        return render_template(pca1, msg = msg,
+                                  minLat = glbls['minLat'],
+                                  minLon = glbls['minLon'],
+                                  maxLat = glbls['maxLat'],
+                                  maxLon = glbls['maxLon'],
+                                  centerLon = glbls['centerLon'],
+                                  centerLat = glbls['centerLat'],
+                                  startDate = glbls['startDate'],
+                                  endDate = glbls['endDate'],
+                                  zoom = zoom)
+    else:
+        try:
+            startDate = request.form['startDate']
+            endDate = request.form['endDate']
+            minLat = float(request.form['minLat'])
+            minLon = float(request.form['minLon'])
+            maxLat = float(request.form['maxLat'])
+            maxLon = float(request.form['maxLon'])
+            collectionid = request.form['collectionid']  
+            rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
+            centerLon = (minLon + maxLon)/2.0
+            centerLat = (minLat + maxLat)/2.0 
+            ulPoint = ee.Geometry.Point([minLon,maxLat])   
+            lrPoint = ee.Geometry.Point([maxLon,minLat]) 
+            cloudcover = 'CLOUD_COVER'
+            
+            if collectionid=='COPERNICUS/S2_10':
+                bandNames = ['B2','B3','B4','B8']
+                collectionid = 'COPERNICUS/S2'
+                cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
+                displayMax = 5000
+            elif collectionid =='COPERNICUS/S2_20':
+                bandNames = ['B5','B6','B7','B8A','B11','B12']
+                collectionid = 'COPERNICUS/S2'
+                cloudcover = 'CLOUDY_PIXEL_PERCENTAGE' 
+                displayMax = 5000
+            elif collectionid=='LANDSAT/LC08/C01/T1_RT':
+                bandNames = ['B2','B3','B4','B5','B6','B7'] 
+                displayMax = 20000 
+            elif collectionid=='LANDSAT/LC08/C01/T1_RT_TOA': 
+                bandNames = ['B2','B3','B4','B5','B6','B7'] 
+                displayMax = 1   
+            elif collectionid=='LANDSAT/LE07/C01/T1_RT':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 255
+            elif collectionid=='LANDSAT/LE07/C01/T1_RT_TOA':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 1
+            elif collectionid=='LANDSAT/LT05/C01/T1':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 255
+            elif collectionid=='LANDSAT/LT05/C01/T1_TOA':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 1   
+            elif collectionid=='LANDSAT/LT4_L1T':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 255
+            elif collectionid=='LANDSAT/LT4_L1T_TOA':
+                bandNames = ['B1','B2','B3','B4','B5','B7']
+                displayMax = 1    
+            elif collectionid=='ASTER/AST_L1T_003':
+                bandNames = ['B01','B02','B3N']
+                displayMax = 255
+                cloudcover = 'CLOUDCOVER'    
+            else:
+                collectionid = request.form['collectionID']
+                bandNames =  request.form['bandnames'].split()
+                displayMax = float(request.form['displaymax'])           
+            if request.form.has_key('gdexport'):        
+                gdexportscale = float(request.form['gdexportscale'])
+                gdexportname = request.form['gdexportname']
+                gdexport = request.form['gdexport']
+            else:
+                gdexport = ' '
+            start = ee.Date(startDate)
+            finish = ee.Date(endDate)           
+            rect = ee.Geometry.Rectangle(minLon,minLat,maxLon,maxLat)     
+            centerLon = (minLon + maxLon)/2.0
+            centerLat = (minLat + maxLat)/2.0 
+            ulPoint = ee.Geometry.Point([minLon,maxLat])   
+            lrPoint = ee.Geometry.Point([maxLon,minLat]) 
+            collection = ee.ImageCollection(collectionid) \
+                        .filterBounds(ulPoint) \
+                        .filterBounds(lrPoint) \
+                        .filterDate(start, finish) \
+                        .sort(cloudcover, True) 
+            acquisition_times = ee.List(collection.aggregate_array('system:time_start')).getInfo()                          
+            glbls['minLat'] = minLat
+            glbls['minLon'] = minLon
+            glbls['maxLat'] = maxLat
+            glbls['maxLon'] = maxLon  
+            glbls['centerLon'] = centerLon
+            glbls['centerLat'] = centerLat  
+            glbls['startDate'] = startDate
+            glbls['endDate'] = endDate   
+            count = collection.toList(100).length().getInfo() 
+            if count==0:
+                raise ValueError('No images found')        
+            timestamplist = []
+            for timestamp in acquisition_times:
+                tmp = time.gmtime(int(timestamp)/1000)
+                timestamplist.append(time.strftime('%c', tmp))
+            timestamp = timestamplist[0]    
+            timestamps = str(timestamplist)   
+            
+            image = ee.Image(collection.first())                 
+            systemid = image.get('system:id').getInfo()
+            cloudcover = image.get(cloudcover).getInfo()
+            projection = image.select(0).projection().getInfo()['crs']
+            scale = image.select(0).projection().nominalScale().getInfo()
+            nbands = len(bandNames)
+            
+            pcs, lambdas = eePca.pca(image.select(bandNames),scale,nbands)
+            
+            if gdexport == 'gdexport':
+#              export to Google Drive --------------------------
+                gdexport = ee.batch.Export.image.toDrive(pcs,
+                                         description='driveExportTask', 
+                                         folder = 'EarthEngineImages',
+                                         fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9) 
+                
+                
+                gdexportid = str(gdexport.id)
+                print >> sys.stderr, '****Exporting to Google Drive, task id: %s '%gdexportid
+                gdexport.start() 
+            else:
+                gdexportid = 'none'
+#              --------------------------------------------------                    
+            rgb = pcs.select(0,1,2) 
+            variances = lambdas.transpose().getInfo()[0] 
+            max1 = math.sqrt(variances[0]) 
+            mapid = rgb.getMapId({'min':-max1,'max':max1})                                 
+            return render_template('pcaout.html', 
+                                    mapid = mapid['mapid'], 
+                                    token = mapid['token'], 
+                                    centerLon = centerLon,
+                                    centerLat = centerLat,
+                                    zoom = zoom,
+                                    systemid = systemid,
+                                    cloudcover = cloudcover,
+                                    projection = projection,
+                                    variances = str(variances),
+                                    count = count,
+                                    timestamps = timestamps,
+                                    timestamp = timestamp)  
+        except Exception as e:
+            return '<br />An error occurred in pca: %s<br /><a href="pca.html" name="return"> Return</a>'%e           
         
 @app.route('/mad.html', methods = ['GET', 'POST'])
 def Mad():
@@ -984,7 +1140,7 @@ def Omnibus():
                                        .select('B8') \
                                        .divide(10000)                      
             else: 
-                print 'No sentinel-2 background available, using despeckled sentinel 1'                                        
+                print 'No sentinel-2 background available, using de-speckled sentinel 1'                                        
 #              use temporally de-speckled sentinel-1 as background
                 background = collection.mean() \
                                        .select(0) \
