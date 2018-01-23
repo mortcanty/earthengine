@@ -575,9 +575,12 @@ def pca():
                 gdexportid = 'none'
 #              --------------------------------------------------                    
             rgb = pcs.select(0,1,2) 
-            variances = lambdas.transpose().getInfo()[0] 
-            max1 = math.sqrt(variances[0]) 
-            mapid = rgb.getMapId({'min':-max1,'max':max1})                                 
+            variances = lambdas.transpose().getInfo()[0]
+            sdevs = map(math.sqrt,variances) 
+            maxs = ','.join(map(str, sdevs[:3]))
+            msdevs = [-x for x in sdevs]
+            mins = ','.join(map(str, msdevs[:3]))
+            mapid = rgb.getMapId({'min':mins,'max':maxs})                                 
             return render_template('pcaout.html', 
                                     mapid = mapid['mapid'], 
                                     token = mapid['token'], 
