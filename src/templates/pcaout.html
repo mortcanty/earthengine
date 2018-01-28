@@ -19,6 +19,8 @@ for details.
 
       var MAPID = "{{ mapid }}";
       var TOKEN = "{{ token }}";
+      var MAPIDCLIP = "{{ mapidclip }}";
+      var TOKENCLIP = "{{ tokenclip }}";
       
       /**
       * The Google Maps API calls getTileUrl when it tries to display a maps
@@ -35,11 +37,20 @@ for details.
         },
         tileSize: new google.maps.Size(256, 256)
       };
-    
+      var eeMapOptions2 = {
+        getTileUrl: function(tile, zoom) {
+          var url = ['https://earthengine.googleapis.com/map',
+                     MAPIDCLIP, zoom, tile.x, tile.y].join("/");
+          url += '?token=' + TOKENCLIP;
+          return url;
+        },
+        tileSize: new google.maps.Size(256, 256)
+      };
       
 
       // Create the map type.
       var mapType1 = new google.maps.ImageMapType(eeMapOptions1);
+      var mapType2 = new google.maps.ImageMapType(eeMapOptions2);
 
       // Initialize the Google Map and add our custom layer overlay.
       function initialize() {
@@ -53,6 +64,7 @@ for details.
         var map = new google.maps.Map(document.getElementById("map"),
                                       mapOptions);
         map.overlayMapTypes.push(mapType1);
+        map.overlayMapTypes.push(mapType2);
       }
 
       window.onload = initialize;
@@ -71,5 +83,6 @@ for details.
     </p>
     <p><a href="/" name="return"> Return</a></p>
     <div id="map" style="width: 640px; height: 480px;"></div><br />
+    <a href={{downloadpathclip}}>{{downloadtext}}</a><br />
   </body>
 </html>

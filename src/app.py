@@ -396,7 +396,8 @@ def Visinfrared():
             timestamp = timestamplist[0]    
             timestamps = str(timestamplist)   
             
-            image = ee.Image(collection.first())         
+            image = ee.Image(collection.first()) 
+            scale = image.select(0).projection().nominalScale().getInfo()        
             imageclip = image.clip(rect)              
             systemid = image.get('system:id').getInfo()
             cloudcover = image.get(cloudcover).getInfo()
@@ -416,7 +417,7 @@ def Visinfrared():
             else:
                 gdexportid = 'none'
 #              --------------------------------------------------                    
-            downloadpathclip = imageclip.select(bandNames).getDownloadUrl({'scale':10, 'crs':projection})
+            downloadpathclip = imageclip.select(bandNames).getDownloadUrl({'scale':scale, 'crs':projection})
             rgb = image.select(0,1,2)            
             rgbclip = imageclip.select(0,1,2)                 
             mapid = rgb.getMapId({'min':0, 'max':displayMax, 'opacity': 0.6}) 
@@ -575,15 +576,24 @@ def pca():
                 gdexportid = 'none'
 #              --------------------------------------------------                    
             rgb = pcs.select(0,1,2) 
+            pcsclip = pcs.clip(rect)
+            rgbclip = pcsclip.select(0,1,2)             
             variances = lambdas.transpose().getInfo()[0]
             sdevs = map(math.sqrt,variances) 
             maxs = ','.join(map(str, sdevs[:3]))
             msdevs = [-x for x in sdevs]
             mins = ','.join(map(str, msdevs[:3]))
-            mapid = rgb.getMapId({'min':mins,'max':maxs})                                 
+            mapid = rgb.getMapId({'min':mins,'max':maxs, 'opacity': 0.5})
+            mapidclip = rgbclip.getMapId({'min':mins, 'max':maxs, 'opacity': 1.0})          
+            downloadpathclip = pcsclip.getDownloadUrl({'scale':scale, 'crs':projection})
+                                      
             return render_template('pcaout.html', 
                                     mapid = mapid['mapid'], 
                                     token = mapid['token'], 
+                                    mapidclip = mapidclip['mapid'],
+                                    tokenclip = mapidclip['token'],
+                                    downloadpathclip = downloadpathclip,
+                                    downloadtext = 'Download image intersection',
                                     centerLon = centerLon,
                                     centerLat = centerLat,
                                     zoom = zoom,
