@@ -7,70 +7,7 @@ for details.
 <html>
   <head>
     <title>Earth Engine</title>
-    <script type="text/javascript"
-      src="https://maps.google.com/maps/api/js?key=AIzaSyCAh2-5_eHJwN6rXb4GbZcKNb8qJSoFWhE"></script>
-    <script type="text/javascript">
-      /**
-      * This page will be called from a Python script in App Engine that uses
-      * webapp2 templates to pass information from the script to the web page.
-      * Here we get the mapid and token for the map tiles that were generated
-      * by Earth Engine using the Python script ee_appengine.py.
-      */
 
-      var MAPID = "{{ mapid }}";
-      var TOKEN = "{{ token }}";
-      var MAPIDCLIP = "{{ mapidclip }}";
-      var TOKENCLIP = "{{ tokenclip }}";
-      var CENTERLAT = "{{ centerLat }}";
-      var CENTERLON = "{{ centerLon }}";
-      
-      /**
-      * The Google Maps API calls getTileUrl when it tries to display a maps
-      * tile.  This is a good place to swap in the mapid and token we got from
-      * the Python script. The other values describe other properties of the
-      * custom map type.
-      */
-      var eeMapOptions1 = {
-        getTileUrl: function(tile, zoom) {
-          var url = ['https://earthengine.googleapis.com/map',
-                     MAPID, zoom, tile.x, tile.y].join("/");
-          url += '?token=' + TOKEN;
-          return url;
-        },
-        tileSize: new google.maps.Size(256, 256)
-      };132
-      var eeMapOptions2 = {
-        getTileUrl: function(tile, zoom) {
-          var url = ['https://earthengine.googleapis.com/map',
-                     MAPIDCLIP, zoom, tile.x, tile.y].join("/");
-          url += '?token=' + TOKENCLIP;
-          return url;
-        },
-        tileSize: new google.maps.Size(256, 256)
-      };
-      
-
-      // Create the map type.
-      var mapType1 = new google.maps.ImageMapType(eeMapOptions1);
-      var mapType2 = new google.maps.ImageMapType(eeMapOptions2);
-
-      // Initialize the Google Map and add our custom layer overlay.
-      function initialize() {
-        var myLatLng = new google.maps.LatLng(CENTERLAT, CENTERLON);
-        var mapOptions = {
-          center: myLatLng,
-          zoom: {{zoom}},
-          maxZoom: 12
-        };
-
-        var map = new google.maps.Map(document.getElementById("map"),
-                                      mapOptions);
-        map.overlayMapTypes.push(mapType1);
-        map.overlayMapTypes.push(mapType2);
-      }
-
-      window.onload = initialize;
-    </script>
   </head>
   <body>
     <h3>Google Earth Engine</h3>
@@ -80,10 +17,13 @@ for details.
     System ID: {{systemid}}<br />
     Projection: {{projection}}<br />
     Timestamp: {{timestamp}}<br />
+    Rectangle: {{rect}}<br />
     GDExportID: {{gdexportid}}<br />
     </p>
+     <p>
+    <b>{{exportmsg}}</b>
+    </p>
     <p><a href="/" name="return"> Return</a></p>
-    <div id="map" style="width: 640px; height: 480px;"></div>
     <a href={{downloadpathclip}}>{{downloadtext}}</a><br />
     <p>Acquisition times:<br />
     {{timestamps}}<br />

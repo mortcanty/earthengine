@@ -236,20 +236,17 @@ def Sentinel1():
             if slanes:
 #              just want max for shipping lanes
                 outimage = pcollection.max().clip(rect)
-                mapidclip = outimage.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.7})
-                mapid = image.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.5})
                 downloadtext = 'Download maximum intensity image'
                 titletext = 'Sentinel-1 Maximum Intensity Image'
             else:
 #              want the entire time series 
-                mapid = image.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.5})
                 image1clip = ee.Image(pcollection.first()).clip(rect)   
-                mapidclip = image1clip.select(0).getMapId({'min': 0, 'max':1, 'opacity': 0.7})    
+    
                 downloadtext = 'Download image collection intersection'      
                 titletext = 'Sentinel-1 Intensity Image'                                                      
 #              clip the image collection and create a single multiband image      
                 outimage = ee.Image(pcollection.iterate(get_image,image1clip))    
-                                               
+            exportmsg = 'No export to drive'                                   
             if export == 'export':
 #              export to Google Drive -------------------------
                 gdexport = ee.batch.Export.image.toDrive(outimage,
@@ -258,25 +255,20 @@ def Sentinel1():
                                                          fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9)                
                 
                 gdexportid = str(gdexport.id)
-                print >> sys.stderr, '****Exporting to Google Drive, task id: %s '%gdexportid
+                exportmsg = '****Exporting to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
 #              --------------------------------------------------                                        
             downloadpathclip =  outimage.getDownloadUrl({'scale':10})       
                                                                     
-            return render_template('sentinel1out.html',
-                                    mapid = mapid['mapid'],
-                                    token = mapid['token'],
-                                    mapidclip = mapidclip['mapid'], 
-                                    tokenclip = mapidclip['token'], 
-                                    centerLon = centerLon,
-                                    centerLat = centerLat,
-                                    zoom = zoom,
+            return render_template('sentinel1out.html', 
+                                    exportmsg = exportmsg,
                                     downloadtext = downloadtext,
                                     titletext = titletext,
                                     downloadpathclip = downloadpathclip, 
                                     projection = projection,
                                     systemid = systemid,
                                     count = count,
+                                    rect = [glbls['minLon'],glbls['minLat'],glbls['maxLon'],glbls['maxLat']],
                                     timestamp = timestamp,
                                     gdexportid = gdexportid,
                                     timestamps = timestamps,
@@ -321,44 +313,32 @@ def Visinfrared():
                 bandNames = ['B2','B3','B4','B8']
                 collectionid = 'COPERNICUS/S2'
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
-                displayMax = 5000
             elif collectionid =='COPERNICUS/S2_20':
                 bandNames = ['B5','B6','B7','B8A','B11','B12']
                 collectionid = 'COPERNICUS/S2'
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE' 
-                displayMax = 5000
             elif collectionid=='LANDSAT/LC08/C01/T1_RT':
                 bandNames = ['B2','B3','B4','B5','B6','B7'] 
-                displayMax = 20000 
             elif collectionid=='LANDSAT/LC08/C01/T1_RT_TOA': 
-                bandNames = ['B2','B3','B4','B5','B6','B7'] 
-                displayMax = 1   
+                bandNames = ['B2','B3','B4','B5','B6','B7']  
             elif collectionid=='LANDSAT/LE07/C01/T1_RT':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 255
             elif collectionid=='LANDSAT/LE07/C01/T1_RT_TOA':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 1
             elif collectionid=='LANDSAT/LT05/C01/T1':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 255
             elif collectionid=='LANDSAT/LT05/C01/T1_TOA':
-                bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 1   
+                bandNames = ['B1','B2','B3','B4','B5','B7']   
             elif collectionid=='LANDSAT/LT4_L1T':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 255
             elif collectionid=='LANDSAT/LT4_L1T_TOA':
-                bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 1    
+                bandNames = ['B1','B2','B3','B4','B5','B7']   
             elif collectionid=='ASTER/AST_L1T_003':
                 bandNames = ['B01','B02','B3N']
-                displayMax = 255
                 cloudcover = 'CLOUDCOVER'    
             else:
                 collectionid = request.form['collectionID']
-                bandNames =  request.form['bandnames'].split()
-                displayMax = float(request.form['displaymax'])           
+                bandNames =  request.form['bandnames'].split()          
             if request.form.has_key('gdexport'):        
                 gdexportscale = float(request.form['gdexportscale'])
                 gdexportname = request.form['gdexportname']
@@ -402,7 +382,8 @@ def Visinfrared():
             systemid = image.get('system:id').getInfo()
             cloudcover = image.get(cloudcover).getInfo()
             projection = image.select(0).projection().getInfo()['crs']
-            downloadpath = image.getDownloadUrl({'scale':30,'crs':projection})    
+            downloadpath = image.getDownloadUrl({'scale':30,'crs':projection})  
+            exportmsg = 'No export to drive'  
             if gdexport == 'gdexport':
 #              export to Google Drive --------------------------
                 gdexport = ee.batch.Export.image.toDrive(imageclip.select(bandNames),
@@ -412,22 +393,15 @@ def Visinfrared():
                 
                 
                 gdexportid = str(gdexport.id)
-                print >> sys.stderr, '****Exporting to Google Drive, task id: %s '%gdexportid
+                exportmsg = '****Exporting to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
             else:
                 gdexportid = 'none'
 #              --------------------------------------------------                    
             downloadpathclip = imageclip.select(bandNames).getDownloadUrl({'scale':scale, 'crs':projection})
-            rgb = image.select(0,1,2)            
-            rgbclip = imageclip.select(0,1,2)                 
-            mapid = rgb.getMapId({'min':0, 'max':displayMax, 'opacity': 0.6}) 
-            mapidclip = rgbclip.getMapId({'min':0, 'max':displayMax, 'opacity': 1.0}) 
                                  
             return render_template('visinfraredout.html',
-                                    mapidclip = mapidclip['mapid'], 
-                                    tokenclip = mapidclip['token'], 
-                                    mapid = mapid['mapid'], 
-                                    token = mapid['token'], 
+                                    exportmsg = exportmsg,
                                     centerLon = centerLon,
                                     centerLat = centerLat,
                                     zoom = zoom,
@@ -437,6 +411,7 @@ def Visinfrared():
                                     systemid = systemid,
                                     cloudcover = cloudcover,
                                     projection = projection,
+                                    rect = [glbls['minLon'],glbls['minLat'],glbls['maxLon'],glbls['maxLat']],
                                     count = count,
                                     timestamps = timestamps,
                                     timestamp = timestamp)  
@@ -477,44 +452,32 @@ def pca():
                 bandNames = ['B2','B3','B4','B8']
                 collectionid = 'COPERNICUS/S2'
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
-                displayMax = 5000
             elif collectionid =='COPERNICUS/S2_20':
                 bandNames = ['B5','B6','B7','B8A','B11','B12']
                 collectionid = 'COPERNICUS/S2'
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE' 
-                displayMax = 5000
             elif collectionid=='LANDSAT/LC08/C01/T1_RT':
                 bandNames = ['B2','B3','B4','B5','B6','B7'] 
-                displayMax = 20000 
             elif collectionid=='LANDSAT/LC08/C01/T1_RT_TOA': 
-                bandNames = ['B2','B3','B4','B5','B6','B7'] 
-                displayMax = 1   
+                bandNames = ['B2','B3','B4','B5','B6','B7']   
             elif collectionid=='LANDSAT/LE07/C01/T1_RT':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 255
             elif collectionid=='LANDSAT/LE07/C01/T1_RT_TOA':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 1
             elif collectionid=='LANDSAT/LT05/C01/T1':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 255
             elif collectionid=='LANDSAT/LT05/C01/T1_TOA':
-                bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 1   
+                bandNames = ['B1','B2','B3','B4','B5','B7'] 
             elif collectionid=='LANDSAT/LT4_L1T':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 255
             elif collectionid=='LANDSAT/LT4_L1T_TOA':
-                bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 1    
+                bandNames = ['B1','B2','B3','B4','B5','B7']   
             elif collectionid=='ASTER/AST_L1T_003':
                 bandNames = ['B01','B02','B3N']
-                displayMax = 255
                 cloudcover = 'CLOUDCOVER'    
             else:
                 collectionid = request.form['collectionID']
-                bandNames =  request.form['bandnames'].split()
-                displayMax = float(request.form['displaymax'])           
+                bandNames =  request.form['bandnames'].split()           
             if request.form.has_key('gdexport'):        
                 gdexportscale = float(request.form['gdexportscale'])
                 gdexportname = request.form['gdexportname']
@@ -560,7 +523,7 @@ def pca():
             nbands = len(bandNames)
             
             pcs, lambdas = eePca.pca(image.select(bandNames),scale,nbands)
-            
+            exportmsg = 'No export to drive'
             if gdexport == 'gdexport':
 #              export to Google Drive --------------------------
                 gdexport = ee.batch.Export.image.toDrive(pcs,
@@ -570,28 +533,17 @@ def pca():
                 
                 
                 gdexportid = str(gdexport.id)
-                print >> sys.stderr, '****Exporting to Google Drive, task id: %s '%gdexportid
+                exportmsg =  '****Exporting to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
             else:
                 gdexportid = 'none'
 #              --------------------------------------------------                    
-            rgb = pcs.select(0,1,2) 
-            pcsclip = pcs.clip(rect)
-            rgbclip = pcsclip.select(0,1,2)             
+            pcsclip = pcs.clip(rect)            
             variances = lambdas.transpose().getInfo()[0]
-            sdevs = map(math.sqrt,variances) 
-            maxs = ','.join(map(str, sdevs[:3]))
-            msdevs = [-x for x in sdevs]
-            mins = ','.join(map(str, msdevs[:3]))
-            mapid = rgb.getMapId({'min':mins,'max':maxs, 'opacity': 0.5})
-            mapidclip = rgbclip.getMapId({'min':mins, 'max':maxs, 'opacity': 1.0})          
             downloadpathclip = pcsclip.getDownloadUrl({'scale':scale, 'crs':projection})
                                       
             return render_template('pcaout.html', 
-                                    mapid = mapid['mapid'], 
-                                    token = mapid['token'], 
-                                    mapidclip = mapidclip['mapid'],
-                                    tokenclip = mapidclip['token'],
+                                    exportmsg = exportmsg,
                                     downloadpathclip = downloadpathclip,
                                     downloadtext = 'Download image intersection',
                                     centerLon = centerLon,
@@ -749,6 +701,8 @@ def Mad():
             sel = ee.List.sequence(1,nbands)
             normalized = ee.Image(result.get ('normalized')).select(sel)                                             
             MADs = ee.Image.cat(MAD,chi2,ncmask,image1.clip(rect),image2.clip(rect),normalized.clip(rect))
+            exportmsg1 = 'No asset export' 
+            exportmsg2 = 'No drive export'    
             if assexport == 'assexport':
 #              export metadata as CSV to Drive  
                 ninvar = ee.String(ncmask.reduceRegion(ee.Reducer.sum().unweighted(),
@@ -771,13 +725,13 @@ def Mad():
                              fileNamePrefix=assexportname.replace('/','-') )
                 gdrhosexportid = str(gdmetaexport.id)
                 print >> sys.stderr, '****Exporting correlations as CSV to Drive, task id: %s '%gdrhosexportid            
-                gdmetaexport.start()                  
+                gdmetaexport.start()             
 #              export to Assets 
                 assexport = ee.batch.Export.image.toAsset(MADs,
                                                           description='assetExportTask', 
                                                           assetId=assexportname,scale=assexportscale,maxPixels=1e9)
                 assexportid = str(assexport.id)
-                print >> sys.stderr, '****Exporting MAD image to Assets, task id: %s '%assexportid
+                exportmsg1 = '****Exporting MAD image to Assets, task id: %s '%assexportid
                 assexport.start() 
             else:
                 assexportid = 'none'                
@@ -787,18 +741,17 @@ def Mad():
                                                          folder = 'EarthEngineImages',
                                                          fileNamePrefix=gdexportname,scale=gdexportscale,maxPixels=1e9)
                 gdexportid = str(gdexport.id)
-                print '****Exporting MAD image to Google Drive, task id: %s '%gdexportid
+                exportmsg2 = '****Exporting MAD image to Google Drive, task id: %s '%gdexportid
                 gdexport.start() 
             else:
                 gdexportid = 'none'      
                 
             for rhos in allrhos.getInfo():
-                print >> sys.stderr, rhos               
-            mapid = chi2.getMapId({'min': 0, 'max':10000, 'opacity': 0.7})                             
+                print >> sys.stderr, rhos                                       
             return render_template('madout.html',
-                                    title = 'Chi Square Image',
-                                    mapid = mapid['mapid'], 
-                                    token = mapid['token'], 
+                                    title = 'IR-MAD',
+                                    exportmsg1 = exportmsg1,
+                                    exportmsg2 = exportmsg2, 
                                     gdexportid = gdexportid,
                                     assexportid = assexportid,
                                     centerLon = centerLon,
@@ -866,44 +819,32 @@ def Radcal():
                 bandNames = ['B2','B3','B4','B8']
                 collectionid = 'COPERNICUS/S2'
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE'
-                displayMax = 5000
             elif collectionid =='COPERNICUS/S2_20':
                 bandNames = ['B5','B6','B7','B8A','B11','B12']
                 collectionid = 'COPERNICUS/S2'
                 cloudcover = 'CLOUDY_PIXEL_PERCENTAGE' 
-                displayMax = 5000
             elif collectionid=='LANDSAT/LC08/C01/T1_RT':
-                bandNames = ['B2','B3','B4','B5','B6','B7'] 
-                displayMax = 20000 
+                bandNames = ['B2','B3','B4','B5','B6','B7']  
             elif collectionid=='LANDSAT/LC08/C01/T1_RT_TOA': 
-                bandNames = ['B2','B3','B4','B5','B6','B7'] 
-                displayMax = 1   
+                bandNames = ['B2','B3','B4','B5','B6','B7']   
             elif collectionid=='LANDSAT/LE07/C01/T1_RT':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 255
             elif collectionid=='LANDSAT/LE07/C01/T1_RT_TOA':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 1
             elif collectionid=='LANDSAT/LT05/C01/T1':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 255
             elif collectionid=='LANDSAT/LT05/C01/T1_TOA':
-                bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 1   
+                bandNames = ['B1','B2','B3','B4','B5','B7'] 
             elif collectionid=='LANDSAT/LT4_L1T':
                 bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 255
             elif collectionid=='LANDSAT/LT4_L1T_TOA':
-                bandNames = ['B1','B2','B3','B4','B5','B7']
-                displayMax = 1    
+                bandNames = ['B1','B2','B3','B4','B5','B7']   
             elif collectionid=='ASTER/AST_L1T_003':
                 bandNames = ['B01','B02','B3N']
-                displayMax = 255
                 cloudcover = 'CLOUDCOVER' 
             else:
                 collectionid = request.form['collectionID']
-                bandNames =  request.form['bandnames'].split()
-                displayMax = float(request.form['displaymax'])           
+                bandNames =  request.form['bandnames'].split()           
             if request.form.has_key('assexport'):        
                 assexportscale = float(request.form['assexportscale'])
                 assexportdir = request.form['assexportdir']
@@ -951,13 +892,7 @@ def Radcal():
                 ids[i+1]=systemids[i]          
             timestamp = ee.Date(reference.get('system:time_start')).getInfo()
             timestamp = time.gmtime(int(timestamp['value'])/1000)
-            timestamp = time.strftime('%x', timestamp)                      
-            referenceclip = reference.clip(rect)
-            rgb = reference.select(0,1,2)            
-            rgbclip = referenceclip.select(0,1,2)                 
-            mapid = rgb.getMapId({'min':0, 'max':displayMax, 'opacity': 0.6}) 
-            mapidclip = rgbclip.getMapId({'min':0, 'max':displayMax, 'opacity': 1.0}) 
-            refcloudcover = reference.get(cloudcover).getInfo()
+            timestamp = time.strftime('%x', timestamp)                                    
             msg1 = 'Batch export not submitted'
             if assexport != 'none':
 #              batch normalization 
@@ -992,11 +927,6 @@ def Radcal():
             return render_template('radcalout.html',
                                 title = 'Radiometric Normalization: '+msg1,
                                 count = count,
-                                mapid = mapid['mapid'], 
-                                token = mapid['token'], 
-                                mapidclip = mapidclip['mapid'], 
-                                tokenclip = mapidclip['token'], 
-                                refcloudcover = refcloudcover,
                                 timestamp = timestamp,
                                 timestamps =timestamps,
                                 systemids = str(systemids),
@@ -1031,7 +961,6 @@ def Omnibus():
             startDate = request.form['startDate']  
             endDate = request.form['endDate']  
             orbitpass = request.form['pass']
-            display = request.form['display']
             polarization1 = request.form['polarization']
             relativeorbitnumber = request.form['relorbitnumber']
             if polarization1 == 'VV,VH':
@@ -1044,8 +973,7 @@ def Omnibus():
             maxLat = float(request.form['maxLat'])
             maxLon = float(request.form['maxLon'])    
             assexportid = 'none'     
-            gdexportid = 'none'       
-            videxportid = 'none'     
+            gdexportid = 'none'           
             if request.form.has_key('assexport'):        
                 assexportname = request.form['assexportname']
                 assexport = request.form['assexport']
@@ -1163,7 +1091,10 @@ def Omnibus():
             cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist1[1:]) 
             cmaps1 = ee.Image.cat(cmaps,background).rename(['cmap','smap','fmap']+timestamplist1[1:]+['background']) 
             downloadpath = cmaps.getDownloadUrl({'scale':10})    
-#          export             
+#          export     
+            exportmsg1 = 'No metadata export'   
+            exportmsg2 = 'No asset export' 
+            exportmsg3 = 'No drive export'    
             if assexport == 'assexport':
 #              export metadata as CSV to Drive  
                 metadata = ee.List(['SEQUENTIAL OMNIBUS: '+time.asctime(),
@@ -1181,14 +1112,14 @@ def Omnibus():
                              folder = 'EarthEngineImages',
                              fileNamePrefix=assexportname.replace('/','-') )
                 gdexportid1 = str(gdexport1.id)
-                print '****Exporting metadata as CSV to Drive, task id: %s '%gdexportid1            
+                exportmsg1 = '****Exporting metadata as CSV to Drive, task id: %s'%gdexportid1            
                 gdexport1.start()                
 #              export change maps to Assets 
                 assexport = ee.batch.Export.image.toAsset(cmaps1,
                                                           description='assetExportTask', 
                                                           assetId=assexportname,scale=10,maxPixels=1e9)
                 assexportid = str(assexport.id)
-                print '****Exporting to Assets, task id: %s '%assexportid
+                exportmsg2 = '****Exporting to Assets, task id: %s'%assexportid
                 assexport.start() 
             
             if gdexport == 'gdexport':
@@ -1198,23 +1129,13 @@ def Omnibus():
                                                          folder = 'EarthEngineImages',
                                                          fileNamePrefix=gdexportname,scale=10,maxPixels=1e9)
                 gdexportid = str(gdexport.id)
-                print '****Exporting change maps to Google Drive, task id: %s '%gdexportid
-                gdexport.start()         
-            
-#          output  
-            if display=='fmap':                                                                                  
-                mapid = fmap.getMapId({'min': 0, 'max': count/2,'palette': jet, 'opacity': 0.4}) 
-                title = 'Sequential omnibus frequency map'
-            elif display=='smap':
-                mapid = smap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4}) 
-                title = 'Sequential omnibus first change map'
-            else:
-                mapid = cmap.getMapId({'min': 0, 'max': count,'palette': jet, 'opacity': 0.4})   
-                title = 'Sequential omnibus last change map'                                                          
+                exportmsg3 = '****Exporting change maps to Google Drive, task id: %s '%gdexportid
+                gdexport.start()                                                         
             return render_template('omnibusout.html',
-                                    mapid = mapid['mapid'], 
-                                    token = mapid['token'], 
-                                    title = title,
+                                    exportmsg1 = exportmsg1, 
+                                    exportmsg2 = exportmsg2,
+                                    exportmsg3 = exportmsg3,
+                                    title = 'Sequential SAR change maps',
                                     centerLon = centerLon,
                                     centerLat = centerLat,
                                     zoom = zoom,
