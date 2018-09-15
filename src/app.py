@@ -537,15 +537,11 @@ def pca():
                 gdexport.start() 
             else:
                 gdexportid = 'none'
-#              --------------------------------------------------                    
-            pcsclip = pcs.clip(rect)            
+#              --------------------------------------------------                              
             variances = lambdas.transpose().getInfo()[0]
-            downloadpathclip = pcsclip.getDownloadUrl({'scale':scale, 'crs':projection})
-                                      
+                                    
             return render_template('pcaout.html', 
                                     exportmsg = exportmsg,
-                                    downloadpathclip = downloadpathclip,
-                                    downloadtext = 'Download image intersection',
                                     centerLon = centerLon,
                                     centerLat = centerLat,
                                     zoom = zoom,
@@ -1090,7 +1086,8 @@ def Omnibus():
 #          concatenate results                                
             cmaps = ee.Image.cat(cmap,smap,fmap,bmap).rename(['cmap','smap','fmap']+timestamplist1[1:]) 
             cmaps1 = ee.Image.cat(cmaps,background).rename(['cmap','smap','fmap']+timestamplist1[1:]+['background']) 
-            downloadpath = cmaps.getDownloadUrl({'scale':10})    
+            downloadpath = cmaps.getDownloadUrl({'scale':10})  
+            thumburl = cmaps.select('cmap').getThumbURL({'min':0,'max':count-1,'palette':jet})  
 #          export     
             exportmsg1 = 'No metadata export'   
             exportmsg2 = 'No asset export' 
@@ -1143,6 +1140,7 @@ def Omnibus():
                                     systemid = systemid,
                                     count = count,
                                     downloadpath = downloadpath,
+                                    thumburl = thumburl,
                                     timestamp = timestamp,
                                     assexportid = assexportid,
                                     gdexportid = gdexportid,
