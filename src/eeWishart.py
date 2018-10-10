@@ -7,8 +7,10 @@ Created on 09.01.2017
 import ee
 from eeMad import chi2cdf
 
+ENL = 4.4
+
 def multbyenl(image):
-    return ee.Image(image).multiply(4.9)
+    return ee.Image(image).multiply(ENL)
 
 def log_det_sum(imList,j):
     '''return the log of the the determinant of the sum of the first j images in imList'''
@@ -35,7 +37,7 @@ def pv(imList,p,median,j):
     f = p
     one = ee.Number(1.0)
 # 1 - (1. + 1./(j*(j-1)))/(6.*p*n)    
-    rhoj = one.subtract(one.add(one.divide(j.multiply(j.subtract(one)))).divide(6*4.9))
+    rhoj = one.subtract(one.add(one.divide(j.multiply(j.subtract(one)))).divide(6*ENL))
 # -(f/4.)*(1.-1./rhoj)**2'    
     omega2j = one.subtract(one.divide(rhoj)).pow(2.0).multiply(f.divide(-4.0))
     Z = ee.Image(ee.Image(log_det_sum(imList,j.subtract(1)))).multiply(j.subtract(1)) \
@@ -44,7 +46,7 @@ def pv(imList,p,median,j):
                  .subtract(p.multiply(j.subtract(1)).multiply(j.subtract(1).log())) \
                  .subtract(ee.Image(log_det_sum(imList,j)).multiply(j)) \
                  .multiply(rhoj) \
-                 .multiply(-2*4.9)
+                 .multiply(-2*ENL)
 # (1.-omega2j)*stats.chi2.cdf(Z,[f])+omega2j*stats.chi2.cdf(Z,[f+4])                 
     P = ee.Image( chi2cdf(Z,f).multiply(one.subtract(omega2j)).add(chi2cdf(Z,f.add(4)).multiply(omega2j))  )
 # 3x3 median filter    
