@@ -741,9 +741,7 @@ def Mad():
                 gdexport.start() 
             else:
                 gdexportid = 'none'      
-                
-            for rhos in allrhos.getInfo():
-                print >> sys.stderr, rhos                                       
+                                                    
             return render_template('madout.html',
                                     title = 'IR-MAD',
                                     exportmsg1 = exportmsg1,

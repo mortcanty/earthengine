@@ -26,7 +26,9 @@ RUN     pip install --upgrade pip &&  \
         pip install pyCrypto && \
         apt-get install -y libssl-dev
 RUN     pip install earthengine-api
-ADD     oauth2client /home/oauth2client
+RUN     pip install --upgrade oauth2client
+RUN     pip install --upgrade six
+#ADD     oauth2client /home/oauth2client
 ADD     static /home/static
 ADD     templates /home/templates   
 COPY    eeMad.py /home/eeMad.py

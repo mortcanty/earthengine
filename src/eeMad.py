@@ -161,11 +161,6 @@ def imad1(current,prev):
     lambdas, A = geneiv(c1,b1)
     _,       B = geneiv(c2,b2) 
     rhos = lambdas.sqrt().project(ee.List([1]))
-#  sort in increasing order
-    keys = ee.List.sequence(nBands,1,-1)   
-    A = A.sort([keys])
-    B = B.sort([keys]) 
-    rhos = rhos.sort(keys) 
 #  test for convergence    
     lastrhos = ee.Array(allrhos.get(-1))
     done = rhos.subtract(lastrhos) \
