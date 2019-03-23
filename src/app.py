@@ -70,27 +70,27 @@ def iterate(image1,image2,niter,first):
 
 def get_vv(image):   
     ''' get 'VV' band from sentinel-1 imageCollection and restore linear signal from db-values '''
-    return image.select('VV').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
+    return image.select('VV')#.multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
 
 def get_vh(image):   
     ''' get 'VH' band from sentinel-1 imageCollection and restore linear signal from db-values '''
-    return image.select('VH').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
+    return image.select('VH')#.multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
 
 def get_vvvh(image):   
     ''' get 'VV' and 'VH' bands from sentinel-1 imageCollection and restore linear signal from db-values '''
-    return image.select('VV','VH').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
+    return image.select('VV','VH')#.multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
 
 def get_hh(image):   
     ''' get 'HH' band from sentinel-1 imageCollection and restore linear signal from db-values '''
-    return image.select('HH').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
+    return image.select('HH')#.multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
 
 def get_hv(image):   
     ''' get 'HV' band from sentinel-1 imageCollection and restore linear signal from db-values '''
-    return image.select('HV').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
+    return image.select('HV')#.multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
 
 def get_hhhv(image):   
     ''' get 'HH' and 'HV' bands from sentinel-1 imageCollection and restore linear signal from db-values '''
-    return image.select('HH','HV').multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
+    return image.select('HH','HV')#.multiply(ee.Image.constant(math.log(10.0)/10.0)).exp()
 
 def anglestats(current,prev):
     ''' get dictionary of incident angle statistics of current image and append to list '''
@@ -183,7 +183,7 @@ def Sentinel1():
             centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat])
-            collection = ee.ImageCollection('COPERNICUS/S1_GRD') \
+            collection = ee.ImageCollection('COPERNICUS/S1_GRD_FLOAT') \
                         .filterBounds(ulPoint) \
                         .filterBounds(lrPoint) \
                         .filterDate(start, finish) \
@@ -995,7 +995,7 @@ def Omnibus():
             centerLat = (minLat + maxLat)/2.0 
             ulPoint = ee.Geometry.Point([minLon,maxLat])   
             lrPoint = ee.Geometry.Point([maxLon,minLat])                
-            collection = ee.ImageCollection('COPERNICUS/S1_GRD') \
+            collection = ee.ImageCollection('COPERNICUS/S1_GRD_FLOAT') \
                         .filterBounds(ulPoint) \
                         .filterBounds(lrPoint) \
                         .filterDate(ee.Date(startDate), ee.Date(endDate)) \
