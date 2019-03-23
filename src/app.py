@@ -232,7 +232,7 @@ def Sentinel1():
             elif polarization1 == 'HV':
                 pcollection = collection.map(get_hv)
             elif polarization1 == 'HH,HV':
-                pcollection = collection.map(get_hhhv)                 
+                pcollection = collection.map(get_hhhv)           
             if slanes:
 #              just want max for shipping lanes
                 outimage = pcollection.max().clip(rect)
@@ -245,7 +245,13 @@ def Sentinel1():
                 downloadtext = 'Download image collection intersection'      
                 titletext = 'Sentinel-1 Intensity Image'                                                      
 #              clip the image collection and create a single multiband image      
-                outimage = ee.Image(pcollection.iterate(get_image,image1clip))    
+                outimage = ee.Image(pcollection.iterate(get_image,image1clip)) 
+                bnames = outimage.bandNames()
+                if (polarization1 == 'VV,VH') or (polarization1 == 'HH,HV'):
+                    bnames = bnames.slice(2)
+                else:
+                    bnames = bnames.slice(1)
+                outimage = outimage.select(bnames)        
             exportmsg = 'No export to drive'                                   
             if export == 'export':
 #              export to Google Drive -------------------------
@@ -741,7 +747,9 @@ def Mad():
                 gdexport.start() 
             else:
                 gdexportid = 'none'      
-                                                    
+                
+            for rhos in allrhos.getInfo():
+                print >> sys.stderr, rhos                                       
             return render_template('madout.html',
                                     title = 'IR-MAD',
                                     exportmsg1 = exportmsg1,
